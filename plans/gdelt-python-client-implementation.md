@@ -48,7 +48,7 @@ src/py_gdelt/
 │
 ├── models/                  # Data models
 │   ├── __init__.py          # Public Pydantic models (API boundary)
-│   ├── _internal.py         # Internal dataclasses (performance)
+│   ├── _internal.py         # Internal dataclasses (slots=True for performance)
 │   ├── common.py            # Location, ToneScores, EntityMention, FetchResult
 │   ├── events.py            # Event, Actor, Mention
 │   ├── gkg.py               # GKGRecord, Quotation, Amount
@@ -107,7 +107,7 @@ src/py_gdelt/
 
 1. **Filters**: Consolidated to `filters.py` with Pydantic models for immediate validation on construction
 2. **Parsers**: Merged v1/v2 into single files with version detection
-3. **Models**: Dataclasses internally (`_internal.py`), Pydantic at API boundaries
+3. **Models**: Dataclasses internally (`_internal.py` with `slots=True`), Pydantic at API boundaries
 4. **Streaming**: Simple async generators (prefetching deferred to v1.1 after profiling)
 5. **Exceptions**: Granular hierarchy (9 classes) for actionable error handling
 6. **Sync/Async**: Async-first with `_sync()` wrappers for convenience
@@ -141,12 +141,31 @@ class Event(BaseModel):
     original_record_id: str | None  # Links translated record to original
 ```
 
+#### Internal Dataclasses (Performance)
+```python
+from dataclasses import dataclass
+
+@dataclass(slots=True)  # Python 3.10+ - faster attribute access, less memory
+class _RawEvent:
+    """Internal representation during parsing - no validation overhead."""
+    global_event_id: str
+    sql_date: str  # Still string, validated when converting to Pydantic
+    actor1_code: str | None
+    actor2_code: str | None
+    # ... other fields
+
+    def to_event(self) -> Event:
+        """Convert to public Pydantic model at API boundary."""
+        return Event.model_validate(self.__dict__)
+```
+
 #### FetchResult (Partial Failure Tracking)
 ```python
+@dataclass
 class FetchResult(Generic[T]):
     """Result container with partial failure tracking."""
     data: list[T]
-    failed: list[FailedRequest]
+    failed: list[FailedRequest] = field(default_factory=list)
 
     @property
     def complete(self) -> bool:
@@ -165,6 +184,29 @@ if result.partial:
 # User can still iterate over successful results
 for event in result.data:
     ...
+```
+
+#### ResultStream vs FetchResult: When to Use Each
+
+| Use Case | Return Type | Why |
+|----------|-------------|-----|
+| **Streaming large datasets** | `AsyncIterator[T]` | Memory efficient, process as you go |
+| **Batch with failure tracking** | `FetchResult[T]` | Know what failed, retry partial |
+| **Terminal methods** | `ResultStream[T]` | Wraps iterator with `.to_list()`, `.to_dataframe()` |
+
+```python
+# Streaming (memory efficient)
+async for event in client.events.stream(filter):
+    process(event)
+
+# Batch with failure tracking
+result: FetchResult[Event] = await client.events.query(filter)
+if not result.complete:
+    handle_failures(result.failed)
+
+# ResultStream wraps streaming with terminal methods
+stream = client.events.query(filter)
+df = await stream.to_dataframe()  # Materializes
 ```
 
 ### Security Architecture
@@ -252,22 +294,32 @@ if response.status_code == 429:
 GDELT captures news reports, not unique events. ~20% redundancy exists. Provide multiple strategies:
 
 ```python
+from enum import StrEnum
+
+class DedupeStrategy(StrEnum):
+    """Deduplication strategies - use StrEnum for type safety."""
+    URL_ONLY = "url_only"
+    URL_DATE = "url_date"
+    URL_DATE_LOCATION = "url_date_location"  # Default
+    URL_DATE_LOCATION_ACTORS = "url_date_location_actors"
+    AGGRESSIVE = "aggressive"
+
 # Via query parameter (recommended)
 events = client.events.query(filter, deduplicate=True)  # Uses default
-events = client.events.query(filter, dedupe_strategy="aggressive")
+events = client.events.query(filter, dedupe_strategy=DedupeStrategy.AGGRESSIVE)
 
 # Via utility function
 from gdelt.utils import deduplicate
-deduped = deduplicate(events, strategy="url_date_location")
+deduped = deduplicate(events, strategy=DedupeStrategy.URL_DATE_LOCATION)
 ```
 
 | Strategy | Fields Matched | Reduction |
 |----------|---------------|-----------|
-| `url_only` | SOURCEURL | Minimal |
-| `url_date` | SOURCEURL + SQLDATE | Light |
-| `url_date_location` | SOURCEURL + SQLDATE + ActionGeo | Moderate (**default**) |
-| `url_date_location_actors` | Above + Actor1 + Actor2 | Heavy |
-| `aggressive` | Above + EventRootCode | Maximum (26-33% of original) |
+| `URL_ONLY` | SOURCEURL | Minimal |
+| `URL_DATE` | SOURCEURL + SQLDATE | Light |
+| `URL_DATE_LOCATION` | SOURCEURL + SQLDATE + ActionGeo | Moderate (**default**) |
+| `URL_DATE_LOCATION_ACTORS` | Above + Actor1 + Actor2 | Heavy |
+| `AGGRESSIVE` | Above + EventRootCode | Maximum (26-33% of original) |
 
 #### Lookup Helper Methods
 
@@ -313,6 +365,122 @@ client.cache.size()                      # Current cache size in bytes
 - Historical files (>30 days old): Cached indefinitely (immutable)
 - Recent files: TTL-based (configurable, default 1 hour)
 - Master file lists: Short TTL (5 minutes)
+
+---
+
+### Parallelization Strategy
+
+Use `@agent-python-coder` subagents to parallelize independent work streams. Each stream can be assigned to a separate agent.
+
+#### Phase 1: Core Infrastructure (7 parallel streams)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SEQUENTIAL: Project setup (ruff, mypy, pyproject.toml)                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+          ┌─────────────────────────┼─────────────────────────┐
+          ▼                         ▼                         ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│ Agent 1         │     │ Agent 2         │     │ Agent 3         │
+│ config.py       │     │ exceptions.py   │     │ _security.py    │
+│ (GDELTSettings) │     │ (9 classes)     │     │ (path, URL)     │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+          │                         │                         │
+          ▼                         ▼                         ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│ Agent 4         │     │ Agent 5         │     │ Agent 6         │
+│ lookups/        │     │ cache.py        │     │ utils/dedup.py  │
+│ (CAMEO, themes) │     │ (TTL + immut)   │     │ (5 strategies)  │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+          │                         │                         │
+          └─────────────────────────┼─────────────────────────┘
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Agent 7: models/common.py (Location, ToneScores, FetchResult)           │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SEQUENTIAL: filters.py (depends on lookups for validation)              │
+│             utils/streaming.py (depends on models)                      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Phase 2: REST API Endpoints (4 parallel streams after base)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SEQUENTIAL: BaseEndpoint (shared HTTP client, retry logic)              │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+     ┌──────────────┬───────────────┼───────────────┬──────────────┐
+     ▼              ▼               ▼               ▼              ▼
+┌─────────┐  ┌─────────┐    ┌─────────────┐  ┌─────────┐  ┌──────────────┐
+│ Agent 1 │  │ Agent 2 │    │   Agent 3   │  │ Agent 4 │  │   Agent 5    │
+│ doc.py  │  │ geo.py  │    │ context.py  │  │  tv.py  │  │ articles.py  │
+│ (DOC)   │  │ (GEO)   │    │ (Context)   │  │(TV+TVAI)│  │  (models)    │
+└─────────┘  └─────────┘    └─────────────┘  └─────────┘  └──────────────┘
+```
+
+#### Phase 3: File Parsers & Sources (5 parallel streams)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SEQUENTIAL: models/_internal.py (shared dataclasses for all parsers)    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+     ┌──────────────┬───────────────┼───────────────┬──────────────┐
+     ▼              ▼               ▼               ▼              ▼
+┌─────────┐  ┌───────────┐  ┌─────────────┐  ┌───────────┐  ┌──────────┐
+│ Agent 1 │  │  Agent 2  │  │   Agent 3   │  │  Agent 4  │  │ Agent 5  │
+│events.py│  │mentions.py│  │   gkg.py    │  │ ngrams.py │  │ files.py │
+│(v1/v2)  │  │           │  │(v1/v2+XML) │  │  (JSON)   │  │(FileSource)│
+└─────────┘  └───────────┘  └─────────────┘  └───────────┘  └──────────┘
+```
+
+#### Phase 4: BigQuery Integration (sequential)
+
+Single agent - `bigquery.py` is cohesive unit with parameterized queries, credential handling, streaming.
+
+#### Phase 5: Multi-Source Endpoints (4 parallel streams after fetcher)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SEQUENTIAL: DataFetcher (source selection, fallback logic)              │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+     ┌──────────────┬───────────────┼───────────────┬──────────────┐
+     ▼              ▼               ▼               ▼              │
+┌─────────┐  ┌───────────┐  ┌─────────────┐  ┌───────────┐        │
+│ Agent 1 │  │  Agent 2  │  │   Agent 3   │  │  Agent 4  │        │
+│events.py│  │mentions.py│  │   gkg.py    │  │ ngrams.py │        │
+│         │  │           │  │             │  │           │        │
+└─────────┘  └───────────┘  └─────────────┘  └───────────┘        │
+     │              │               │               │              │
+     └──────────────┴───────────────┴───────────────┴──────────────┘
+                                    │
+                                    ▼
+                            (all 4 parallel)
+```
+
+#### Phase 6: Integration (sequential)
+
+Single agent - `client.py` wires everything together, requires all prior phases.
+
+#### Summary: Parallelization Opportunities
+
+| Phase | Sequential Tasks | Parallel Streams | Max Agents |
+|-------|------------------|------------------|------------|
+| 1 | Project setup, filters.py, streaming.py | config, exceptions, security, lookups, cache, dedup, models | **7** |
+| 2 | BaseEndpoint | doc, geo, context, tv, articles | **5** |
+| 3 | _internal.py | events, mentions, gkg, ngrams, files | **5** |
+| 4 | - | (single unit) | **1** |
+| 5 | DataFetcher | events, mentions, gkg, ngrams | **4** |
+| 6 | - | (single unit) | **1** |
+
+**Total potential parallel agents**: 23 (but constrained by phase dependencies)
+**Recommended approach**: Run each phase with max parallelism, then move to next phase.
 
 ---
 
@@ -504,19 +672,28 @@ client.cache.size()                      # Current cache size in bytes
 **Rationale**: Provide both async and sync APIs. Async is primary (`async def query()`). Sync wrappers use `asyncio.run()` for simple scripts and CLI usage. Jupyter users must install `nest_asyncio` or use async directly. Document this clearly. v2 may add `unasync` codegen for true sync without the asyncio overhead.
 
 **Sync wrapper pattern:**
+
+⚠️ **Note**: `asyncio.run()` per-call is problematic (creates new event loop, breaks in Jupyter/FastAPI). Use `anyio` for robust sync/async duality:
+
 ```python
-# In each endpoint
-async def query(self, filters: EventFilter) -> AsyncIterator[Event]:
-    """Primary async API."""
-    ...
+# Add anyio to dependencies (thin asyncio wrapper, same as httpx uses)
+import anyio
 
-def query_sync(self, filters: EventFilter) -> list[Event]:
-    """Sync convenience wrapper. For Jupyter, use async API with nest_asyncio."""
-    return asyncio.run(self._collect(self.query(filters)))
+class GDELTClient:
+    """Async-first client with sync convenience methods."""
 
-async def _collect(self, stream: AsyncIterator[T]) -> list[T]:
-    return [item async for item in stream]
+    async def query(self, filters: EventFilter) -> AsyncIterator[Event]:
+        """Primary async API - use this in async contexts."""
+        ...
+
+    def query_sync(self, filters: EventFilter) -> list[Event]:
+        """Sync wrapper using anyio - works in nested event loops."""
+        return anyio.from_thread.run_sync(
+            lambda: anyio.run(self._collect_async, filters)
+        )
 ```
+
+Alternative: Separate `GDELTClientSync` class with background thread + persistent event loop for connection reuse.
 
 ### 2. HTTP Client Lifecycle
 
@@ -535,6 +712,57 @@ async def _collect(self, stream: AsyncIterator[T]) -> list[T]:
 | **DataFetcher pattern** | Centralized, testable | Extra abstraction | **Selected** |
 
 **Rationale**: All multi-source endpoints need the same fallback logic. Centralizing in `DataFetcher` avoids duplication and enables unit testing without mocking entire endpoints.
+
+**DataFetcher with Dependency Injection:**
+```python
+class DataFetcher:
+    """Orchestrates source selection and fallback."""
+
+    def __init__(
+        self,
+        file_source: FileSource,
+        bigquery_source: BigQuerySource | None = None,
+        *,
+        fallback_enabled: bool = True,
+    ) -> None:
+        self._file = file_source
+        self._bq = bigquery_source
+        self._fallback = fallback_enabled and bigquery_source is not None
+
+    async def fetch(
+        self,
+        filter: EventFilter,
+        parser: Parser[T],
+    ) -> AsyncIterator[T]:
+        try:
+            async for record in self._file.fetch(filter, parser):
+                yield record
+        except RateLimitError as e:
+            if self._fallback:
+                logger.warning(f"Rate limited, falling back to BigQuery: {e}")
+                async for record in self._bq.fetch(filter, parser):
+                    yield record
+            else:
+                raise
+```
+
+**Parser Protocol:**
+```python
+from typing import Protocol, TypeVar
+
+T = TypeVar("T")
+
+class Parser(Protocol[T]):
+    """Interface for file format parsers."""
+
+    def parse(self, raw: bytes) -> Iterator[T]:
+        """Parse raw bytes into records."""
+        ...
+
+    def detect_version(self, header: bytes) -> int:
+        """Detect format version from header (1 or 2)."""
+        ...
+```
 
 ### 4. Streaming Strategy
 
@@ -611,7 +839,8 @@ async def _collect(self, stream: AsyncIterator[T]) -> list[T]:
 - `pydantic-settings>=2.12.0` - Configuration
 - `tenacity>=9.1.2` - Retry logic
 - `tqdm>=4.67.1` - Progress bars
-- `defusedxml>=0.7.1` - **NEW: Secure XML parsing** (GKG V2EXTRASXML)
+- `defusedxml>=0.7.1` - Secure XML parsing (GKG V2EXTRASXML)
+- `anyio>=4.0` - **NEW: Robust sync/async wrapper** (handles nested event loops)
 
 ### Optional Dependencies
 - `google-cloud-bigquery>=3.0` - BigQuery support
@@ -692,20 +921,21 @@ async def _collect(self, stream: AsyncIterator[T]) -> list[T]:
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Sync/Async | Async-first + sync wrappers | Scripts get sync; Jupyter users use async or `nest_asyncio` |
+| Sync/Async | Async-first + sync wrappers (anyio) | Scripts get sync; anyio handles nested loops |
 | HTTP Client | Owned with optional DI | Testability + clean lifecycle |
 | Source Selection | Files primary, BQ fallback | Files are free; BQ only when configured and files fail |
-| Fallback Logic | DataFetcher pattern | Centralized, reusable, clean separation |
+| Fallback Logic | DataFetcher with DI | Centralized, testable, accepts sources via constructor |
+| Parser Interface | Protocol[T] | Extensible, type-safe, enables new formats |
 | Streaming | Simple async generators | Deferred prefetching to v1.1 after profiling |
 | Lookups | Lazy `@cached_property` | No startup penalty |
 | Error Policy | Configurable, default `warn` | Sensible default, user can override |
 | Validation | On filter creation (Pydantic) | Immediate feedback on typos, built-in validation |
-| Models | Dataclasses internal, Pydantic at boundary | Performance + type safety |
+| Models | Dataclasses (slots=True) internal, Pydantic at boundary | Performance + type safety |
 | Filters | Consolidated Pydantic models | Validation on construction, simpler than 8 files |
 | Exceptions | Granular hierarchy | RateLimitError vs APIError enables targeted retry logic |
 | Config | Env vars + TOML file | Flexible for both scripts and project configs |
 | Parsers | Version detection in single file | Less duplication than v1/v2 split |
-| Deduplication | 5 strategies, default `url_date_location` | Covers minimal to aggressive; ~20% data is redundant |
+| Deduplication | StrEnum with 5 strategies | Type-safe, IDE autocomplete, default `URL_DATE_LOCATION` |
 | Caching | TTL-based recent + indefinite historical | Historical data is immutable; recent changes often |
 | Geo output | `Location.as_tuple()` + `as_wkt()` | Prep for geopandas without requiring it |
 | Partial failures | FetchResult with `partial`, `failed` | User can still work with available data |
@@ -723,11 +953,12 @@ async def _collect(self, stream: AsyncIterator[T]) -> list[T]:
 - [ ] Build exception hierarchy (9 classes per spec)
 - [ ] Create `_security.py` module
 - [ ] Create consolidated `filters.py` with Pydantic models
-- [ ] Build `ResultStream[T]` in `utils/streaming.py`
+- [ ] Build `ResultStream[T]` and `FetchResult[T]` in models
 - [ ] Build cache module with TTL-based + immutable strategies
 - [ ] Build deduplication utility with 5 strategies
 - [ ] Bundle lookup data (CAMEO, themes, countries)
 - [ ] Implement lazy-loaded lookups with helper methods
+- [ ] Build common models (Location with `as_tuple()`/`as_wkt()`, ToneScores)
 - [ ] Add `py.typed` marker and `__all__` exports
 
 ### Phase 2: REST API Endpoints
@@ -748,6 +979,7 @@ async def _collect(self, stream: AsyncIterator[T]) -> list[T]:
 - [ ] Add decompression size/ratio limits
 - [ ] Add line/field length limits
 - [ ] Create internal dataclasses (`models/_internal.py`)
+- [ ] Include `original_record_id` parsing for translated records
 
 ### Phase 4: BigQuery Integration
 - [ ] Build `BigQuerySource`
