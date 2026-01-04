@@ -1,0 +1,542 @@
+"""FileSource for downloading and extracting GDELT data files.
+
+This module provides functionality for downloading GDELT data files directly from
+data.gdeltproject.org. It handles:
+- Master file list retrieval and parsing
+- File URL generation for date ranges
+- Concurrent download with safety limits
+- ZIP/GZ decompression with zip bomb protection
+- Intelligent caching (historical files cached indefinitely, recent files TTL-based)
+
+Security Features:
+- HTTPS enforcement for all downloads
+- URL validation to prevent domain spoofing
+- Decompression size limits to prevent zip bombs
+- Maximum compression ratio checks
+"""
+
+import asyncio
+import gzip
+import io
+import logging
+import re
+import zipfile
+from collections.abc import AsyncIterator
+from datetime import datetime, timedelta
+from typing import Final, Literal
+
+import httpx
+
+from py_gdelt._security import (
+    MAX_COMPRESSION_RATIO,
+    MAX_DECOMPRESSED_SIZE,
+    SecurityError,
+    check_decompression_safety,
+    validate_url,
+)
+from py_gdelt.cache import Cache
+from py_gdelt.config import GDELTSettings
+from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
+
+__all__ = ["FileSource", "FileType"]
+
+logger = logging.getLogger(__name__)
+
+# GDELT file list URLs
+MASTER_FILE_LIST_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
+TRANSLATION_FILE_LIST_URL: Final[str] = (
+    "http://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt"
+)
+LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
+
+# File type patterns
+FILE_TYPE_PATTERNS: Final[dict[str, str]] = {
+    "export": ".export.CSV.zip",
+    "mentions": ".mentions.CSV.zip",
+    "gkg": ".gkg.csv.zip",
+    "ngrams": ".webngrams.json.gz",
+}
+
+# Type alias for file types
+FileType = Literal["export", "mentions", "gkg", "ngrams"]
+
+
+class FileSource:
+    """Downloads and extracts GDELT data files.
+
+    This class provides async methods for downloading GDELT data files with:
+    - Concurrent downloads with semaphore-based rate limiting
+    - Automatic decompression (ZIP/GZ) with security checks
+    - Intelligent caching (historical files permanent, recent files TTL)
+    - Progress tracking and error handling
+
+    Example:
+        >>> async with httpx.AsyncClient() as client:
+        ...     source = FileSource(client=client)
+        ...     urls = await source.get_files_for_date_range(
+        ...         start_date=datetime(2024, 1, 1),
+        ...         end_date=datetime(2024, 1, 2),
+        ...         file_type="export"
+        ...     )
+        ...     async for url, data in source.stream_files(urls):
+        ...         print(f"Downloaded {url}: {len(data)} bytes")
+    """
+
+    def __init__(
+        self,
+        settings: GDELTSettings | None = None,
+        client: httpx.AsyncClient | None = None,
+        cache: Cache | None = None,
+    ) -> None:
+        """Initialize FileSource.
+
+        Args:
+            settings: GDELT settings (creates default if None)
+            client: HTTP client (creates new one if None, caller owns lifecycle)
+            cache: Cache manager (creates new one if None)
+        """
+        self.settings = settings or GDELTSettings()
+        self._client = client
+        self._owns_client = client is None
+        self.cache = cache or Cache(
+            cache_dir=self.settings.cache_dir,
+            default_ttl=self.settings.cache_ttl,
+        )
+        self._semaphore = asyncio.Semaphore(self.settings.max_concurrent_downloads)
+
+    async def __aenter__(self) -> "FileSource":
+        """Async context manager entry."""
+        if self._owns_client:
+            self._client = httpx.AsyncClient(timeout=self.settings.timeout)
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        """Async context manager exit."""
+        if self._owns_client and self._client is not None:
+            await self._client.aclose()
+
+    @property
+    def client(self) -> httpx.AsyncClient:
+        """Get the HTTP client, raising if not initialized."""
+        if self._client is None:
+            msg = "FileSource not initialized. Use 'async with FileSource() as source:'"
+            raise RuntimeError(msg)
+        return self._client
+
+    async def get_master_file_list(
+        self,
+        include_translation: bool = False,
+    ) -> list[str]:
+        """Fetch and parse master file list URLs.
+
+        Args:
+            include_translation: If True, also fetch translation files
+
+        Returns:
+            List of file URLs from master file list(s)
+
+        Raises:
+            APIError: If fetching or parsing fails
+        """
+        urls_to_fetch = [MASTER_FILE_LIST_URL]
+        if include_translation:
+            urls_to_fetch.append(TRANSLATION_FILE_LIST_URL)
+
+        all_urls: list[str] = []
+
+        for url in urls_to_fetch:
+            try:
+                # Check cache first (master lists have short TTL)
+                cached_data = self.cache.get(url)
+
+                if cached_data is not None:
+                    logger.debug("Using cached master file list: %s", url)
+                    content = cached_data.decode("utf-8")
+                else:
+                    # Upgrade to HTTPS and validate
+                    secure_url = self._upgrade_to_https(url)
+                    validate_url(secure_url)
+
+                    logger.info("Fetching master file list: %s", secure_url)
+                    response = await self.client.get(secure_url)
+                    response.raise_for_status()
+
+                    content = response.text
+
+                    # Cache with short TTL (5 minutes for master lists)
+                    self.cache.set(url, content.encode("utf-8"))
+
+                # Parse URLs from content (one URL per line)
+                file_urls = [line.strip() for line in content.splitlines() if line.strip()]
+                all_urls.extend(file_urls)
+
+                logger.debug("Found %d URLs in %s", len(file_urls), url)
+
+            except httpx.HTTPStatusError as e:
+                logger.error("HTTP error fetching master file list %s: %s", url, e)
+                raise APIUnavailableError(f"Failed to fetch master file list: {e}") from e
+            except httpx.RequestError as e:
+                logger.error("Request error fetching master file list %s: %s", url, e)
+                raise APIError(f"Network error fetching master file list: {e}") from e
+            except UnicodeDecodeError as e:
+                logger.error("Invalid encoding in master file list %s: %s", url, e)
+                raise DataError(f"Invalid encoding in master file list: {e}") from e
+
+        return all_urls
+
+    async def get_files_for_date_range(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        file_type: FileType,
+        include_translation: bool = False,
+    ) -> list[str]:
+        """Get file URLs for a date range.
+
+        Generates URLs based on GDELT naming patterns. Note that not all
+        time slots have files (15-minute granularity may have gaps).
+
+        Args:
+            start_date: Start of date range (inclusive)
+            end_date: End of date range (inclusive)
+            file_type: Type of files to get (export, mentions, gkg, ngrams)
+            include_translation: If True, include translation files
+
+        Returns:
+            List of file URLs for the date range
+
+        Raises:
+            ValueError: If date range is invalid or file_type unknown
+        """
+        if start_date > end_date:
+            msg = f"start_date ({start_date}) must be <= end_date ({end_date})"
+            raise ValueError(msg)
+
+        if file_type not in FILE_TYPE_PATTERNS:
+            valid_types = ", ".join(FILE_TYPE_PATTERNS.keys())
+            msg = f"Unknown file_type '{file_type}'. Valid types: {valid_types}"
+            raise ValueError(msg)
+
+        pattern = FILE_TYPE_PATTERNS[file_type]
+        urls: list[str] = []
+
+        # Generate URLs for 15-minute intervals
+        current = start_date
+        delta = timedelta(minutes=15)
+
+        while current <= end_date:
+            timestamp = current.strftime("%Y%m%d%H%M%S")
+
+            # Build URL based on file type
+            if file_type == "ngrams":
+                url = f"http://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
+            else:
+                url = f"http://data.gdeltproject.org/gdeltv2/{timestamp}{pattern}"
+
+            urls.append(url)
+
+            # Handle translation files
+            if include_translation and file_type != "ngrams":
+                trans_url = url.replace(pattern, f".translation{pattern}")
+                urls.append(trans_url)
+
+            current += delta
+
+        logger.debug(
+            "Generated %d URLs for date range %s to %s (type: %s)",
+            len(urls),
+            start_date,
+            end_date,
+            file_type,
+        )
+
+        return urls
+
+    async def download_file(self, url: str) -> bytes:
+        """Download a file and return raw bytes.
+
+        Args:
+            url: URL to download
+
+        Returns:
+            Raw file content as bytes
+
+        Raises:
+            APIError: If download fails
+            SecurityError: If URL validation fails
+        """
+        # Upgrade to HTTPS and validate
+        secure_url = self._upgrade_to_https(url)
+        validate_url(secure_url)
+
+        # Check cache first
+        cached_data = self.cache.get(url)
+        if cached_data is not None:
+            logger.debug("Cache hit for URL: %s", url)
+            return cached_data
+
+        # Download with semaphore-based rate limiting
+        async with self._semaphore:
+            try:
+                logger.debug("Downloading: %s", secure_url)
+                response = await self.client.get(secure_url)
+                response.raise_for_status()
+
+                content = response.content
+
+                # Extract file date from URL for cache TTL decision
+                file_date = self._extract_date_from_url(url)
+
+                # Cache the raw data
+                self.cache.set(url, content, file_date=file_date)
+
+                logger.debug("Downloaded %d bytes from %s", len(content), url)
+                return content
+
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 404:
+                    # Missing files are normal (not all 15-min slots exist)
+                    logger.debug("File not found (404): %s", secure_url)
+                    raise APIError(f"File not found: {url}") from e
+
+                logger.error("HTTP error downloading %s: %s", secure_url, e)
+                raise APIUnavailableError(f"Failed to download file: {e}") from e
+
+            except httpx.RequestError as e:
+                logger.error("Request error downloading %s: %s", secure_url, e)
+                raise APIError(f"Network error downloading file: {e}") from e
+
+    async def download_and_extract(self, url: str) -> bytes:
+        """Download and extract ZIP/GZ file, return decompressed content.
+
+        Args:
+            url: URL to download (must be .zip or .gz)
+
+        Returns:
+            Decompressed file content
+
+        Raises:
+            APIError: If download fails
+            DataError: If extraction fails
+            SecurityError: If decompression limits exceeded (zip bomb protection)
+        """
+        # Download compressed file
+        compressed_data = await self.download_file(url)
+        compressed_size = len(compressed_data)
+
+        try:
+            # Determine compression type from URL
+            if url.endswith(".zip"):
+                decompressed_data = self._extract_zip(compressed_data, compressed_size)
+            elif url.endswith(".gz"):
+                decompressed_data = self._extract_gzip(compressed_data, compressed_size)
+            else:
+                # Not compressed, return as-is
+                logger.debug("File is not compressed: %s", url)
+                return compressed_data
+
+            logger.debug(
+                "Extracted %d bytes from %d compressed bytes (ratio: %.1fx) for %s",
+                len(decompressed_data),
+                compressed_size,
+                len(decompressed_data) / compressed_size if compressed_size > 0 else 0,
+                url,
+            )
+
+            return decompressed_data
+
+        except (zipfile.BadZipFile, gzip.BadGzipFile) as e:
+            logger.error("Invalid archive format for %s: %s", url, e)
+            raise DataError(f"Invalid archive format: {e}") from e
+        except SecurityError:
+            # Re-raise security errors as-is
+            raise
+        except Exception as e:
+            logger.error("Unexpected error extracting %s: %s", url, e)
+            raise DataError(f"Failed to extract file: {e}") from e
+
+    async def stream_files(
+        self,
+        urls: list[str],
+        *,
+        max_concurrent: int | None = None,
+    ) -> AsyncIterator[tuple[str, bytes]]:
+        """Download multiple files concurrently, yielding (url, data) tuples.
+
+        Args:
+            urls: List of URLs to download
+            max_concurrent: Override default concurrent download limit
+
+        Yields:
+            Tuple of (url, decompressed_data) for each successful download
+
+        Note:
+            Failed downloads are logged but do not stop iteration.
+            This is by design as GDELT files may have gaps.
+        """
+        if max_concurrent is not None:
+            # Temporarily override semaphore limit
+            original_semaphore = self._semaphore
+            self._semaphore = asyncio.Semaphore(max_concurrent)
+
+        try:
+            async with asyncio.TaskGroup() as tg:
+                # Create tasks for all downloads
+                tasks = [
+                    tg.create_task(self._safe_download_and_extract(url)) for url in urls
+                ]
+
+            # Yield successful results
+            for task in tasks:
+                result = task.result()
+                if result is not None:
+                    url, data = result
+                    yield url, data
+
+        finally:
+            if max_concurrent is not None:
+                # Restore original semaphore
+                self._semaphore = original_semaphore
+
+    async def _safe_download_and_extract(self, url: str) -> tuple[str, bytes] | None:
+        """Download and extract file with error handling (firewall pattern).
+
+        This method acts as a firewall, catching exceptions so that one failed
+        download doesn't cancel other concurrent downloads in a TaskGroup.
+
+        Args:
+            url: URL to download
+
+        Returns:
+            Tuple of (url, data) if successful, None if failed
+        """
+        try:
+            data = await self.download_and_extract(url)
+            return url, data
+        except APIError as e:
+            # Expected errors (404, network issues) - log at debug level
+            logger.debug("Failed to download %s: %s", url, e)
+            return None
+        except Exception as e:
+            # Unexpected errors - log at error level
+            logger.error("Unexpected error downloading %s: %s", url, e)
+            return None
+
+    def _extract_zip(self, compressed_data: bytes, compressed_size: int) -> bytes:
+        """Extract ZIP file with security checks.
+
+        Args:
+            compressed_data: ZIP file bytes
+            compressed_size: Size of compressed data
+
+        Returns:
+            Decompressed content
+
+        Raises:
+            SecurityError: If decompression limits exceeded
+            DataError: If ZIP contains multiple files (unexpected)
+        """
+        with zipfile.ZipFile(io.BytesIO(compressed_data)) as zf:
+            # GDELT files should contain exactly one file
+            names = zf.namelist()
+            if len(names) != 1:
+                logger.warning("ZIP file contains %d files (expected 1): %s", len(names), names)
+                if len(names) == 0:
+                    raise DataError("ZIP file is empty")
+                # Use first file if multiple
+                logger.debug("Using first file from ZIP: %s", names[0])
+
+            filename = names[0]
+            info = zf.getinfo(filename)
+
+            # Check decompression safety before extracting
+            decompressed_size = info.file_size
+            check_decompression_safety(compressed_size, decompressed_size)
+
+            # Extract and return
+            return zf.read(filename)
+
+    def _extract_gzip(self, compressed_data: bytes, compressed_size: int) -> bytes:
+        """Extract GZIP file with security checks.
+
+        Args:
+            compressed_data: GZIP file bytes
+            compressed_size: Size of compressed data
+
+        Returns:
+            Decompressed content
+
+        Raises:
+            SecurityError: If decompression limits exceeded
+        """
+        # For GZIP, we need to decompress incrementally to check size
+        result = io.BytesIO()
+        bytes_read = 0
+
+        with gzip.GzipFile(fileobj=io.BytesIO(compressed_data)) as gz:
+            # Read in chunks to avoid loading huge files into memory
+            chunk_size = 1024 * 1024  # 1MB chunks
+
+            while True:
+                chunk = gz.read(chunk_size)
+                if not chunk:
+                    break
+
+                bytes_read += len(chunk)
+
+                # Check size limits during decompression
+                if bytes_read > MAX_DECOMPRESSED_SIZE:
+                    raise SecurityError(
+                        f"Decompressed size {bytes_read} bytes "
+                        f"exceeds maximum allowed size {MAX_DECOMPRESSED_SIZE} bytes "
+                        f"({MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB)"
+                    )
+
+                # Check compression ratio
+                if compressed_size > 0:
+                    ratio = bytes_read / compressed_size
+                    if ratio > MAX_COMPRESSION_RATIO:
+                        raise SecurityError(
+                            f"Suspicious compression ratio: {ratio:.1f}x "
+                            f"(max allowed: {MAX_COMPRESSION_RATIO}x). "
+                            f"Possible zip bomb attack."
+                        )
+
+                result.write(chunk)
+
+        return result.getvalue()
+
+    @staticmethod
+    def _upgrade_to_https(url: str) -> str:
+        """Upgrade HTTP URL to HTTPS.
+
+        Args:
+            url: URL to upgrade
+
+        Returns:
+            HTTPS version of URL
+        """
+        if url.startswith("http://"):
+            return url.replace("http://", "https://", 1)
+        return url
+
+    @staticmethod
+    def _extract_date_from_url(url: str) -> datetime | None:
+        """Extract date from GDELT URL timestamp.
+
+        Args:
+            url: GDELT file URL
+
+        Returns:
+            Datetime extracted from URL, or None if not found
+        """
+        # GDELT URLs contain timestamps like: YYYYMMDDHHMMSS
+        match = re.search(r"/(\d{14})[.]", url)
+        if match:
+            timestamp_str = match.group(1)
+            try:
+                return datetime.strptime(timestamp_str, "%Y%m%d%H%M%S")
+            except ValueError:
+                logger.debug("Invalid timestamp in URL: %s", timestamp_str)
+                return None
+        return None
