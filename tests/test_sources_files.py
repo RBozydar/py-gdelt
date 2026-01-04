@@ -641,6 +641,69 @@ class TestStreamFiles:
 
             assert len(results) == 10
 
+    @pytest.mark.asyncio
+    async def test_stream_files_yields_before_all_complete(
+        self,
+        file_source: FileSource,
+    ) -> None:
+        """Test that stream_files yields results as they complete, not after all complete.
+
+        This verifies true streaming behavior - results should be yielded incrementally
+        as downloads complete, rather than waiting for ALL downloads to finish first.
+        """
+        import asyncio
+
+        urls = [
+            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
+        ]
+
+        original_data = b"test data"
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("test.csv", original_data)
+        zip_data = zip_buffer.getvalue()
+
+        # Track which downloads have completed
+        download_completed = {url: False for url in urls}
+        first_yield_time = None
+        all_complete_time = None
+
+        async def delayed_response(url: str) -> httpx.Response:
+            """Simulate delayed download with different delays per URL."""
+            # First URL completes quickly, last URL takes longer
+            delay = 0.1 if url == urls[0] else 0.5
+            await asyncio.sleep(delay)
+            download_completed[url] = True
+            if all(download_completed.values()):
+                nonlocal all_complete_time
+                all_complete_time = asyncio.get_event_loop().time()
+            return httpx.Response(200, content=zip_data)
+
+        async with respx.mock:
+            for url in urls:
+                respx.get(url.replace("http://", "https://")).mock(
+                    side_effect=lambda request, url=url: delayed_response(url)
+                )
+
+            results = []
+            async for url, data in file_source.stream_files(urls):
+                if first_yield_time is None:
+                    first_yield_time = asyncio.get_event_loop().time()
+                results.append((url, data))
+
+            # Verify we got all results
+            assert len(results) == 3
+
+            # Verify true streaming: first result was yielded BEFORE all downloads completed
+            # This would fail with TaskGroup which waits for all tasks before yielding
+            assert first_yield_time is not None
+            assert all_complete_time is not None
+            assert (
+                first_yield_time < all_complete_time
+            ), "First yield should happen before all downloads complete (true streaming)"
+
 
 class TestHelperMethods:
     """Test helper and utility methods."""
