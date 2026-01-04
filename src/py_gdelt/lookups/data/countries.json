@@ -1,0 +1,42 @@
+{
+  "US": {
+    "iso": "USA",
+    "name": "United States"
+  },
+  "UK": {
+    "iso": "GBR",
+    "name": "United Kingdom"
+  },
+  "FR": {
+    "iso": "FRA",
+    "name": "France"
+  },
+  "DE": {
+    "iso": "DEU",
+    "name": "Germany"
+  },
+  "CN": {
+    "iso": "CHN",
+    "name": "China"
+  },
+  "RU": {
+    "iso": "RUS",
+    "name": "Russia"
+  },
+  "IZ": {
+    "iso": "IRQ",
+    "name": "Iraq"
+  },
+  "AF": {
+    "iso": "AFG",
+    "name": "Afghanistan"
+  },
+  "BR": {
+    "iso": "BRA",
+    "name": "Brazil"
+  },
+  "IN": {
+    "iso": "IND",
+    "name": "India"
+  }
+}
