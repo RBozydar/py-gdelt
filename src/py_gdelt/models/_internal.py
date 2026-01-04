@@ -32,14 +32,29 @@ class _RawEvent:
     leading zeros in CAMEO codes (e.g., "010" for "Make statement, not specified").
     """
 
-    # Event identification
+    # Event identification (required fields)
     global_event_id: str
     sql_date: str
     month_year: str
     year: str
     fraction_date: str
 
-    # Actor 1 attributes
+    # Event attributes (required fields)
+    is_root_event: str
+    event_code: str
+    event_base_code: str
+    event_root_code: str
+    quad_class: str
+    goldstein_scale: str
+    num_mentions: str
+    num_sources: str
+    num_articles: str
+    avg_tone: str
+
+    # Metadata (required fields)
+    date_added: str
+
+    # Actor 1 attributes (optional fields)
     actor1_code: str | None = None
     actor1_name: str | None = None
     actor1_country_code: str | None = None
@@ -51,7 +66,7 @@ class _RawEvent:
     actor1_type2_code: str | None = None
     actor1_type3_code: str | None = None
 
-    # Actor 2 attributes
+    # Actor 2 attributes (optional fields)
     actor2_code: str | None = None
     actor2_name: str | None = None
     actor2_country_code: str | None = None
@@ -62,18 +77,6 @@ class _RawEvent:
     actor2_type1_code: str | None = None
     actor2_type2_code: str | None = None
     actor2_type3_code: str | None = None
-
-    # Event attributes
-    is_root_event: str
-    event_code: str
-    event_base_code: str
-    event_root_code: str
-    quad_class: str
-    goldstein_scale: str
-    num_mentions: str
-    num_sources: str
-    num_articles: str
-    avg_tone: str
 
     # Actor1 Geography
     actor1_geo_type: str | None = None
@@ -105,8 +108,7 @@ class _RawEvent:
     action_geo_lon: str | None = None
     action_geo_feature_id: str | None = None
 
-    # Metadata
-    date_added: str
+    # Metadata (optional fields)
     source_url: str | None = None
     is_translated: bool = False
 
