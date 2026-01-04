@@ -40,8 +40,8 @@ async def query_climate_mentions() -> None:
         # Create filter for recent data
         filter_obj = NGramsFilter(
             date_range=DateRange(
-                start=date(2024, 1, 1),
-                end=date(2024, 1, 2),
+                start=date(2026, 1, 1),
+                end=date(2026, 1, 2),
             ),
             ngram="climate",
             language="en",
@@ -76,7 +76,7 @@ async def stream_language_diversity() -> None:
     async with NGramsEndpoint() as endpoint:
         # Create filter for broad search
         filter_obj = NGramsFilter(
-            date_range=DateRange(start=date(2024, 1, 1)),
+            date_range=DateRange(start=date(2026, 1, 1)),
             ngram="peace",
         )
 
@@ -115,7 +115,7 @@ async def analyze_position_distribution() -> None:
 
     async with NGramsEndpoint() as endpoint:
         filter_obj = NGramsFilter(
-            date_range=DateRange(start=date(2024, 1, 1)),
+            date_range=DateRange(start=date(2026, 1, 1)),
             ngram="election",
             language="en",
         )
@@ -157,7 +157,7 @@ async def sync_example() -> None:
     endpoint = NGramsEndpoint()
 
     filter_obj = NGramsFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
+        date_range=DateRange(start=date(2026, 1, 1)),
         ngram="technology",
         language="en",
         max_position=20,  # Headlines only

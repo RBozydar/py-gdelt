@@ -23,9 +23,9 @@ async def example_basic_query() -> None:
     async with FileSource() as file_source:
         endpoint = EventsEndpoint(file_source=file_source)
 
-        # Create filter for USA events on January 1, 2024
+        # Create filter for USA events on January 1, 2026
         filter_obj = EventFilter(
-            date_range=DateRange(start=date(2024, 1, 1)),
+            date_range=DateRange(start=date(2026, 1, 1)),
             actor1_country="USA",
         )
 
@@ -59,8 +59,8 @@ async def example_streaming() -> None:
         # Create filter for a week of events
         filter_obj = EventFilter(
             date_range=DateRange(
-                start=date(2024, 1, 1),
-                end=date(2024, 1, 7),
+                start=date(2026, 1, 1),
+                end=date(2026, 1, 7),
             ),
         )
 
@@ -85,7 +85,7 @@ async def example_deduplication() -> None:
 
         # Create filter
         filter_obj = EventFilter(
-            date_range=DateRange(start=date(2024, 1, 1)),
+            date_range=DateRange(start=date(2026, 1, 1)),
         )
 
         # Query with deduplication
@@ -110,7 +110,7 @@ async def example_filtered_query() -> None:
 
         # Create filter with multiple criteria
         filter_obj = EventFilter(
-            date_range=DateRange(start=date(2024, 1, 1)),
+            date_range=DateRange(start=date(2026, 1, 1)),
             actor1_country="USA",
             actor2_country="RUS",
             min_tone=-5.0,  # Negative tone events only
@@ -138,7 +138,7 @@ async def example_sync_usage() -> None:
 
     # Create filter
     filter_obj = EventFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
+        date_range=DateRange(start=date(2026, 1, 1)),
     )
 
     # Synchronous query (blocks until complete)

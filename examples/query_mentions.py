@@ -37,8 +37,8 @@ async def query_mentions_batch():
         # Create filter with date range
         filter_obj = EventFilter(
             date_range=DateRange(
-                start=date(2024, 1, 1),
-                end=date(2024, 1, 7),
+                start=date(2026, 1, 1),
+                end=date(2026, 1, 7),
             )
         )
 
@@ -82,8 +82,8 @@ async def stream_mentions():
 
         filter_obj = EventFilter(
             date_range=DateRange(
-                start=date(2024, 1, 1),
-                end=date(2024, 1, 7),
+                start=date(2026, 1, 1),
+                end=date(2026, 1, 7),
             )
         )
 
@@ -134,7 +134,7 @@ def query_mentions_sync():
     )
 
     filter_obj = EventFilter(
-        date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 3))
+        date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 3))
     )
 
     global_event_id = "123456789"
@@ -162,7 +162,7 @@ async def analyze_mention_sources():
         )
 
         filter_obj = EventFilter(
-            date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
+            date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 7))
         )
 
         global_event_id = "123456789"

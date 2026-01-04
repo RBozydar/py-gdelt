@@ -20,11 +20,11 @@ from py_gdelt.sources import BigQuerySource
 
 async def query_events_example() -> None:
     """Query GDELT events for US-China interactions."""
-    # Create filter for events between USA and China in January 2024
+    # Create filter for events between USA and China in January 2026
     filter_obj = EventFilter(
         date_range=DateRange(
-            start=date(2024, 1, 1),
-            end=date(2024, 1, 7),
+            start=date(2026, 1, 1),
+            end=date(2026, 1, 7),
         ),
         actor1_country="USA",
         actor2_country="CHN",
@@ -63,7 +63,7 @@ async def query_gkg_example() -> None:
 
     # Create filter for climate change themes
     filter_obj = GKGFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
+        date_range=DateRange(start=date(2026, 1, 1)),
         themes=["ENV_CLIMATECHANGE"],
         country="USA",
     )
@@ -90,7 +90,7 @@ async def query_mentions_example() -> None:
     """Query event mentions for a specific event."""
     # First, get an event ID
     filter_obj = EventFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
+        date_range=DateRange(start=date(2026, 1, 1)),
         actor1_country="USA",
     )
 
@@ -113,7 +113,7 @@ async def query_mentions_example() -> None:
             count = 0
             async for mention in source.query_mentions(
                 global_event_id=event_id,
-                date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7)),
+                date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 7)),
             ):
                 count += 1
                 print(f"Mention #{count}:")

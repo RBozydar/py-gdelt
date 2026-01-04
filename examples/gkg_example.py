@@ -22,7 +22,7 @@ async def async_query_example() -> None:
 
         # Create a filter for climate change articles
         filter_obj = GKGFilter(
-            date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 1)),
+            date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 1)),
             themes=["ENV_CLIMATECHANGE"],
             min_tone=0.0,  # Only positive tone articles
         )
@@ -58,7 +58,7 @@ async def async_stream_example() -> None:
 
         # Filter for articles mentioning United Nations
         filter_obj = GKGFilter(
-            date_range=DateRange(start=date(2024, 1, 1)),
+            date_range=DateRange(start=date(2026, 1, 1)),
             organizations=["United Nations"],
         )
 
@@ -91,7 +91,7 @@ def sync_query_example() -> None:
             endpoint = GKGEndpoint(file_source=file_source)
 
             filter_obj = GKGFilter(
-                date_range=DateRange(start=date(2024, 1, 1)),
+                date_range=DateRange(start=date(2026, 1, 1)),
                 themes=["ECON_STOCKMARKET"],
             )
 
@@ -119,7 +119,7 @@ def sync_stream_example() -> None:
             endpoint = GKGEndpoint(file_source=file_source)
 
             filter_obj = GKGFilter(
-                date_range=DateRange(start=date(2024, 1, 1)),
+                date_range=DateRange(start=date(2026, 1, 1)),
                 country="USA",
             )
 

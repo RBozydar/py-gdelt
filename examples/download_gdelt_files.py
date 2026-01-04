@@ -89,7 +89,7 @@ async def download_recent_events() -> None:
 
 async def download_specific_file() -> None:
     """Download a specific GDELT file by URL."""
-    url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+    url = "http://data.gdeltproject.org/gdeltv2/20260101000000.export.CSV.zip"
 
     logger.info("Downloading specific file: %s", url)
 
@@ -137,8 +137,8 @@ async def list_available_files() -> None:
 
 async def download_with_custom_concurrency() -> None:
     """Download files with custom concurrency limits."""
-    start_date = datetime(2024, 1, 1, 0, 0, 0)
-    end_date = datetime(2024, 1, 1, 1, 0, 0)  # 1 hour of data
+    start_date = datetime(2026, 1, 1, 0, 0, 0)
+    end_date = datetime(2026, 1, 1, 1, 0, 0)  # 1 hour of data
 
     logger.info("Downloading with custom concurrency limit")
 
