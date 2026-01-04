@@ -1008,9 +1008,33 @@ class Parser(Protocol[T]):
 
 ### Phase 7: Real life integration tests
 There's code in examples folder but date ranges are off - update them to Jan 1st 2026 as starting point.
-- [ ] Design sample queries / tests using the APIs and files (BQ credentials might not be available)
-- [ ] Run the them and verify
-- [ ] Verify if the files from examples work
+- [x] Fix stream_files() TaskGroup bug (see plans/potential_memory_issue.md)
+- [x] Memory test verified - sliding window bounds memory to ~12MB for 50MB+ data
+- [x] Apply breaking changes from lookup refactoring (see plans/convert-gdelt-docs-to-lookups.md)
+- [x] Update examples for new lookup API (fips_to_iso3, entry.name, etc.)
+- [x] All 772 tests pass
+- [x] Lookup API verified working
+- [x] Real-life integration test: Trump+Venezuela query via DOC API (tests/integration_trump_venezuela.py)
+
+**SPIKE COMPLETE:** Memory analysis identified 1 real bug in `stream_files()`.
+See `plans/potential_memory_issue_v3.md` for final fix (sliding window with asyncio.wait).
+
+#### Coverage Matrix
+
+| Endpoint | Unit Tests | Example | Integration |
+|----------|------------|---------|-------------|
+| DOC | ✅ | ✅ basic_client_usage.py | ✅ integration_trump_venezuela.py |
+| Events | ✅ | ✅ events_endpoint_example.py | - |
+| Mentions | ✅ | ✅ query_mentions.py | - |
+| GKG | ✅ | ✅ gkg_example.py | - |
+| NGrams | ✅ | ✅ ngrams_example.py | - |
+| Context | ✅ | ❌ MISSING | - |
+| GEO | ✅ | ❌ MISSING | - |
+| TV/TV AI | ✅ | ❌ MISSING | - |
+| FileSource | ✅ | ✅ download_gdelt_files.py | - |
+| BigQuery | ✅ | ✅ bigquery_example.py | - |
+
+**Status:** All endpoints have unit tests. 3 endpoints missing examples (Context, GEO, TV).
 
 ---
 
