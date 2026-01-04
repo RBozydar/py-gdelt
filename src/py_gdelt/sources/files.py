@@ -21,7 +21,7 @@ import io
 import logging
 import re
 import zipfile
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterable
 from datetime import datetime, timedelta
 from typing import Final, Literal
 
@@ -65,7 +65,7 @@ class FileSource:
     """Downloads and extracts GDELT data files.
 
     This class provides async methods for downloading GDELT data files with:
-    - Concurrent downloads with semaphore-based rate limiting
+    - Concurrent downloads with sliding window for bounded memory usage
     - Automatic decompression (ZIP/GZ) with security checks
     - Intelligent caching (historical files permanent, recent files TTL)
     - Progress tracking and error handling
@@ -102,7 +102,6 @@ class FileSource:
             cache_dir=self.settings.cache_dir,
             default_ttl=self.settings.cache_ttl,
         )
-        self._semaphore = asyncio.Semaphore(self.settings.max_concurrent_downloads)
 
     async def __aenter__(self) -> "FileSource":
         """Async context manager entry."""
@@ -275,36 +274,34 @@ class FileSource:
             logger.debug("Cache hit for URL: %s", url)
             return cached_data
 
-        # Download with semaphore-based rate limiting
-        async with self._semaphore:
-            try:
-                logger.debug("Downloading: %s", secure_url)
-                response = await self.client.get(secure_url)
-                response.raise_for_status()
+        try:
+            logger.debug("Downloading: %s", secure_url)
+            response = await self.client.get(secure_url)
+            response.raise_for_status()
 
-                content = response.content
+            content = response.content
 
-                # Extract file date from URL for cache TTL decision
-                file_date = self._extract_date_from_url(url)
+            # Extract file date from URL for cache TTL decision
+            file_date = self._extract_date_from_url(url)
 
-                # Cache the raw data
-                self.cache.set(url, content, file_date=file_date)
+            # Cache the raw data
+            self.cache.set(url, content, file_date=file_date)
 
-                logger.debug("Downloaded %d bytes from %s", len(content), url)
-                return content
+            logger.debug("Downloaded %d bytes from %s", len(content), url)
+            return content
 
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    # Missing files are normal (not all 15-min slots exist)
-                    logger.debug("File not found (404): %s", secure_url)
-                    raise APIError(f"File not found: {url}") from e
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                # Missing files are normal (not all 15-min slots exist)
+                logger.debug("File not found (404): %s", secure_url)
+                raise APIError(f"File not found: {url}") from e
 
-                logger.error("HTTP error downloading %s: %s", secure_url, e)
-                raise APIUnavailableError(f"Failed to download file: {e}") from e
+            logger.error("HTTP error downloading %s: %s", secure_url, e)
+            raise APIUnavailableError(f"Failed to download file: {e}") from e
 
-            except httpx.RequestError as e:
-                logger.error("Request error downloading %s: %s", secure_url, e)
-                raise APIError(f"Network error downloading file: {e}") from e
+        except httpx.RequestError as e:
+            logger.error("Request error downloading %s: %s", secure_url, e)
+            raise APIError(f"Network error downloading file: {e}") from e
 
     async def download_and_extract(self, url: str) -> bytes:
         """Download and extract ZIP/GZ file, return decompressed content.
@@ -357,14 +354,17 @@ class FileSource:
 
     async def stream_files(
         self,
-        urls: list[str],
+        urls: Iterable[str],
         *,
         max_concurrent: int | None = None,
     ) -> AsyncIterator[tuple[str, bytes]]:
-        """Download multiple files concurrently, yielding (url, data) tuples.
+        """Stream downloads with bounded memory via sliding window.
+
+        Memory bounded to max_concurrent × max_file_size (~500MB default).
+        Natural backpressure: downloads throttle to caller's consumption rate.
 
         Args:
-            urls: List of URLs to download
+            urls: Iterable of URLs to download
             max_concurrent: Override default concurrent download limit
 
         Yields:
@@ -374,29 +374,39 @@ class FileSource:
             Failed downloads are logged but do not stop iteration.
             This is by design as GDELT files may have gaps.
         """
-        if max_concurrent is not None:
-            # Temporarily override semaphore limit
-            original_semaphore = self._semaphore
-            self._semaphore = asyncio.Semaphore(max_concurrent)
+        limit = (
+            max_concurrent
+            if max_concurrent is not None
+            else self.settings.max_concurrent_downloads
+        )
+        url_iter = iter(urls)
+        pending: set[asyncio.Task[tuple[str, bytes] | None]] = set()
+
+        def spawn() -> None:
+            """Add one task from iterator if available."""
+            if (url := next(url_iter, None)) is not None:
+                pending.add(asyncio.create_task(self._safe_download_and_extract(url)))
 
         try:
-            async with asyncio.TaskGroup() as tg:
-                # Create tasks for all downloads
-                tasks = [
-                    tg.create_task(self._safe_download_and_extract(url)) for url in urls
-                ]
+            # Prime with initial batch (only N tasks, not all URLs)
+            for _ in range(limit):
+                spawn()
 
-            # Yield successful results
-            for task in tasks:
-                result = task.result()
-                if result is not None:
-                    url, data = result
-                    yield url, data
+            while pending:
+                done, pending = await asyncio.wait(
+                    pending, return_when=asyncio.FIRST_COMPLETED
+                )
 
+                for task in done:
+                    spawn()  # Replenish immediately (keeps pipeline full)
+                    if (result := task.result()) is not None:
+                        yield result  # Backpressure point - pauses until consumed
         finally:
-            if max_concurrent is not None:
-                # Restore original semaphore
-                self._semaphore = original_semaphore
+            # CRITICAL: cleanup on early exit or error
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
 
     async def _safe_download_and_extract(self, url: str) -> tuple[str, bytes] | None:
         """Download and extract file with error handling (firewall pattern).
