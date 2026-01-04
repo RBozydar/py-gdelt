@@ -1,7 +1,7 @@
 [project]
 name = "py-gdelt"
 version = "0.1.0"
-description = "Using GDELT data"
+description = "Python client library for GDELT (Global Database of Events, Language, and Tone)"
 readme = "README.md"
 authors = [
     { name = "Robert Wasilewski", email = "wasilewski.robert@gmail.com" }
@@ -13,6 +13,8 @@ dependencies = [
     "pydantic-settings>=2.12.0",
     "tenacity>=9.1.2",
     "tqdm>=4.67.1",
+    "defusedxml>=0.7.1",
+    "anyio>=4.0",
 ]
 
 [build-system]
@@ -23,9 +25,78 @@ build-backend = "uv_build"
 bigquery = ["google-cloud-bigquery>=3.0"]
 pandas = ["pandas>=2.0"]
 dev = [
-    "pytest>=7.0",
-    "pytest-asyncio>=0.21",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
     "pytest-cov>=4.0",
     "mypy>=1.0",
-    "ruff>=0.1",
+    "ruff>=0.8",
+    "respx>=0.21",
+    "pip-audit>=2.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+    "ERA",    # eradicate (commented code)
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["py_gdelt"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_configs = true
+show_error_codes = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src/py_gdelt"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[dependency-groups]
+dev = [
+    "pip-audit>=2.10.0",
 ]
