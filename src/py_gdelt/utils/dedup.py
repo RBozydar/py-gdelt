@@ -8,7 +8,7 @@ GDELT captures news reports, not unique events. ~20% redundancy exists due to:
 This module provides memory-efficient deduplication using different strategies.
 """
 
-from collections.abc import Iterable, Iterator
+from collections.abc import AsyncIterator, Iterable, Iterator
 from enum import StrEnum
 from typing import Protocol, TypeVar
 
@@ -125,6 +125,42 @@ def deduplicate[T: HasDedupeFields](
     seen_keys: set[tuple] = set()
 
     for record in records:
+        key = get_dedup_key(record, strategy)
+
+        if key not in seen_keys:
+            seen_keys.add(key)
+            yield record
+
+
+async def deduplicate_async[T: HasDedupeFields](
+    records: AsyncIterator[T],
+    strategy: DedupeStrategy = DedupeStrategy.URL_DATE_LOCATION,
+) -> AsyncIterator[T]:
+    """Deduplicate async records using the specified strategy.
+
+    Async version of deduplicate() for use with async iterators.
+
+    GDELT captures news reports, not unique events. ~20% redundancy exists.
+    This function yields unique records based on the strategy's key fields.
+
+    The function is memory-efficient: it uses a generator and only stores
+    seen keys in memory, not the full records.
+
+    Args:
+        records: Async iterable of records to deduplicate
+        strategy: Deduplication strategy to use (default: URL_DATE_LOCATION)
+
+    Yields:
+        Unique records based on the strategy. First occurrence is kept,
+        subsequent duplicates are filtered out.
+
+    Example:
+        >>> async for event in deduplicate_async(fetch_events(...)):
+        ...     await process(event)
+    """
+    seen_keys: set[tuple] = set()
+
+    async for record in records:
         key = get_dedup_key(record, strategy)
 
         if key not in seen_keys:
