@@ -34,9 +34,9 @@ async def download_recent_events() -> None:
         max_concurrent_downloads=10,
     )
 
-    # Calculate date range (last 2 hours)
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(hours=2)
+    # Calculate date range (2 hours on Jan 1, 2026)
+    start_date = datetime(2026, 1, 1, 0, 0, 0)
+    end_date = datetime(2026, 1, 1, 2, 0, 0)
 
     logger.info("Downloading GDELT events from %s to %s", start_date, end_date)
 

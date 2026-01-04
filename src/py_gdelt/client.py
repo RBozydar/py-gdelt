@@ -28,7 +28,8 @@ Example:
     ...     articles = await client.doc.search("climate change")
     ...
     ...     # Access lookups
-    ...     event_name = client.lookups.cameo["14"]  # "PROTEST"
+    ...     event_entry = client.lookups.cameo["14"]
+    ...     event_name = event_entry.name  # "PROTEST"
 
     With custom configuration:
 

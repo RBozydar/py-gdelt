@@ -26,8 +26,7 @@ async def basic_usage() -> None:
     # Use the client as an async context manager
     async with GDELTClient() as client:
         # Query recent events from the US
-        today = date.today()
-        yesterday = today - timedelta(days=1)
+        yesterday = date(2026, 1, 1)
 
         print(f"\nQuerying events for {yesterday}...")
         event_filter = EventFilter(
@@ -90,15 +89,18 @@ async def lookup_usage() -> None:
         # Access CAMEO codes
         print("\nCAMEO Code Lookups:")
         cameo = client.lookups.cameo
-        print(f"  Code '01': {cameo.get('01', 'Unknown')}")
-        print(f"  Code '14': {cameo.get('14', 'Unknown')}")
+        entry_01 = cameo.get("01")
+        entry_14 = cameo.get("14")
+        print(f"  Code '01': {entry_01.name if entry_01 else 'Unknown'}")
+        print(f"  Code '14': {entry_14.name if entry_14 else 'Unknown'}")
 
         # Access country codes
         print("\nCountry Code Conversions:")
         countries = client.lookups.countries
         try:
-            iso = countries.fips_to_iso("US")
-            print(f"  FIPS 'US' -> ISO '{iso}'")
+            iso3 = countries.fips_to_iso3("US")
+            iso2 = countries.fips_to_iso2("US")
+            print(f"  FIPS 'US' -> ISO3 '{iso3}', ISO2 '{iso2}'")
         except Exception as e:
             print(f"  Error: {e}")
 
@@ -159,7 +161,7 @@ async def streaming_usage() -> None:
     print("=" * 60)
 
     async with GDELTClient() as client:
-        yesterday = date.today() - timedelta(days=1)
+        yesterday = date(2026, 1, 1)
 
         print(f"\nStreaming events from {yesterday} (first 5)...")
         event_filter = EventFilter(
@@ -187,7 +189,7 @@ def sync_usage() -> None:
 
     # Use the client as a sync context manager
     with GDELTClient() as client:
-        yesterday = date.today() - timedelta(days=1)
+        yesterday = date(2026, 1, 1)
 
         print(f"\nQuerying events for {yesterday} (synchronous)...")
         event_filter = EventFilter(
