@@ -947,64 +947,70 @@ class Parser(Protocol[T]):
 ## Implementation Checklist
 
 ### Phase 1: Core Infrastructure
-- [ ] Configure ruff + mypy strict in pyproject.toml
-- [ ] Add `defusedxml` to dependencies
-- [ ] Implement `GDELTSettings` class (env vars + TOML config file)
-- [ ] Build exception hierarchy (9 classes per spec)
-- [ ] Create `_security.py` module
-- [ ] Create consolidated `filters.py` with Pydantic models
-- [ ] Build `ResultStream[T]` and `FetchResult[T]` in models
-- [ ] Build cache module with TTL-based + immutable strategies
-- [ ] Build deduplication utility with 5 strategies
-- [ ] Bundle lookup data (CAMEO, themes, countries)
-- [ ] Implement lazy-loaded lookups with helper methods
-- [ ] Build common models (Location with `as_tuple()`/`as_wkt()`, ToneScores)
-- [ ] Add `py.typed` marker and `__all__` exports
+- [x] Configure ruff + mypy strict in pyproject.toml
+- [x] Add `defusedxml` to dependencies
+- [x] Implement `GDELTSettings` class (env vars + TOML config file)
+- [x] Build exception hierarchy (9 classes per spec)
+- [x] Create `_security.py` module
+- [x] Create consolidated `filters.py` with Pydantic models
+- [x] Build `ResultStream[T]` and `FetchResult[T]` in models
+- [x] Build cache module with TTL-based + immutable strategies
+- [x] Build deduplication utility with 5 strategies
+- [x] Bundle lookup data (CAMEO, themes, countries)
+- [x] Implement lazy-loaded lookups with helper methods
+- [x] Build common models (Location with `as_tuple()`/`as_wkt()`, ToneScores)
+- [x] Add `py.typed` marker and `__all__` exports
 
 ### Phase 2: REST API Endpoints
-- [ ] Build `BaseEndpoint` with httpx (HTTPS only)
-- [ ] Implement `DocEndpoint` (async + sync wrappers)
-- [ ] Implement `GeoEndpoint` (async + sync wrappers)
-- [ ] Implement `ContextEndpoint` (async + sync wrappers)
-- [ ] Implement `TVEndpoint` and `TVAIEndpoint` (async + sync wrappers)
-- [ ] Create Pydantic models for API responses
-- [ ] Add URL validation against allowed hosts
+- [x] Build `BaseEndpoint` with httpx (HTTPS only)
+- [x] Implement `DocEndpoint` (async + sync wrappers)
+- [x] Implement `GeoEndpoint` (async + sync wrappers)
+- [x] Implement `ContextEndpoint` (async + sync wrappers)
+- [x] Implement `TVEndpoint` and `TVAIEndpoint` (async + sync wrappers)
+- [x] Create Pydantic models for API responses
+- [x] Add URL validation against allowed hosts
 
 ### Phase 3: File Parsers & Sources
-- [ ] Build Events parser (v1/v2 with version detection)
-- [ ] Build Mentions parser
-- [ ] Build GKG parser (v1/v2 with version detection, defusedxml)
-- [ ] Build NGrams JSON parser
-- [ ] Implement `FileSource` with secure ZIP extraction
-- [ ] Add decompression size/ratio limits
-- [ ] Add line/field length limits
-- [ ] Create internal dataclasses (`models/_internal.py`)
-- [ ] Include `original_record_id` parsing for translated records
+- [x] Build Events parser (v1/v2 with version detection)
+- [x] Build Mentions parser
+- [x] Build GKG parser (v1/v2 with version detection, defusedxml)
+- [x] Build NGrams JSON parser
+- [x] Implement `FileSource` with secure ZIP extraction
+- [x] Add decompression size/ratio limits
+- [x] Add line/field length limits
+- [x] Create internal dataclasses (`models/_internal.py`)
+- [x] Include `original_record_id` parsing for translated records
 
 ### Phase 4: BigQuery Integration
-- [ ] Build `BigQuerySource`
-- [ ] Implement parameterized queries (NO string formatting)
-- [ ] Add column allowlist validation
-- [ ] Add credential path validation
-- [ ] Build result streaming via `run_in_executor`
+- [x] Build `BigQuerySource`
+- [x] Implement parameterized queries (NO string formatting)
+- [x] Add column allowlist validation
+- [x] Add credential path validation
+- [x] Build result streaming via `run_in_executor`
 
 ### Phase 5: Multi-Source Endpoints
-- [ ] Build `DataFetcher` (files primary, BQ fallback only when configured)
-- [ ] Implement fallback logic (files → BigQuery on 429/error)
-- [ ] Build `EventsEndpoint` with dedup support
-- [ ] Build `MentionsEndpoint`
-- [ ] Build `GKGEndpoint`
-- [ ] Build `NGramsEndpoint`
-- [ ] Implement configurable error policy
-- [ ] Add structured logging for fallback events
+- [x] Build `DataFetcher` (files primary, BQ fallback only when configured)
+- [x] Implement fallback logic (files → BigQuery on 429/error)
+- [x] Build `EventsEndpoint` with dedup support
+- [x] Build `MentionsEndpoint`
+- [x] Build `GKGEndpoint`
+- [x] Build `NGramsEndpoint`
+- [x] Implement configurable error policy
+- [x] Add structured logging for fallback events
 
 ### Phase 6: Integration
-- [ ] Build `GDELTClient` with async context manager
-- [ ] Wire endpoint namespaces
-- [ ] Write integration tests (with respx mocking)
-- [ ] Write README with security best practices
-- [ ] Run `pip-audit` security scan
-- [ ] Security-focused code review
+- [x] Build `GDELTClient` with async context manager
+- [x] Wire endpoint namespaces
+- [x] Write integration tests (with respx mocking)
+- [x] Write README with security best practices
+- [x] Run `pip-audit` security scan (no vulnerabilities found)
+- [x] Security-focused code review
+
+### Phase 7: Real life integration tests
+There's code in examples folder but date ranges are off - update them to Jan 1st 2026 as starting point.
+- [ ] Design sample queries / tests using the APIs and files (BQ credentials might not be available)
+- [ ] Run the them and verify
+- [ ] Verify if the files from examples work
 
 ---
 
