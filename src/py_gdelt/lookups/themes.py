@@ -9,6 +9,7 @@ import json
 from importlib.resources import files
 
 from py_gdelt.exceptions import InvalidCodeError
+from py_gdelt.lookups.models import GKGThemeEntry
 
 __all__ = ["GKGThemes"]
 
@@ -25,34 +26,65 @@ class GKGThemes:
 
     def __init__(self) -> None:
         """Initialize GKGThemes with lazy-loaded data."""
-        self._themes: dict[str, dict[str, str]] | None = None
+        self._themes: dict[str, GKGThemeEntry] | None = None
+
+    def _load_json(self, filename: str) -> dict[str, dict]:
+        """Load JSON data from package resources."""
+        data_path = files("py_gdelt.lookups.data").joinpath(filename)
+        return json.loads(data_path.read_text())
 
     @property
-    def _themes_data(self) -> dict[str, dict[str, str]]:
+    def _themes_data(self) -> dict[str, GKGThemeEntry]:
         """Lazy load GKG themes data."""
         if self._themes is None:
-            data_path = files("py_gdelt.lookups.data").joinpath("gkg_themes.json")
-            self._themes = json.loads(data_path.read_text())
+            raw_data = self._load_json("gkg_themes.json")
+            self._themes = {
+                theme: GKGThemeEntry(**data) for theme, data in raw_data.items()
+            }
         return self._themes
 
-    def __getitem__(self, theme: str) -> dict[str, str]:
+    def __contains__(self, theme: str) -> bool:
         """
-        Get metadata for GKG theme.
+        Check if theme exists.
+
+        Args:
+            theme: GKG theme code to check
+
+        Returns:
+            True if theme exists, False otherwise
+        """
+        return theme in self._themes_data
+
+    def __getitem__(self, theme: str) -> GKGThemeEntry:
+        """
+        Get full entry for theme.
 
         Args:
             theme: GKG theme code (e.g., "ENV_CLIMATECHANGE")
 
         Returns:
-            Dictionary containing theme metadata (category, description, etc.)
+            Full GKG theme entry with metadata
 
         Raises:
             KeyError: If theme is not found
         """
         return self._themes_data[theme]
 
+    def get(self, theme: str) -> GKGThemeEntry | None:
+        """
+        Get entry for theme, or None if not found.
+
+        Args:
+            theme: GKG theme code (e.g., "ENV_CLIMATECHANGE")
+
+        Returns:
+            GKG theme entry, or None if theme not found
+        """
+        return self._themes_data.get(theme)
+
     def search(self, query: str) -> list[str]:
         """
-        Search for themes by substring (case-insensitive).
+        Search themes by description (substring match).
 
         Args:
             query: Search query string
@@ -60,8 +92,12 @@ class GKGThemes:
         Returns:
             List of theme codes matching the query
         """
-        query_upper = query.upper()
-        return [theme for theme in self._themes_data if query_upper in theme.upper()]
+        query_lower = query.lower()
+        return [
+            theme
+            for theme, entry in self._themes_data.items()
+            if query_lower in entry.description.lower()
+        ]
 
     def get_category(self, theme: str) -> str | None:
         """
@@ -73,10 +109,8 @@ class GKGThemes:
         Returns:
             Category name, or None if theme not found
         """
-        theme_data = self._themes_data.get(theme)
-        if theme_data is None:
-            return None
-        return theme_data.get("category")
+        entry = self._themes_data.get(theme)
+        return entry.category if entry else None
 
     def list_by_category(self, category: str) -> list[str]:
         """
@@ -90,8 +124,8 @@ class GKGThemes:
         """
         return [
             theme
-            for theme, data in self._themes_data.items()
-            if data.get("category") == category
+            for theme, entry in self._themes_data.items()
+            if entry.category == category
         ]
 
     def validate(self, theme: str) -> None:

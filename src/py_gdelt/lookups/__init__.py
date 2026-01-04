@@ -28,11 +28,11 @@ class Lookups:
 
     Example:
         >>> lookups = Lookups()
-        >>> lookups.cameo["01"]
+        >>> lookups.cameo["01"].name
         'MAKE PUBLIC STATEMENT'
         >>> lookups.themes.get_category("ENV_CLIMATECHANGE")
         'Environment'
-        >>> lookups.countries.fips_to_iso("US")
+        >>> lookups.countries.fips_to_iso3("US")
         'USA'
     """
 

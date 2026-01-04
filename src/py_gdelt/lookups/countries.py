@@ -9,6 +9,7 @@ import json
 from importlib.resources import files
 
 from py_gdelt.exceptions import InvalidCodeError
+from py_gdelt.lookups.models import CountryEntry
 
 __all__ = ["Countries"]
 
@@ -25,29 +26,75 @@ class Countries:
 
     def __init__(self) -> None:
         """Initialize Countries with lazy-loaded data."""
-        self._countries: dict[str, dict[str, str]] | None = None
+        self._countries: dict[str, CountryEntry] | None = None
         self._iso_to_fips_map: dict[str, str] | None = None
 
+    def _load_json(self, filename: str) -> dict[str, dict]:
+        """Load JSON data from package resources."""
+        data_path = files("py_gdelt.lookups.data").joinpath(filename)
+        return json.loads(data_path.read_text())
+
     @property
-    def _countries_data(self) -> dict[str, dict[str, str]]:
+    def _countries_data(self) -> dict[str, CountryEntry]:
         """Lazy load countries data (FIPS as key)."""
         if self._countries is None:
-            data_path = files("py_gdelt.lookups.data").joinpath("countries.json")
-            self._countries = json.loads(data_path.read_text())
+            raw_data = self._load_json("countries.json")
+            self._countries = {
+                code: CountryEntry(**data) for code, data in raw_data.items()
+            }
         return self._countries
 
     @property
     def _iso_to_fips_mapping(self) -> dict[str, str]:
-        """Lazy build reverse mapping from ISO to FIPS."""
+        """Lazy build reverse mapping from ISO3 to FIPS."""
         if self._iso_to_fips_map is None:
             self._iso_to_fips_map = {
-                data["iso"]: fips for fips, data in self._countries_data.items()
+                entry.iso3: fips for fips, entry in self._countries_data.items()
             }
         return self._iso_to_fips_map
 
-    def fips_to_iso(self, fips: str) -> str | None:
+    def __contains__(self, code: str) -> bool:
         """
-        Convert FIPS code to ISO code.
+        Check if country code exists.
+
+        Args:
+            code: Country code (FIPS or ISO)
+
+        Returns:
+            True if code exists, False otherwise
+        """
+        return code.upper() in self._countries_data
+
+    def __getitem__(self, code: str) -> CountryEntry:
+        """
+        Get full entry for country code.
+
+        Args:
+            code: Country code (FIPS)
+
+        Returns:
+            Full country entry with metadata
+
+        Raises:
+            KeyError: If code is not found
+        """
+        return self._countries_data[code.upper()]
+
+    def get(self, code: str) -> CountryEntry | None:
+        """
+        Get entry for country code, or None if not found.
+
+        Args:
+            code: Country code (FIPS)
+
+        Returns:
+            Country entry, or None if code not found
+        """
+        return self._countries_data.get(code.upper())
+
+    def fips_to_iso3(self, fips: str) -> str | None:
+        """
+        Convert FIPS code to ISO 3166-1 alpha-3.
 
         Args:
             fips: FIPS 10-4 country code (e.g., "US", "UK")
@@ -55,10 +102,21 @@ class Countries:
         Returns:
             ISO 3166-1 alpha-3 code (e.g., "USA", "GBR"), or None if not found
         """
-        country_data = self._countries_data.get(fips)
-        if country_data is None:
-            return None
-        return country_data.get("iso")
+        entry = self._countries_data.get(fips.upper())
+        return entry.iso3 if entry else None
+
+    def fips_to_iso2(self, fips: str) -> str | None:
+        """
+        Convert FIPS code to ISO 3166-1 alpha-2.
+
+        Args:
+            fips: FIPS 10-4 country code (e.g., "US", "UK")
+
+        Returns:
+            ISO 3166-1 alpha-2 code (e.g., "US", "GB"), or None if not found
+        """
+        entry = self._countries_data.get(fips.upper())
+        return entry.iso2 if entry else None
 
     def iso_to_fips(self, iso: str) -> str | None:
         """
@@ -83,16 +141,16 @@ class Countries:
             Country name, or None if code not found
         """
         # Try FIPS first
-        country_data = self._countries_data.get(code)
-        if country_data is not None:
-            return country_data.get("name")
+        entry = self._countries_data.get(code.upper())
+        if entry is not None:
+            return entry.name
 
-        # Try ISO
-        fips = self._iso_to_fips_mapping.get(code)
+        # Try ISO3
+        fips = self._iso_to_fips_mapping.get(code.upper())
         if fips is not None:
-            country_data = self._countries_data.get(fips)
-            if country_data is not None:
-                return country_data.get("name")
+            entry = self._countries_data.get(fips)
+            if entry is not None:
+                return entry.name
 
         return None
 

@@ -10,6 +10,7 @@ from importlib.resources import files
 from typing import Final
 
 from py_gdelt.exceptions import InvalidCodeError
+from py_gdelt.lookups.models import CAMEOCodeEntry, GoldsteinEntry
 
 __all__ = ["CAMEOCodes"]
 
@@ -38,55 +39,76 @@ class CAMEOCodes:
 
     def __init__(self) -> None:
         """Initialize CAMEOCodes with lazy-loaded data."""
-        self._codes: dict[str, str] | None = None
-        self._goldstein: dict[str, float] | None = None
+        self._codes: dict[str, CAMEOCodeEntry] | None = None
+        self._goldstein: dict[str, GoldsteinEntry] | None = None
+
+    def _load_json(self, filename: str) -> dict[str, dict]:
+        """Load JSON data from package resources."""
+        data_path = files("py_gdelt.lookups.data").joinpath(filename)
+        return json.loads(data_path.read_text())
 
     @property
-    def _codes_data(self) -> dict[str, str]:
+    def _codes_data(self) -> dict[str, CAMEOCodeEntry]:
         """Lazy load CAMEO codes data."""
         if self._codes is None:
-            data_path = files("py_gdelt.lookups.data").joinpath("cameo_codes.json")
-            self._codes = json.loads(data_path.read_text())
+            raw_data = self._load_json("cameo_codes.json")
+            self._codes = {
+                code: CAMEOCodeEntry(**data) for code, data in raw_data.items()
+            }
         return self._codes
 
     @property
-    def _goldstein_data(self) -> dict[str, float]:
+    def _goldstein_data(self) -> dict[str, GoldsteinEntry]:
         """Lazy load Goldstein scale data."""
         if self._goldstein is None:
-            data_path = files("py_gdelt.lookups.data").joinpath("cameo_goldstein.json")
-            self._goldstein = json.loads(data_path.read_text())
+            raw_data = self._load_json("cameo_goldstein.json")
+            self._goldstein = {
+                code: GoldsteinEntry(**data) for code, data in raw_data.items()
+            }
         return self._goldstein
 
-    def __getitem__(self, code: str) -> str:
+    def __contains__(self, code: str) -> bool:
         """
-        Get description for CAMEO code.
+        Check if code exists.
+
+        Args:
+            code: CAMEO code to check
+
+        Returns:
+            True if code exists, False otherwise
+        """
+        return code in self._codes_data
+
+    def __getitem__(self, code: str) -> CAMEOCodeEntry:
+        """
+        Get full entry for CAMEO code.
 
         Args:
             code: CAMEO code (e.g., "01", "141", "20")
 
         Returns:
-            Description of the event code
+            Full CAMEO code entry with metadata
 
         Raises:
             KeyError: If code is not found
         """
         return self._codes_data[code]
 
-    def get_description(self, code: str) -> str | None:
+    def get(self, code: str) -> CAMEOCodeEntry | None:
         """
-        Get description for CAMEO code, returning None if not found.
+        Get entry for CAMEO code, or None if not found.
 
         Args:
             code: CAMEO code (e.g., "01", "141", "20")
 
         Returns:
-            Description of the event code, or None if code not found
+            CAMEO code entry, or None if code not found
         """
         return self._codes_data.get(code)
 
-    def get_goldstein(self, code: str) -> float | None:
+    def get_goldstein(self, code: str) -> GoldsteinEntry | None:
         """
-        Get Goldstein scale value for CAMEO code.
+        Get Goldstein entry for CAMEO code.
 
         The Goldstein scale ranges from -10 (most conflictual) to +10 (most cooperative).
 
@@ -94,9 +116,27 @@ class CAMEOCodes:
             code: CAMEO code (e.g., "01", "141", "20")
 
         Returns:
-            Goldstein scale value, or None if code not found
+            Goldstein entry with value and description, or None if code not found
         """
         return self._goldstein_data.get(code)
+
+    def search(self, query: str) -> list[str]:
+        """
+        Search codes by name/description (substring match).
+
+        Args:
+            query: Search query string
+
+        Returns:
+            List of CAMEO codes matching the query
+        """
+        query_lower = query.lower()
+        return [
+            code
+            for code, entry in self._codes_data.items()
+            if query_lower in entry.name.lower()
+            or query_lower in entry.description.lower()
+        ]
 
     def is_conflict(self, code: str) -> bool:
         """

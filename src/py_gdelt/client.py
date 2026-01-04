@@ -519,12 +519,13 @@ class GDELTClient:
         Example:
             >>> async with GDELTClient() as client:
             ...     # CAMEO codes
-            ...     event_name = client.lookups.cameo["14"]  # "PROTEST"
+            ...     event_entry = client.lookups.cameo["14"]
+            ...     event_name = event_entry.name  # "PROTEST"
             ...
             ...     # GKG themes
             ...     category = client.lookups.themes.get_category("ENV_CLIMATECHANGE")
             ...
             ...     # Country codes
-            ...     iso_code = client.lookups.countries.fips_to_iso("US")  # "USA"
+            ...     iso_code = client.lookups.countries.fips_to_iso3("US")  # "USA"
         """
         return Lookups()

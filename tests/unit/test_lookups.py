@@ -15,18 +15,24 @@ class TestCAMEOCodes:
     """Tests for CAMEOCodes class."""
 
     def test_getitem_valid_code(self) -> None:
-        """Test retrieving description via __getitem__ with valid code."""
+        """Test retrieving entry via __getitem__ with valid code."""
         cameo = CAMEOCodes()
-        assert cameo["01"] == "MAKE PUBLIC STATEMENT"
-        assert cameo["14"] == "PROTEST"
-        assert cameo["20"] == "USE UNCONVENTIONAL MASS VIOLENCE"
+        entry = cameo["01"]
+        assert entry.name == "MAKE PUBLIC STATEMENT"
+        entry = cameo["14"]
+        assert entry.name == "PROTEST"
+        entry = cameo["20"]
+        assert entry.name == "USE UNCONVENTIONAL MASS VIOLENCE"
 
     def test_getitem_valid_three_digit_code(self) -> None:
-        """Test retrieving description for three-digit codes."""
+        """Test retrieving entry for three-digit codes."""
         cameo = CAMEOCodes()
-        assert cameo["010"] == "MAKE STATEMENT, NOT SPECIFIED BELOW"
-        assert cameo["141"] == "DEMONSTRATE OR RALLY"
-        assert cameo["204"] == "USE WEAPONS OF MASS DESTRUCTION"
+        entry = cameo["010"]
+        assert entry.name == "Make statement, not specified below"
+        entry = cameo["141"]
+        assert entry.name == "Demonstrate or rally, not specified below"
+        entry = cameo["204"]
+        assert entry.name == "Use weapons of mass destruction, not specified below"
 
     def test_getitem_invalid_code_raises_key_error(self) -> None:
         """Test that invalid code raises KeyError."""
@@ -34,25 +40,69 @@ class TestCAMEOCodes:
         with pytest.raises(KeyError):
             _ = cameo["99"]
 
-    def test_get_description_valid_code(self) -> None:
-        """Test get_description returns correct description."""
+    def test_get_valid_code(self) -> None:
+        """Test get() returns correct entry."""
         cameo = CAMEOCodes()
-        assert cameo.get_description("01") == "MAKE PUBLIC STATEMENT"
-        assert cameo.get_description("14") == "PROTEST"
+        entry = cameo.get("01")
+        assert entry is not None
+        assert entry.name == "MAKE PUBLIC STATEMENT"
+        entry = cameo.get("14")
+        assert entry is not None
+        assert entry.name == "PROTEST"
 
-    def test_get_description_invalid_code_returns_none(self) -> None:
-        """Test get_description returns None for invalid code."""
+    def test_get_invalid_code_returns_none(self) -> None:
+        """Test get() returns None for invalid code."""
         cameo = CAMEOCodes()
-        assert cameo.get_description("99") is None
-        assert cameo.get_description("INVALID") is None
+        assert cameo.get("99") is None
+        assert cameo.get("INVALID") is None
+
+    def test_contains_valid_code(self) -> None:
+        """Test __contains__ for valid codes."""
+        cameo = CAMEOCodes()
+        assert "01" in cameo
+        assert "141" in cameo
+
+    def test_contains_invalid_code(self) -> None:
+        """Test __contains__ for invalid codes."""
+        cameo = CAMEOCodes()
+        assert "99" not in cameo
+        assert "INVALID" not in cameo
+
+    def test_search_finds_matches(self) -> None:
+        """Test search finds codes by name/description."""
+        cameo = CAMEOCodes()
+        results = cameo.search("statement")
+        assert len(results) > 0
+        assert "01" in results
+
+    def test_search_case_insensitive(self) -> None:
+        """Test search is case insensitive."""
+        cameo = CAMEOCodes()
+        results_lower = cameo.search("statement")
+        results_upper = cameo.search("STATEMENT")
+        assert results_lower == results_upper
+
+    def test_search_no_matches(self) -> None:
+        """Test search returns empty list when no matches."""
+        cameo = CAMEOCodes()
+        results = cameo.search("NONEXISTENT_XYZ")
+        assert results == []
 
     def test_get_goldstein_valid_code(self) -> None:
-        """Test get_goldstein returns correct Goldstein scale value."""
+        """Test get_goldstein returns correct Goldstein entry."""
         cameo = CAMEOCodes()
-        assert cameo.get_goldstein("01") == 0.0
-        assert cameo.get_goldstein("02") == 1.0
-        assert cameo.get_goldstein("14") == -5.0
-        assert cameo.get_goldstein("20") == -10.0
+        entry = cameo.get_goldstein("01")
+        assert entry is not None
+        assert entry.value == 0.0
+        entry = cameo.get_goldstein("02")
+        assert entry is not None
+        assert entry.value == 1.0
+        entry = cameo.get_goldstein("14")
+        assert entry is not None
+        assert entry.value == -5.0
+        entry = cameo.get_goldstein("20")
+        assert entry is not None
+        assert entry.value == -10.0
 
     def test_get_goldstein_invalid_code_returns_none(self) -> None:
         """Test get_goldstein returns None for invalid code."""
@@ -133,11 +183,11 @@ class TestGKGThemes:
     """Tests for GKGThemes class."""
 
     def test_getitem_valid_theme(self) -> None:
-        """Test retrieving theme metadata via __getitem__."""
+        """Test retrieving theme entry via __getitem__."""
         themes = GKGThemes()
-        result = themes["ENV_CLIMATECHANGE"]
-        assert result["category"] == "Environment"
-        assert "description" in result
+        entry = themes["ENV_CLIMATECHANGE"]
+        assert entry.category == "Environment"
+        assert entry.description == "Climate change and global warming"
 
     def test_getitem_invalid_theme_raises_key_error(self) -> None:
         """Test that invalid theme raises KeyError."""
@@ -145,18 +195,41 @@ class TestGKGThemes:
         with pytest.raises(KeyError):
             _ = themes["INVALID_THEME"]
 
-    def test_search_returns_matching_themes(self) -> None:
-        """Test search returns themes matching substring query."""
+    def test_contains_valid_theme(self) -> None:
+        """Test __contains__ for valid themes."""
         themes = GKGThemes()
-        results = themes.search("HEALTH")
+        assert "ENV_CLIMATECHANGE" in themes
+        assert "HEALTH_PANDEMIC" in themes
+
+    def test_contains_invalid_theme(self) -> None:
+        """Test __contains__ for invalid themes."""
+        themes = GKGThemes()
+        assert "INVALID_THEME" not in themes
+
+    def test_get_valid_theme(self) -> None:
+        """Test get() returns correct entry."""
+        themes = GKGThemes()
+        entry = themes.get("ENV_CLIMATECHANGE")
+        assert entry is not None
+        assert entry.category == "Environment"
+
+    def test_get_invalid_theme_returns_none(self) -> None:
+        """Test get() returns None for invalid theme."""
+        themes = GKGThemes()
+        assert themes.get("INVALID_THEME") is None
+
+    def test_search_returns_matching_themes(self) -> None:
+        """Test search returns themes matching description substring."""
+        themes = GKGThemes()
+        results = themes.search("pandemic")
         assert len(results) > 0
-        assert all("HEALTH" in theme for theme in results)
+        assert "HEALTH_PANDEMIC" in results
 
     def test_search_case_insensitive(self) -> None:
         """Test search is case-insensitive."""
         themes = GKGThemes()
-        results_upper = themes.search("HEALTH")
-        results_lower = themes.search("health")
+        results_upper = themes.search("PANDEMIC")
+        results_lower = themes.search("pandemic")
         assert results_upper == results_lower
 
     def test_search_no_matches_returns_empty_list(self) -> None:
@@ -214,18 +287,67 @@ class TestGKGThemes:
 class TestCountries:
     """Tests for Countries class."""
 
-    def test_fips_to_iso_valid_code(self) -> None:
-        """Test fips_to_iso conversion with valid FIPS code."""
+    def test_fips_to_iso3_valid_code(self) -> None:
+        """Test fips_to_iso3 conversion with valid FIPS code."""
         countries = Countries()
-        assert countries.fips_to_iso("US") == "USA"
-        assert countries.fips_to_iso("UK") == "GBR"
-        assert countries.fips_to_iso("IZ") == "IRQ"
+        assert countries.fips_to_iso3("US") == "USA"
+        assert countries.fips_to_iso3("UK") == "GBR"
+        assert countries.fips_to_iso3("IZ") == "IRQ"
 
-    def test_fips_to_iso_invalid_code_returns_none(self) -> None:
-        """Test fips_to_iso returns None for invalid FIPS code."""
+    def test_fips_to_iso3_invalid_code_returns_none(self) -> None:
+        """Test fips_to_iso3 returns None for invalid FIPS code."""
         countries = Countries()
-        assert countries.fips_to_iso("XX") is None
-        assert countries.fips_to_iso("INVALID") is None
+        assert countries.fips_to_iso3("XX") is None
+        assert countries.fips_to_iso3("INVALID") is None
+
+    def test_fips_to_iso2_valid_code(self) -> None:
+        """Test fips_to_iso2 conversion with valid FIPS code."""
+        countries = Countries()
+        assert countries.fips_to_iso2("US") == "US"
+        assert countries.fips_to_iso2("UK") == "GB"
+
+    def test_fips_to_iso2_invalid_code_returns_none(self) -> None:
+        """Test fips_to_iso2 returns None for invalid FIPS code."""
+        countries = Countries()
+        assert countries.fips_to_iso2("XX") is None
+
+    def test_contains_valid_code(self) -> None:
+        """Test __contains__ for valid FIPS codes."""
+        countries = Countries()
+        assert "US" in countries
+        assert "us" in countries  # Case insensitive
+        assert "UK" in countries
+
+    def test_contains_invalid_code(self) -> None:
+        """Test __contains__ for invalid codes."""
+        countries = Countries()
+        assert "XXX" not in countries
+
+    def test_getitem_valid_code(self) -> None:
+        """Test __getitem__ returns entry."""
+        countries = Countries()
+        entry = countries["US"]
+        assert entry.name == "United States"
+        assert entry.iso3 == "USA"
+        assert entry.iso2 == "US"
+
+    def test_getitem_invalid_code_raises_key_error(self) -> None:
+        """Test __getitem__ raises KeyError for invalid code."""
+        countries = Countries()
+        with pytest.raises(KeyError):
+            _ = countries["XXX"]
+
+    def test_get_valid_code(self) -> None:
+        """Test get() returns correct entry."""
+        countries = Countries()
+        entry = countries.get("US")
+        assert entry is not None
+        assert entry.name == "United States"
+
+    def test_get_invalid_code_returns_none(self) -> None:
+        """Test get() returns None for invalid code."""
+        countries = Countries()
+        assert countries.get("XXX") is None
 
     def test_iso_to_fips_valid_code(self) -> None:
         """Test iso_to_fips conversion with valid ISO code."""
@@ -280,7 +402,7 @@ class TestCountries:
         """Test FIPS -> ISO -> FIPS roundtrip conversion."""
         countries = Countries()
         fips_code = "US"
-        iso_code = countries.fips_to_iso(fips_code)
+        iso_code = countries.fips_to_iso3(fips_code)
         assert iso_code is not None
         roundtrip_fips = countries.iso_to_fips(iso_code)
         assert roundtrip_fips == fips_code
@@ -336,8 +458,9 @@ class TestLookups:
         """Test that all lookup functionality is accessible via Lookups."""
         lookups = Lookups()
         # Test CAMEO access
-        assert lookups.cameo["01"] == "MAKE PUBLIC STATEMENT"
+        entry = lookups.cameo["01"]
+        assert entry.name == "MAKE PUBLIC STATEMENT"
         # Test themes access
         assert lookups.themes.get_category("HEALTH_PANDEMIC") == "Health"
         # Test countries access
-        assert lookups.countries.fips_to_iso("US") == "USA"
+        assert lookups.countries.fips_to_iso3("US") == "USA"
