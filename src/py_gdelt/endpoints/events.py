@@ -51,7 +51,11 @@ from typing import TYPE_CHECKING, Any
 from py_gdelt.filters import EventFilter
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Event
-from py_gdelt.utils.dedup import DedupeStrategy, deduplicate
+from py_gdelt.utils.dedup import (
+    DedupeStrategy,
+    deduplicate as apply_dedup,
+    deduplicate_async as apply_dedup_async,
+)
 
 if TYPE_CHECKING:
     from py_gdelt.models._internal import _RawEvent
@@ -190,7 +194,7 @@ class EventsEndpoint:
         if deduplicate and dedupe_strategy is not None:
             original_count = len(raw_events_list)
             # Convert to iterator, deduplicate, then back to list
-            raw_events_list = list(deduplicate(iter(raw_events_list), dedupe_strategy))
+            raw_events_list = list(apply_dedup(iter(raw_events_list), dedupe_strategy))
             logger.info(
                 "Deduplicated %d events to %d unique (strategy=%s)",
                 original_count,
@@ -264,7 +268,7 @@ class EventsEndpoint:
         # Apply deduplication if requested
         if deduplicate and dedupe_strategy is not None:
             logger.debug("Applying deduplication (strategy=%s)", dedupe_strategy)
-            raw_events = deduplicate(raw_events, dedupe_strategy)  # type: ignore[assignment]
+            raw_events = apply_dedup_async(raw_events, dedupe_strategy)  # type: ignore[assignment]
 
         # Convert _RawEvent to Event at yield boundary
         count = 0

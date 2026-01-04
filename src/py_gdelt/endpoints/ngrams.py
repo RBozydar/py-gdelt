@@ -132,7 +132,8 @@ class NGramsEndpoint:
         Shared resources are not closed to allow reuse.
         """
         if self._owns_sources:
-            await self._file_source.close()
+            # FileSource uses context manager protocol, manually call __aexit__
+            await self._file_source.__aexit__(None, None, None)
 
     async def __aenter__(self) -> NGramsEndpoint:
         """Async context manager entry.
