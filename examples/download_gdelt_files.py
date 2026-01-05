@@ -7,7 +7,7 @@ for a specific date range, with proper error handling and progress tracking.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 from py_gdelt.config import GDELTSettings
@@ -89,7 +89,7 @@ async def download_recent_events() -> None:
 
 async def download_specific_file() -> None:
     """Download a specific GDELT file by URL."""
-    url = "http://data.gdeltproject.org/gdeltv2/20260101000000.export.CSV.zip"
+    url = "https://data.gdeltproject.org/gdeltv2/20260101000000.export.CSV.zip"
 
     logger.info("Downloading specific file: %s", url)
 
@@ -152,7 +152,7 @@ async def download_with_custom_concurrency() -> None:
         logger.info("Downloading %d files with max 3 concurrent requests", len(urls))
 
         file_count = 0
-        async for url, data in source.stream_files(urls, max_concurrent=3):
+        async for _url, data in source.stream_files(urls, max_concurrent=3):
             file_count += 1
             logger.info("Downloaded file %d/%d: %d bytes", file_count, len(urls), len(data))
 

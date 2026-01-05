@@ -190,7 +190,7 @@ async def analyze_mention_sources():
         for source, count in sorted(sources.items(), key=lambda x: x[1], reverse=True)[:10]:
             print(f"  {source}: {count} mentions")
 
-        print(f"\nMention types:")
+        print("\nMention types:")
         for mention_type, count in sorted(types.items(), key=lambda x: x[1], reverse=True):
             print(f"  Type {mention_type}: {count} mentions")
 
@@ -204,9 +204,6 @@ async def main():
 
     # Example 2: Streaming query
     await stream_mentions()
-
-    # Example 3: Synchronous wrapper
-    # query_mentions_sync()  # Uncomment to test
 
     # Example 4: Analysis
     await analyze_mention_sources()

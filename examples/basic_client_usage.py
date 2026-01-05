@@ -10,7 +10,7 @@ including:
 """
 
 import asyncio
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 from py_gdelt import GDELTClient, GDELTSettings
@@ -42,7 +42,7 @@ async def basic_usage() -> None:
             if result:
                 # Show first event
                 first_event = result[0]
-                print(f"\nFirst event:")
+                print("\nFirst event:")
                 print(f"  ID: {first_event.global_event_id}")
                 print(f"  Date: {first_event.date}")
                 print(f"  Event Code: {first_event.event_code}")
@@ -71,7 +71,7 @@ async def rest_api_usage() -> None:
             print(f"Found {len(articles)} articles")
 
             if articles:
-                print(f"\nFirst article:")
+                print("\nFirst article:")
                 print(f"  Title: {articles[0].title}")
                 print(f"  URL: {articles[0].url}")
                 print(f"  Date: {articles[0].date}")
@@ -121,7 +121,7 @@ async def custom_config_usage() -> None:
     )
 
     async with GDELTClient(settings=settings) as client:
-        print(f"Client initialized with custom settings:")
+        print("Client initialized with custom settings:")
         print(f"  Timeout: {client.settings.timeout}s")
         print(f"  Max Retries: {client.settings.max_retries}")
         print(f"  Fallback to BigQuery: {client.settings.fallback_to_bigquery}")
@@ -133,8 +133,18 @@ async def config_file_usage() -> None:
     print("TOML Configuration Example")
     print("=" * 60)
 
-    # Create a sample config file
-    config_path = Path("/tmp/gdelt_example.toml")
+    # Create a sample config file with secure permissions
+    import tempfile
+
+    fd, config_path_str = tempfile.mkstemp(suffix=".toml", prefix="gdelt_")
+    import os
+    os.close(fd)  # Close the file descriptor
+    config_path = Path(config_path_str)
+
+    # Set secure permissions (owner read/write only)
+    config_path.chmod(0o600)
+
+    # Write config content
     config_path.write_text("""
 [gdelt]
 timeout = 45

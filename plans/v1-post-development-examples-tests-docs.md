@@ -752,31 +752,43 @@ async def test_events_streaming() -> None:
 **File**: `tests/integration/conftest.py`
 
 ```python
-"""Integration test configuration."""
+"""Integration test configuration.
+
+Note: pytest markers are defined in pyproject.toml, not here.
+The anyio_backend fixture is NOT used - we use pytest-asyncio with asyncio_mode="auto".
+"""
 
 import pytest
 
-
-def pytest_configure(config):
-    """Register integration marker."""
-    config.addinivalue_line(
-        "markers", "integration: mark test as integration test (live API calls)"
-    )
+from py_gdelt import GDELTClient
 
 
-@pytest.fixture(scope="session")
-def anyio_backend():
-    """Use asyncio backend for async tests."""
-    return "asyncio"
+@pytest.fixture
+async def gdelt_client():
+    """Provide initialized GDELTClient for integration tests.
+
+    Usage:
+        async def test_something(gdelt_client):
+            result = await gdelt_client.doc.search("test")
+    """
+    async with GDELTClient() as client:
+        yield client
 ```
 
 **Update**: `pyproject.toml`
 
-Add integration test marker:
+Add integration test marker and pytest-timeout dependency:
 
 ```toml
+# Add to [project.optional-dependencies] dev section:
+dev = [
+    # ... existing deps ...
+    "pytest-timeout>=2.0",
+]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"  # pytest-asyncio 0.23+ recommendation
 testpaths = ["tests"]
 addopts = "-v --tb=short"
 markers = [
@@ -794,7 +806,7 @@ markers = [
 
 ### Phase 4: Create Jupyter Notebooks
 
-**Goal**: Interactive notebook examples for all major features.
+**Goal**: Interactive notebook examples for major features.
 
 **Directory**: `notebooks/`
 
@@ -804,74 +816,28 @@ import nest_asyncio
 nest_asyncio.apply()
 ```
 
-#### Notebook Files
+**Note**: Modern Jupyter (IPython 8+) supports native async. For users with recent versions, sync context managers (`with GDELTClient() as client: client.events.query_sync(...)`) work natively without `nest_asyncio`.
+
+#### Notebook Files (3 notebooks - reduced from 6)
 
 **File**: `notebooks/01_getting_started.ipynb`
 
 ```markdown
 # Getting Started with py-gdelt
 
-This notebook introduces the py-gdelt library and demonstrates basic usage.
-
-## Setup
-- Installing the library
-- Basic client initialization
-- Your first query
+Comprehensive introduction covering all essential features.
 
 ## Contents
-1. Installation
-2. Basic Client Usage
-3. Querying Events
+1. Installation and setup
+2. Basic client initialization
+3. Querying Events data
 4. Using REST APIs (DOC, GEO, Context, TV)
-5. Accessing Lookup Tables
+5. Working with GKG and NGrams
+6. Accessing Lookup Tables
+7. Streaming large datasets
 ```
 
-**File**: `notebooks/02_events_and_mentions.ipynb`
-
-```markdown
-# Working with Events and Mentions
-
-Deep dive into GDELT Events and Mentions data.
-
-## Contents
-1. Event data structure
-2. Filtering events (by country, actor, event type)
-3. Streaming large datasets
-4. Deduplication strategies
-5. Working with Mentions
-```
-
-**File**: `notebooks/03_gkg_and_ngrams.ipynb`
-
-```markdown
-# Global Knowledge Graph and NGrams
-
-Explore GKG records and word frequency analysis.
-
-## Contents
-1. GKG data structure
-2. Theme and entity extraction
-3. NGrams 3.0 overview
-4. Position-based filtering
-5. Language diversity analysis
-```
-
-**File**: `notebooks/04_rest_apis.ipynb`
-
-```markdown
-# REST API Endpoints
-
-Comprehensive guide to DOC, GEO, Context, and TV APIs.
-
-## Contents
-1. DOC API - Article search
-2. GEO API - Geographic analysis
-3. Context API - Thematic analysis
-4. TV API - Television news monitoring
-5. Combining multiple APIs
-```
-
-**File**: `notebooks/05_advanced_patterns.ipynb`
+**File**: `notebooks/02_advanced_patterns.ipynb`
 
 ```markdown
 # Advanced Usage Patterns
@@ -879,34 +845,34 @@ Comprehensive guide to DOC, GEO, Context, and TV APIs.
 Production-ready patterns and best practices.
 
 ## Contents
-1. Configuration options
-2. Error handling
-3. Caching strategies
+1. Configuration options (env vars, TOML files)
+2. Error handling and retry strategies
+3. Deduplication strategies
 4. BigQuery integration
-5. Memory-efficient processing
-6. Building data pipelines
+5. Memory-efficient streaming
+6. Combining multiple API sources
 ```
 
-**File**: `notebooks/06_visualization.ipynb`
+**File**: `notebooks/03_visualization.ipynb`
 
 ```markdown
 # Data Visualization
 
-Visualizing GDELT data with pandas and matplotlib.
+Visualizing GDELT data (requires pandas, matplotlib, folium).
 
 ## Contents
-1. Timeline charts
-2. Geographic maps (with folium)
+1. Timeline charts with matplotlib
+2. Geographic maps with folium
 3. Tone analysis plots
 4. Station comparison charts
-5. Entity networks
 ```
 
 **Success Criteria:**
-- [ ] All notebooks execute without errors
+- [ ] All 3 notebooks execute without errors
 - [ ] Each notebook is self-contained with clear outputs
 - [ ] Notebooks include markdown explanations
 - [ ] `notebooks/README.md` provides overview
+- [ ] `.gitattributes` configured with nbstripout filter
 
 ---
 
@@ -1101,6 +1067,8 @@ notebooks = [
 - [ ] Run and fix `gkg_example.py`
 - [ ] Run and fix `ngrams_example.py`
 - [ ] Run and fix `download_gdelt_files.py`
+- [ ] **Security**: Fix HTTP→HTTPS URL in `download_gdelt_files.py` line 92
+- [ ] **Security**: Fix temp file permissions in `basic_client_usage.py` (use tempfile.mkstemp)
 - [ ] Update `examples/README.md`
 
 ### Phase 2: Create Missing Examples
@@ -1110,26 +1078,24 @@ notebooks = [
 - [ ] Update `examples/README.md` with new examples
 
 ### Phase 3: Integration Tests
-- [ ] Create `tests/integration/conftest.py`
+- [ ] Create `tests/integration/conftest.py` (with shared `gdelt_client` fixture, NO anyio_backend)
 - [ ] Create `tests/integration/test_doc_api.py`
 - [ ] Create `tests/integration/test_geo_api.py`
 - [ ] Create `tests/integration/test_context_api.py`
 - [ ] Create `tests/integration/test_tv_api.py`
 - [ ] Create `tests/integration/test_events_files.py`
-- [ ] Update `pyproject.toml` with integration marker
+- [ ] Update `pyproject.toml` with integration marker and `pytest-timeout>=2.0`
 
 ### Phase 4: Jupyter Notebooks
 - [ ] Create `notebooks/` directory
 - [ ] Create `notebooks/01_getting_started.ipynb`
-- [ ] Create `notebooks/02_events_and_mentions.ipynb`
-- [ ] Create `notebooks/03_gkg_and_ngrams.ipynb`
-- [ ] Create `notebooks/04_rest_apis.ipynb`
-- [ ] Create `notebooks/05_advanced_patterns.ipynb`
-- [ ] Create `notebooks/06_visualization.ipynb`
+- [ ] Create `notebooks/02_advanced_patterns.ipynb`
+- [ ] Create `notebooks/03_visualization.ipynb`
 - [ ] Create `notebooks/README.md`
+- [ ] Add `.gitattributes` with nbstripout filter
 
 ### Phase 5: Documentation
-- [ ] Create `mkdocs.yml`
+- [ ] Create `mkdocs.yml` (with correct paths: `["src/py_gdelt"]`)
 - [ ] Create `docs/index.md`
 - [ ] Create `docs/getting-started/` directory with 3 files
 - [ ] Create `docs/user-guide/` directory with 8 files
@@ -1137,6 +1103,11 @@ notebooks = [
 - [ ] Create `docs/examples/` directory with 3 files
 - [ ] Create `docs/contributing.md`
 - [ ] Verify `mkdocs serve` works
+
+### Security Hardening
+- [ ] Add `.gitignore` entries for credential files (`*.json`, `credentials.json`)
+- [ ] Add `.gitattributes` with `*.ipynb filter=nbstripout`
+- [ ] Pin dependency versions in new optional deps
 
 ---
 
@@ -1174,21 +1145,24 @@ Based on SpecFlow analysis, the following decisions have been made:
 
 ### Integration Test Strategy
 
-- **Markers**: `@pytest.mark.integration` for all live API tests
-- **Timeout**: 60s for REST APIs, 120s for file-based endpoints
+- **Markers**: `@pytest.mark.integration` for all live API tests (defined in pyproject.toml only)
+- **Timeout**: 60s for REST APIs, 120s for file-based endpoints (requires `pytest-timeout`)
 - **Assertions**: Test structure (`hasattr`, `isinstance`), not content (`len(result) == 42`)
 - **Dates**: Always relative (`timespan="7d"` or `date.today() - timedelta(days=2)`)
 - **Parallel**: No parallelization (serial execution via pytest defaults)
+- **Fixtures**: Shared `gdelt_client` fixture in conftest.py for DRY compliance
 
 ### Notebook Strategy
 
 - **Setup cell**: All notebooks start with `nest_asyncio.apply()` and import boilerplate
 - **Dependencies**: Notebooks have `try/except ImportError` for optional deps (pandas, folium)
 - **Caching**: No caching (fresh API calls each run) - keeps examples simple
+- **Sync alternative**: Document that sync context managers work natively in modern Jupyter
 
 ### Documentation Strategy
 
 - **API docs**: Generated from docstrings via mkdocstrings
+- **Paths**: Use `["src/py_gdelt"]` in mkdocstrings config
 - **Code validation**: Manual for now (CI validation deferred)
 - **Versioning**: Single version docs initially (mike for versioning deferred)
 
@@ -1206,6 +1180,51 @@ Based on SpecFlow analysis, the following decisions have been made:
 
 ---
 
+## Review Feedback Applied
+
+Based on multi-reviewer analysis, the following changes were incorporated:
+
+### Critical Fixes (Must Apply)
+
+| Issue | Resolution | Reviewer |
+|-------|------------|----------|
+| **Remove `anyio_backend` fixture** | Delete from conftest.py - incompatible with pytest-asyncio | Architecture + Kieran |
+| **Add `pytest-timeout>=2.0`** | Add to dev dependencies in pyproject.toml | Architecture + Kieran |
+| **Fix HTTP→HTTPS in download example** | Change line 92 of `download_gdelt_files.py` | Security |
+| **Fix temp file permissions** | Use `tempfile.mkstemp()` with 0o600 in `basic_client_usage.py` | Security |
+| **Use pyproject.toml for markers only** | Remove `pytest_configure` from conftest.py | Kieran |
+
+### High Priority Improvements
+
+| Issue | Resolution | Reviewer |
+|-------|------------|----------|
+| **Verify `to_geojson` method** | Method exists at `geo.py:202-238` - confirmed | Kieran |
+| **Create shared client fixture** | Add `gdelt_client` async fixture to conftest.py | Architecture |
+| **Use test classes** | Match existing test patterns with `class TestXxxApi` | Kieran |
+| **Remove unused GeoFilter import** | Delete from geo example or use it | Kieran |
+| **Add nbstripout config** | Strip notebook outputs before committing | Security |
+
+### Simplification Applied
+
+| Before | After | Reviewer |
+|--------|-------|----------|
+| Complete example code in plan (~360 lines) | Brief descriptions of what to demonstrate | Simplicity |
+| Complete test code in plan (~290 lines) | Pattern + test case list | Simplicity |
+| 6 notebooks | 3 notebooks (getting started, advanced, visualization) | Simplicity |
+| 19+ doc files | 8 essential files + auto-generated API reference | Simplicity |
+| Separate Acceptance Criteria section | Merged into Implementation Checklist | Simplicity |
+
+### Security Hardening
+
+| Addition | Purpose | Reviewer |
+|----------|---------|----------|
+| `.gitignore` entries for credentials | Prevent accidental credential commits | Security |
+| `nbstripout` in `.gitattributes` | Strip outputs containing API responses | Security |
+| Dependency version pinning | Prevent vulnerable versions | Security |
+
+---
+
 *Plan generated: January 2026*
 *Estimated effort: 3-5 days*
 *SpecFlow analysis: Completed - 21 gaps identified, 5 critical decisions made*
+*Multi-reviewer feedback: Applied from 4 reviewers (Simplicity, Architecture, Security, Kieran)*

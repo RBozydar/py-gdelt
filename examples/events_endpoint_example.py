@@ -35,7 +35,7 @@ async def example_basic_query() -> None:
         print(f"Found {len(result)} events")
         if result.data:
             event = result.data[0]
-            print(f"\nFirst event:")
+            print("\nFirst event:")
             print(f"  ID: {event.global_event_id}")
             print(f"  Date: {event.date}")
             print(f"  Event Code: {event.event_code}")
@@ -154,8 +154,6 @@ async def main() -> None:
         await example_streaming()
         await example_deduplication()
         await example_filtered_query()
-        # Note: Skipping sync example in async context
-        # await example_sync_usage()  # Would raise RuntimeError
 
         print("\n" + "=" * 60)
         print("All examples completed successfully!")
