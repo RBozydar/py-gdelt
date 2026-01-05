@@ -6,11 +6,13 @@ Demonstrates:
 - Timeline of TV mentions
 - Station comparison charts
 - AI-enhanced TV search
+- Proper error handling with specific exceptions
 """
 
 import asyncio
 
 from py_gdelt import GDELTClient
+from py_gdelt.exceptions import APIError, RateLimitError
 
 
 async def search_tv_clips() -> None:
@@ -36,8 +38,14 @@ async def search_tv_clips() -> None:
                     print(f"  Date: {clip.date}")
                 if clip.snippet:
                     print(f"  Snippet: {clip.snippet[:100]}...")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error searching TV clips: {e}")
         except Exception as e:
-            print(f"Error searching TV clips: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def search_by_station() -> None:
@@ -60,8 +68,12 @@ async def search_by_station() -> None:
                 print(f"\n{station}: {len(clips)} clips about 'election'")
                 if clips:
                     print(f"  First clip show: {clips[0].show_name}")
+            except RateLimitError as e:
+                print(f"Rate limit exceeded for {station}: {e}")
+            except APIError as e:
+                print(f"API error searching {station}: {e}")
             except Exception as e:
-                print(f"Error searching {station}: {e}")
+                print(f"Unexpected error: {e}")
 
 
 async def get_timeline() -> None:
@@ -84,8 +96,14 @@ async def get_timeline() -> None:
                 # Show last 5 data points
                 for point in timeline.points[-5:]:
                     print(f"  {point.date}: {point.count} mentions")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error fetching timeline: {e}")
         except Exception as e:
-            print(f"Error fetching timeline: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def compare_stations() -> None:
@@ -105,8 +123,14 @@ async def compare_stations() -> None:
             for station in chart.stations[:10]:
                 pct = f"{station.percentage:.1f}%" if station.percentage else "N/A"
                 print(f"  {station.station}: {station.count} mentions ({pct})")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error fetching station chart: {e}")
         except Exception as e:
-            print(f"Error fetching station chart: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def ai_enhanced_search() -> None:
@@ -130,8 +154,14 @@ async def ai_enhanced_search() -> None:
                 print(f"  Show: {clip.show_name}")
                 if clip.snippet:
                     print(f"  Snippet: {clip.snippet[:150]}...")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error with AI-enhanced search: {e}")
         except Exception as e:
-            print(f"Error with AI-enhanced search: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def main() -> None:

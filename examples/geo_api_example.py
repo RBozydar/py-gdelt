@@ -6,11 +6,13 @@ Demonstrates:
 - Bounding box filtering
 - GeoJSON output for mapping
 - Location analysis
+- Proper error handling with specific exceptions
 """
 
 import asyncio
 
 from py_gdelt import GDELTClient
+from py_gdelt.exceptions import APIError, RateLimitError
 
 
 async def search_locations() -> None:
@@ -36,8 +38,14 @@ async def search_locations() -> None:
             for point in sorted_points[:10]:
                 print(f"  - {point.name or 'Unknown'}: {point.count} articles")
                 print(f"    Coordinates: ({point.lat:.2f}, {point.lon:.2f})")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error searching locations: {e}")
         except Exception as e:
-            print(f"Error searching locations: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def search_with_bounding_box() -> None:
@@ -61,8 +69,14 @@ async def search_with_bounding_box() -> None:
             print(f"\nFound {len(result.points)} locations in Europe for 'energy crisis'")
             for point in result.points[:10]:
                 print(f"  - {point.name}: {point.count} articles at ({point.lat:.2f}, {point.lon:.2f})")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error searching with bounding box: {e}")
         except Exception as e:
-            print(f"Error searching with bounding box: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def get_geojson_output() -> None:
@@ -89,8 +103,14 @@ async def get_geojson_output() -> None:
                 feat = features[0]
                 print(f"  Geometry: {feat.get('geometry', {}).get('type')}")
                 print(f"  Properties: {list(feat.get('properties', {}).keys())}")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error fetching GeoJSON: {e}")
         except Exception as e:
-            print(f"Error fetching GeoJSON: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def main() -> None:

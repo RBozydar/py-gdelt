@@ -6,11 +6,13 @@ Demonstrates:
 - Getting top themes for a search term
 - Filtering entities by type (PERSON, ORG, LOCATION)
 - Tone/sentiment analysis
+- Proper error handling with specific exceptions
 """
 
 import asyncio
 
 from py_gdelt import GDELTClient
+from py_gdelt.exceptions import APIError, RateLimitError
 
 
 async def analyze_topic_context() -> None:
@@ -46,8 +48,14 @@ async def analyze_topic_context() -> None:
                 print(f"  Positive: {result.tone.positive_count}")
                 print(f"  Negative: {result.tone.negative_count}")
                 print(f"  Neutral: {result.tone.neutral_count}")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error analyzing topic: {e}")
         except Exception as e:
-            print(f"Error analyzing topic: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def get_entities_by_type() -> None:
@@ -81,8 +89,14 @@ async def get_entities_by_type() -> None:
             print("\nTop organizations:")
             for org in orgs:
                 print(f"  - {org.name}: {org.count} mentions")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error fetching entities: {e}")
         except Exception as e:
-            print(f"Error fetching entities: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def compare_topic_themes() -> None:
@@ -100,8 +114,12 @@ async def compare_topic_themes() -> None:
                 print(f"\n'{topic}' top themes:")
                 for theme in themes:
                     print(f"  - {theme.theme}: {theme.count}")
+            except RateLimitError as e:
+                print(f"Rate limit exceeded for '{topic}': {e}")
+            except APIError as e:
+                print(f"API error fetching themes for '{topic}': {e}")
             except Exception as e:
-                print(f"Error fetching themes for '{topic}': {e}")
+                print(f"Unexpected error: {e}")
 
 
 async def main() -> None:

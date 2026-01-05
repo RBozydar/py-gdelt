@@ -9,6 +9,7 @@ import asyncio
 from datetime import date
 
 from py_gdelt.endpoints import EventsEndpoint
+from py_gdelt.exceptions import APIError, DataError
 from py_gdelt.filters import DateRange, EventFilter
 from py_gdelt.sources import FileSource
 from py_gdelt.utils.dedup import DedupeStrategy
@@ -159,10 +160,17 @@ async def main() -> None:
         print("All examples completed successfully!")
         print("=" * 60)
 
-    except Exception as e:
-        print(f"\nError running examples: {e}")
+    except DataError as e:
+        print(f"\nData error running examples: {e}")
         import traceback
-
+        traceback.print_exc()
+    except APIError as e:
+        print(f"\nAPI error running examples: {e}")
+        import traceback
+        traceback.print_exc()
+    except Exception as e:
+        print(f"\nUnexpected error running examples: {e}")
+        import traceback
         traceback.print_exc()
 
 

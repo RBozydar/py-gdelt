@@ -13,7 +13,9 @@ import asyncio
 from datetime import date
 from pathlib import Path
 
-from py_gdelt import GDELTClient, GDELTSettings
+from py_gdelt import GDELTClient
+from py_gdelt.config import GDELTSettings
+from py_gdelt.exceptions import APIError, DataError, RateLimitError
 from py_gdelt.filters import DateRange, DocFilter, EventFilter
 
 
@@ -47,8 +49,12 @@ async def basic_usage() -> None:
                 print(f"  Date: {first_event.date}")
                 print(f"  Event Code: {first_event.event_code}")
                 print(f"  Goldstein Scale: {first_event.goldstein_scale}")
+        except DataError as e:
+            print(f"Data error querying events: {e}")
+        except APIError as e:
+            print(f"API error querying events: {e}")
         except Exception as e:
-            print(f"Error querying events: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def rest_api_usage() -> None:
@@ -75,8 +81,14 @@ async def rest_api_usage() -> None:
                 print(f"  Title: {articles[0].title}")
                 print(f"  URL: {articles[0].url}")
                 print(f"  Date: {articles[0].date}")
+        except RateLimitError as e:
+            print(f"Rate limit exceeded: {e}")
+            if e.retry_after:
+                print(f"Please retry after {e.retry_after} seconds")
+        except APIError as e:
+            print(f"API error searching articles: {e}")
         except Exception as e:
-            print(f"Error searching articles: {e}")
+            print(f"Unexpected error: {e}")
 
 
 async def lookup_usage() -> None:
@@ -102,7 +114,7 @@ async def lookup_usage() -> None:
             iso2 = countries.fips_to_iso2("US")
             print(f"  FIPS 'US' -> ISO3 '{iso3}', ISO2 '{iso2}'")
         except Exception as e:
-            print(f"  Error: {e}")
+            print(f"  Lookup error: {e}")
 
 
 async def custom_config_usage() -> None:
@@ -187,8 +199,12 @@ async def streaming_usage() -> None:
                 if count >= 5:
                     break
             print(f"\nProcessed {count} events (stopped early for demo)")
+        except DataError as e:
+            print(f"Data error streaming events: {e}")
+        except APIError as e:
+            print(f"API error streaming events: {e}")
         except Exception as e:
-            print(f"Error streaming events: {e}")
+            print(f"Unexpected error: {e}")
 
 
 def sync_usage() -> None:

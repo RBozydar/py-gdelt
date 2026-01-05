@@ -14,6 +14,7 @@ Prerequisites:
 import asyncio
 from datetime import date
 
+from py_gdelt.exceptions import BigQueryError
 from py_gdelt.filters import DateRange, EventFilter
 from py_gdelt.sources import BigQuerySource
 
@@ -144,8 +145,8 @@ async def main() -> None:
         # Example 3: Query mentions
         await query_mentions_example()
 
-    except Exception as e:
-        print(f"Error: {e}")
+    except BigQueryError as e:
+        print(f"BigQuery error: {e}")
         print()
         print("Note: This example requires BigQuery credentials to be configured.")
         print("Set environment variables:")
@@ -155,6 +156,8 @@ async def main() -> None:
         print("Or use Application Default Credentials:")
         print("  gcloud auth application-default login")
         print("  export GDELT_BIGQUERY_PROJECT='your-project-id'")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 
 if __name__ == "__main__":
