@@ -104,7 +104,7 @@ jobs:
           echo "Extracted version: $VERSION"
 
       - name: Add PyPI link to release notes
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           append_body: true
           body: |
