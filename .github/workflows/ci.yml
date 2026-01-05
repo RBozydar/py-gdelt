@@ -119,7 +119,7 @@ jobs:
         run: uv run pydoclint --style=google src/py_gdelt
 
       - name: Check docstring coverage with docstr-coverage
-        uses: HunterMcGushion/docstr_coverage@v1.3.0
+        uses: HunterMcGushion/docstr_coverage@v2.3.2
         with:
           fail-under: 90
           skip-magic: true
