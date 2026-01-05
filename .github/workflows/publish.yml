@@ -1,0 +1,121 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:  # Manual trigger for testing
+    inputs:
+      environment:
+        description: 'Environment to publish to'
+        required: true
+        type: choice
+        options:
+          - testpypi
+          - pypi
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Build package
+        run: uv build
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'testpypi'
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/py-gdelt
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/py-gdelt
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  create-github-release-notes:
+    name: Update GitHub Release Notes
+    needs: [publish-to-pypi]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Extract version from pyproject.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Add PyPI link to release notes
+        uses: softprops/action-gh-release@v2
+        with:
+          append_body: true
+          body: |
+            ---
+
+            ## Installation
+
+            ```bash
+            pip install py-gdelt==${{ steps.get_version.outputs.version }}
+            # or with uv
+            uv add py-gdelt==${{ steps.get_version.outputs.version }}
+            ```
+
+            View on [PyPI](https://pypi.org/project/py-gdelt/${{ steps.get_version.outputs.version }}/)
