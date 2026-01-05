@@ -264,20 +264,18 @@ class TVEndpoint(BaseEndpoint):
 
         data = await self._get_json(url, params=params)
 
-        clips: list[TVClip] = []
-        if "clips" in data:
-            for item in data["clips"]:
-                clips.append(
-                    TVClip(
-                        station=item.get("station", ""),
-                        show_name=item.get("show"),
-                        clip_url=item.get("url"),
-                        preview_url=item.get("preview"),
-                        date=_parse_date(item.get("date")),
-                        duration_seconds=item.get("duration"),
-                        snippet=item.get("snippet"),
-                    ),
-                )
+        clips: list[TVClip] = [
+            TVClip(
+                station=item.get("station", ""),
+                show_name=item.get("show"),
+                clip_url=item.get("url"),
+                preview_url=item.get("preview"),
+                date=_parse_date(item.get("date")),
+                duration_seconds=item.get("duration"),
+                snippet=item.get("snippet"),
+            )
+            for item in data.get("clips", [])
+        ]
 
         return clips
 
@@ -323,16 +321,14 @@ class TVEndpoint(BaseEndpoint):
 
         data = await self._get_json(url, params=params)
 
-        points: list[TVTimelinePoint] = []
-        if "timeline" in data:
-            for item in data["timeline"]:
-                points.append(
-                    TVTimelinePoint(
-                        date=item.get("date", ""),
-                        station=item.get("station"),
-                        count=item.get("count", 0),
-                    ),
-                )
+        points: list[TVTimelinePoint] = [
+            TVTimelinePoint(
+                date=item.get("date", ""),
+                station=item.get("station"),
+                count=item.get("count", 0),
+            )
+            for item in data.get("timeline", [])
+        ]
 
         return TVTimeline(points=points)
 
@@ -462,20 +458,18 @@ class TVAIEndpoint(BaseEndpoint):
         url = await self._build_url()
         data = await self._get_json(url, params=params)
 
-        clips: list[TVClip] = []
-        if "clips" in data:
-            for item in data["clips"]:
-                clips.append(
-                    TVClip(
-                        station=item.get("station", ""),
-                        show_name=item.get("show"),
-                        clip_url=item.get("url"),
-                        preview_url=item.get("preview"),
-                        date=_parse_date(item.get("date")),
-                        duration_seconds=item.get("duration"),
-                        snippet=item.get("snippet"),
-                    ),
-                )
+        clips: list[TVClip] = [
+            TVClip(
+                station=item.get("station", ""),
+                show_name=item.get("show"),
+                clip_url=item.get("url"),
+                preview_url=item.get("preview"),
+                date=_parse_date(item.get("date")),
+                duration_seconds=item.get("duration"),
+                snippet=item.get("snippet"),
+            )
+            for item in data.get("clips", [])
+        ]
 
         return clips
 

@@ -324,9 +324,7 @@ class TestBigQuerySourceQueries:
             actor1_country="USA",
         )
 
-        results = []
-        async for row in source.query_events(filter_obj, limit=10):
-            results.append(row)
+        results = [row async for row in source.query_events(filter_obj, limit=10)]
 
         # Verify results
         assert len(results) == 2
@@ -405,9 +403,7 @@ class TestBigQuerySourceQueries:
             themes=["ENV_CLIMATECHANGE"],
         )
 
-        results = []
-        async for row in source.query_gkg(filter_obj):
-            results.append(row)
+        results = [row async for row in source.query_gkg(filter_obj)]
 
         # Verify results
         assert len(results) == 1
@@ -448,12 +444,13 @@ class TestBigQuerySourceQueries:
         source._credentials_validated = True
 
         # Execute query
-        results = []
-        async for row in source.query_mentions(
-            global_event_id="123",
-            date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7)),
-        ):
-            results.append(row)
+        results = [
+            row
+            async for row in source.query_mentions(
+                global_event_id="123",
+                date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7)),
+            )
+        ]
 
         # Verify results
         assert len(results) == 2
@@ -585,8 +582,8 @@ class TestSecurityFeatures:
             results: list[dict[str, Any]] = []
 
             async def collect() -> None:
-                async for row in source.query_events(filter_obj):
-                    results.append(row)
+                nonlocal results
+                results.extend([row async for row in source.query_events(filter_obj)])
 
             import asyncio
 

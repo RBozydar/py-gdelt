@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 
 if TYPE_CHECKING:
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class ResultStream[T]:
+class ResultStream(Generic[T]):
     """
     Wrapper around async iterator with terminal methods for convenience.
 
@@ -68,9 +68,7 @@ class ResultStream[T]:
         if self._exhausted:
             raise RuntimeError("Stream has been exhausted")
 
-        items: list[T] = []
-        async for item in self:
-            items.append(item)
+        items: list[T] = [item async for item in self]
         return items
 
     async def to_dataframe(self, **kwargs: Any) -> pd.DataFrame:

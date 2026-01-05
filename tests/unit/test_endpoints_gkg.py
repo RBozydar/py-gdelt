@@ -351,9 +351,7 @@ class TestGKGEndpointStream:
             yield sample_raw_gkg
 
         with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
-            records = []
-            async for record in endpoint.stream(gkg_filter):
-                records.append(record)
+            records = [record async for record in endpoint.stream(gkg_filter)]
 
             assert len(records) == 1
             assert isinstance(records[0], GKGRecord)
@@ -407,9 +405,7 @@ class TestGKGEndpointStream:
                 yield raw_gkg
 
         with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
-            records = []
-            async for record in endpoint.stream(gkg_filter):
-                records.append(record)
+            records = [record async for record in endpoint.stream(gkg_filter)]
 
             assert len(records) == 5
             assert all(isinstance(r, GKGRecord) for r in records)
@@ -525,9 +521,7 @@ class TestGKGEndpointStream:
             yield sample_raw_gkg
 
         with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
-            records = []
-            async for record in endpoint.stream(gkg_filter):
-                records.append(record)
+            records = [record async for record in endpoint.stream(gkg_filter)]
 
             # Should only get 2 good records (bad one skipped)
             assert len(records) == 2

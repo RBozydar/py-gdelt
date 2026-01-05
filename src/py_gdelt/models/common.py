@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -90,7 +90,7 @@ class FailedRequest:
 
 
 @dataclass
-class FetchResult[T]:
+class FetchResult(Generic[T]):
     """Result container with partial failure tracking."""
 
     data: list[T]

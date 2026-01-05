@@ -42,6 +42,9 @@ logger = logging.getLogger(__name__)
 # Type variable for parser output (covariant since only used in return position)
 T_co = TypeVar("T_co", covariant=True)
 
+# Type variable for generic fetch methods
+R = TypeVar("R")
+
 # Error handling policy
 ErrorPolicy = Literal["raise", "warn", "skip"]
 
@@ -144,7 +147,7 @@ class DataFetcher:
             error_policy,
         )
 
-    async def fetch[R](
+    async def fetch(
         self,
         filter_obj: EventFilter | GKGFilter,
         parser: Parser[R],
@@ -215,7 +218,7 @@ class DataFetcher:
                 logger.error("File source failed and fallback not enabled: %s", e)
                 self._handle_error(e)
 
-    async def _fetch_from_files[R](
+    async def _fetch_from_files(
         self,
         filter_obj: EventFilter | GKGFilter,
         parser: Parser[R],
@@ -296,7 +299,7 @@ class DataFetcher:
 
         logger.info("Fetched %d records from file source", records_yielded)
 
-    async def _fetch_from_bigquery[R](
+    async def _fetch_from_bigquery(
         self,
         filter_obj: EventFilter | GKGFilter,
         parser: Parser[R],

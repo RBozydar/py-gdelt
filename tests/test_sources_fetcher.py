@@ -189,9 +189,7 @@ class TestDataFetcherFetchFromFiles:
         # Create fetcher and fetch
         fetcher = DataFetcher(file_source=mock_file_source)
 
-        events = []
-        async for event in fetcher._fetch_from_files(event_filter, mock_parser):
-            events.append(event)
+        events = [event async for event in fetcher._fetch_from_files(event_filter, mock_parser)]
 
         assert len(events) == 1
         assert events[0]["global_event_id"] == "123"
@@ -238,9 +236,7 @@ class TestDataFetcherFetchFromFiles:
         # Create fetcher and fetch
         fetcher = DataFetcher(file_source=mock_file_source)
 
-        gkgs = []
-        async for gkg in fetcher._fetch_from_files(gkg_filter, mock_parser):
-            gkgs.append(gkg)
+        gkgs = [gkg async for gkg in fetcher._fetch_from_files(gkg_filter, mock_parser)]
 
         assert len(gkgs) == 1
         assert gkgs[0]["gkg_record_id"] == "123"
@@ -285,9 +281,7 @@ class TestDataFetcherFallback:
         )
 
         # Fetch events - should fallback to BigQuery
-        events = []
-        async for event in fetcher.fetch(event_filter, mock_parser):
-            events.append(event)
+        events = [event async for event in fetcher.fetch(event_filter, mock_parser)]
 
         assert len(events) == 1
         assert events[0]["GLOBALEVENTID"] == "123"
@@ -320,9 +314,7 @@ class TestDataFetcherFallback:
         )
 
         # Fetch events - should fallback to BigQuery
-        events = []
-        async for event in fetcher.fetch(event_filter, mock_parser):
-            events.append(event)
+        events = [event async for event in fetcher.fetch(event_filter, mock_parser)]
 
         assert len(events) == 1
         assert events[0]["GLOBALEVENTID"] == "456"
@@ -406,9 +398,9 @@ class TestDataFetcherUseBigQuery:
         )
 
         # Fetch with use_bigquery=True
-        events = []
-        async for event in fetcher.fetch(event_filter, mock_parser, use_bigquery=True):
-            events.append(event)
+        events = [
+            event async for event in fetcher.fetch(event_filter, mock_parser, use_bigquery=True)
+        ]
 
         assert len(events) == 1
         assert events[0]["GLOBALEVENTID"] == "789"
@@ -459,9 +451,7 @@ class TestDataFetcherConvenienceMethods:
         fetcher = DataFetcher(file_source=mock_file_source)
 
         # Fetch events
-        events = []
-        async for event in fetcher.fetch_events(event_filter):
-            events.append(event)
+        events = [event async for event in fetcher.fetch_events(event_filter)]
 
         # Verify file source was called
         mock_file_source.get_files_for_date_range.assert_called_once()
@@ -489,9 +479,7 @@ class TestDataFetcherConvenienceMethods:
         fetcher = DataFetcher(file_source=mock_file_source)
 
         # Fetch GKG
-        gkgs = []
-        async for gkg in fetcher.fetch_gkg(gkg_filter):
-            gkgs.append(gkg)
+        gkgs = [gkg async for gkg in fetcher.fetch_gkg(gkg_filter)]
 
         # Verify file source was called
         mock_file_source.get_files_for_date_range.assert_called_once()
@@ -537,9 +525,7 @@ class TestDataFetcherConvenienceMethods:
         )
 
         # Fetch mentions
-        mentions = []
-        async for mention in fetcher.fetch_mentions("123", event_filter):
-            mentions.append(mention)
+        mentions = [mention async for mention in fetcher.fetch_mentions("123", event_filter)]
 
         assert len(mentions) == 1
         assert mentions[0]["GLOBALEVENTID"] == "123"
@@ -567,9 +553,7 @@ class TestDataFetcherConvenienceMethods:
         fetcher = DataFetcher(file_source=mock_file_source)
 
         # Fetch ngrams
-        ngrams = []
-        async for ngram in fetcher.fetch_ngrams(event_filter):
-            ngrams.append(ngram)
+        ngrams = [ngram async for ngram in fetcher.fetch_ngrams(event_filter)]
 
         # Verify file source was called with ngrams file type
         mock_file_source.get_files_for_date_range.assert_called_once_with(
@@ -636,9 +620,7 @@ class TestDataFetcherEdgeCases:
         )
 
         # Fetch events - should skip errors and continue
-        events = []
-        async for event in fetcher._fetch_from_files(event_filter, mock_parser):
-            events.append(event)
+        events = [event async for event in fetcher._fetch_from_files(event_filter, mock_parser)]
 
         # Should have no events (all failed)
         assert len(events) == 0

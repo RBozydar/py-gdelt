@@ -161,13 +161,14 @@ class MentionsEndpoint:
         )
 
         # Collect all mentions
-        mentions: list[Mention] = []
-        async for mention in self.stream(
-            global_event_id=global_event_id,
-            filter_obj=filter_obj,
-            use_bigquery=use_bigquery,
-        ):
-            mentions.append(mention)
+        mentions: list[Mention] = [
+            mention
+            async for mention in self.stream(
+                global_event_id=global_event_id,
+                filter_obj=filter_obj,
+                use_bigquery=use_bigquery,
+            )
+        ]
 
         logger.info(
             "Query complete: fetched %d mentions for event %s",

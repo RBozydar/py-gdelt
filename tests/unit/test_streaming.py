@@ -25,9 +25,7 @@ async def test_async_iteration() -> None:
             yield i
 
     stream = ResultStream(gen())
-    items = []
-    async for item in stream:
-        items.append(item)
+    items = [item async for item in stream]
     assert items == [0, 1, 2]
     assert stream.exhausted
 
@@ -240,9 +238,7 @@ async def test_iteration_after_first() -> None:
     first = await stream.first()
     assert first == 0
 
-    remaining = []
-    async for item in stream:
-        remaining.append(item)
+    remaining = [item async for item in stream]
     assert remaining == [1, 2, 3, 4]
 
 

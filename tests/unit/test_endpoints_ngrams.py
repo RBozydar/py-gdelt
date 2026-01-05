@@ -381,9 +381,7 @@ class TestStreamMethod:
             date_range=DateRange(start=date(2024, 1, 1)),
         )
 
-        records = []
-        async for record in endpoint.stream(filter_obj):
-            records.append(record)
+        records = [record async for record in endpoint.stream(filter_obj)]
 
         assert len(records) == 2
         assert records[0].ngram == "climate"
@@ -440,9 +438,7 @@ class TestStreamMethod:
             max_position=50,
         )
 
-        records = []
-        async for record in endpoint.stream(filter_obj):
-            records.append(record)
+        records = [record async for record in endpoint.stream(filter_obj)]
 
         # Should only get first record (has "climate", language="en", position=20)
         assert len(records) == 1
@@ -477,9 +473,7 @@ class TestStreamMethod:
             date_range=DateRange(start=date(2024, 1, 1)),
         )
 
-        records = []
-        async for record in endpoint.stream(filter_obj):
-            records.append(record)
+        records = [record async for record in endpoint.stream(filter_obj)]
 
         # Should skip invalid record
         assert len(records) == 0

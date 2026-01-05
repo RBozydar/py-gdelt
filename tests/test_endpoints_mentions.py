@@ -314,12 +314,13 @@ class TestMentionsEndpointStream:
 
         endpoint = MentionsEndpoint(file_source=mock_file_source)
         endpoint._fetcher.fetch_mentions = mock_fetch_mentions
-        mentions = []
-        async for mention in endpoint.stream(
-            global_event_id="123456789",
-            filter_obj=event_filter,
-        ):
-            mentions.append(mention)
+        mentions = [
+            mention
+            async for mention in endpoint.stream(
+                global_event_id="123456789",
+                filter_obj=event_filter,
+            )
+        ]
 
         assert len(mentions) == 1
         assert isinstance(mentions[0], Mention)
@@ -362,12 +363,13 @@ class TestMentionsEndpointStream:
 
         endpoint = MentionsEndpoint(file_source=mock_file_source)
         endpoint._fetcher.fetch_mentions = mock_fetch_mentions
-        mentions = []
-        async for mention in endpoint.stream(
-            global_event_id="123456789",
-            filter_obj=event_filter,
-        ):
-            mentions.append(mention)
+        mentions = [
+            mention
+            async for mention in endpoint.stream(
+                global_event_id="123456789",
+                filter_obj=event_filter,
+            )
+        ]
 
         assert len(mentions) == 1
         assert isinstance(mentions[0], Mention)
@@ -608,12 +610,13 @@ class TestMentionsEndpointEdgeCases:
 
         endpoint = MentionsEndpoint(file_source=mock_file_source)
         endpoint._fetcher.fetch_mentions = mock_fetch_mentions
-        mentions = []
-        async for mention in endpoint.stream(
-            global_event_id="123456789",
-            filter_obj=event_filter,
-        ):
-            mentions.append(mention)
+        mentions = [
+            mention
+            async for mention in endpoint.stream(
+                global_event_id="123456789",
+                filter_obj=event_filter,
+            )
+        ]
 
         assert len(mentions) == 0
 

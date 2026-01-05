@@ -253,9 +253,7 @@ class TestEventsEndpoint:
             "fetch_events",
             side_effect=mock_fetch_events,
         ):
-            events = []
-            async for event in endpoint.stream(event_filter):
-                events.append(event)
+            events = [event async for event in endpoint.stream(event_filter)]
 
         assert len(events) == 1
         assert isinstance(events[0], Event)
@@ -283,13 +281,14 @@ class TestEventsEndpoint:
             "fetch_events",
             side_effect=mock_fetch_events,
         ):
-            events = []
-            async for event in endpoint.stream(
-                event_filter,
-                deduplicate=True,
-                dedupe_strategy=DedupeStrategy.URL_DATE_LOCATION,
-            ):
-                events.append(event)
+            events = [
+                event
+                async for event in endpoint.stream(
+                    event_filter,
+                    deduplicate=True,
+                    dedupe_strategy=DedupeStrategy.URL_DATE_LOCATION,
+                )
+            ]
 
         # Should deduplicate from 2 to 1
         assert len(events) == 1
@@ -315,9 +314,7 @@ class TestEventsEndpoint:
             "fetch_events",
             side_effect=mock_fetch_events,
         ):
-            events = []
-            async for event in endpoint.stream(event_filter):
-                events.append(event)
+            events = [event async for event in endpoint.stream(event_filter)]
 
         assert len(events) == 0
 

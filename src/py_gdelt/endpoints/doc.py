@@ -226,12 +226,7 @@ class DocEndpoint(BaseEndpoint):
         data = await self._get_json(url, params=params)
 
         # Parse response - handle both empty and populated responses
-        articles = []
-        if "articles" in data:
-            for item in data["articles"]:
-                articles.append(Article.model_validate(item))
-
-        return articles
+        return [Article.model_validate(item) for item in data.get("articles", [])]
 
     async def timeline(
         self,

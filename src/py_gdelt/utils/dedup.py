@@ -105,7 +105,7 @@ def get_dedup_key(record: HasDedupeFields, strategy: DedupeStrategy) -> tuple[st
     )
 
 
-def deduplicate[T: HasDedupeFields](
+def deduplicate(
     records: Iterable[T],
     strategy: DedupeStrategy = DedupeStrategy.URL_DATE_LOCATION,
 ) -> Iterator[T]:
@@ -141,7 +141,7 @@ def deduplicate[T: HasDedupeFields](
             yield record
 
 
-async def deduplicate_async[T: HasDedupeFields](
+async def deduplicate_async(
     records: AsyncIterator[T],
     strategy: DedupeStrategy = DedupeStrategy.URL_DATE_LOCATION,
 ) -> AsyncIterator[T]:

@@ -192,8 +192,7 @@ class GeoEndpoint(BaseEndpoint):
                     )
         elif "points" in data:
             # Plain JSON format
-            for item in data["points"]:
-                points.append(GeoPoint.model_validate(item))
+            points.extend([GeoPoint.model_validate(item) for item in data["points"]])
 
         return GeoResult(
             points=points,

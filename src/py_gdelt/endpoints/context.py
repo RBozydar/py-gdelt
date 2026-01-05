@@ -191,28 +191,24 @@ class ContextEndpoint(BaseEndpoint):
         data = await self._get_json(url, params=params)
 
         # Parse themes
-        themes: list[ContextTheme] = []
-        if "themes" in data:
-            for item in data["themes"]:
-                themes.append(
-                    ContextTheme(
-                        theme=item.get("theme", ""),
-                        count=item.get("count", 0),
-                        score=item.get("score"),
-                    ),
-                )
+        themes: list[ContextTheme] = [
+            ContextTheme(
+                theme=item.get("theme", ""),
+                count=item.get("count", 0),
+                score=item.get("score"),
+            )
+            for item in data.get("themes", [])
+        ]
 
         # Parse entities
-        entities: list[ContextEntity] = []
-        if "entities" in data:
-            for item in data["entities"]:
-                entities.append(
-                    ContextEntity(
-                        name=item.get("name", ""),
-                        entity_type=item.get("type", "UNKNOWN"),
-                        count=item.get("count", 0),
-                    ),
-                )
+        entities: list[ContextEntity] = [
+            ContextEntity(
+                name=item.get("name", ""),
+                entity_type=item.get("type", "UNKNOWN"),
+                count=item.get("count", 0),
+            )
+            for item in data.get("entities", [])
+        ]
 
         # Parse tone
         tone: ContextTone | None = None

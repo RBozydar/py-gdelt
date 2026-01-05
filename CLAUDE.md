@@ -25,7 +25,7 @@ A comprehensive Python client library for the GDELT (Global Database of Events, 
 ## Development Setup
 
 ### Prerequisites
-*   Python >= 3.12
+*   Python >= 3.11
 *   `uv` 
 
 
@@ -70,8 +70,9 @@ All ignored linting rules are categorized and documented in `pyproject.toml`:
 
 **Rule Categories:**
 
-1. **PERMANENT** (3 rules) - Justified by project architecture
-   - ARG002, S608, PLR0913
+1. **PERMANENT** (5 rules) - Justified by project architecture
+   - ARG002, S608, PLR0913, UP046, UP047
+   - UP046/UP047 ignored for Python 3.11 compatibility (no PEP 695 syntax)
    - These violations are intentional and correct for this codebase
 
 2. **MAJOR TECHNICAL DEBT** (3 rules, 992 violations) - Keep ignored
@@ -120,3 +121,26 @@ uv run mypy deep_research
 ### PyTest & Coverage
 
 **Configuration:** `pyproject.toml` → `[tool.pytest.ini_options]`, `[tool.coverage.*]`
+
+
+### Multi-Version Python Testing
+
+The CI pipeline tests against multiple Python versions to ensure broad compatibility:
+
+**Supported Versions:** Python 3.11, 3.12, 3.13, 3.14
+
+**CI Matrix:** `.github/workflows/ci.yml` → `test.strategy.matrix.python-version`
+
+**Compatibility Guidelines:**
+- **No PEP 695 syntax** - Use `Generic[T]` instead of `class Foo[T]:` for Python 3.11 compatibility
+- **Use `from __future__ import annotations`** - Enables modern type syntax on older Python versions
+- All dependencies must support Python 3.11+
+
+**Testing locally on a specific version:**
+```bash
+# Test on Python 3.11
+uv sync --all-extras --python 3.11 && uv run --python 3.11 pytest tests/
+
+# Test on Python 3.14
+uv sync --all-extras --python 3.14 && uv run --python 3.14 pytest tests/
+```

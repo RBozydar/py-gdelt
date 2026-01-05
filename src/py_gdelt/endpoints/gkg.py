@@ -167,10 +167,9 @@ class GKGEndpoint:
             >>> for record in result:
             ...     print(record.record_id, record.tone.tone if record.tone else None)
         """
-        records: list[GKGRecord] = []
-
-        async for record in self.stream(filter_obj, use_bigquery=use_bigquery):
-            records.append(record)
+        records: list[GKGRecord] = [
+            record async for record in self.stream(filter_obj, use_bigquery=use_bigquery)
+        ]
 
         logger.info("GKG query completed: %d records fetched", len(records))
 

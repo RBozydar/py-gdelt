@@ -181,11 +181,8 @@ class NGramsEndpoint:
             >>> result = await endpoint.query(filter_obj)
             >>> print(f"Found {len(result)} records in article headlines")
         """
-        records: list[NGramRecord] = []
-
         # Stream all records and collect them
-        async for record in self.stream(filter_obj):
-            records.append(record)
+        records: list[NGramRecord] = [record async for record in self.stream(filter_obj)]
 
         logger.info("Collected %d NGram records from query", len(records))
 

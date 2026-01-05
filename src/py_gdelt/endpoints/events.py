@@ -186,12 +186,13 @@ class EventsEndpoint:
             dedupe_strategy = DedupeStrategy.URL_DATE_LOCATION
 
         # Fetch raw events first (for deduplication)
-        raw_events_list: list[_RawEvent] = []
-        async for raw_event in self._fetcher.fetch_events(
-            filter_obj,
-            use_bigquery=use_bigquery,
-        ):
-            raw_events_list.append(raw_event)
+        raw_events_list: list[_RawEvent] = [
+            raw_event
+            async for raw_event in self._fetcher.fetch_events(
+                filter_obj,
+                use_bigquery=use_bigquery,
+            )
+        ]
 
         logger.info("Fetched %d raw events from sources", len(raw_events_list))
 
