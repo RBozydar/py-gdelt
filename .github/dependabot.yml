@@ -11,7 +11,7 @@ updates:
       timezone: "UTC"
     open-pull-requests-limit: 10
     reviewers:
-      - "RBozydar"  # Replace with actual GitHub usernames
+      - "RBozydar"
     assignees:
       - "RBozydar"
     commit-message:
