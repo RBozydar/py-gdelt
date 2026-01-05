@@ -1,4 +1,4 @@
-.PHONY: help fmt lint typecheck test coverage ci verify install clean
+.PHONY: help fmt lint typecheck test coverage doc-coverage ci verify install clean commit bump-version changelog
 
 help:  ## Show this help message
 	@echo "Available targets:"
@@ -22,7 +22,7 @@ test:  ## Run tests with pytest
 	uv run pytest tests/
 
 coverage:  ## Run tests with coverage report
-	uv run pytest -m "not integration" --cov=py_gdelt --cov-report=html --cov-report=term tests/
+	uv run pytest -m "not integration" --cov=src/py_gdelt --cov-report=html --cov-report=term tests/
 	@echo "HTML coverage report: htmlcov/index.html"
 
 doc-coverage:  ## Check documentation coverage
@@ -51,3 +51,12 @@ clean:  ## Clean generated files
 	rm -rf *.egg-info
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
+
+commit:  ## Interactive conventional commit (requires commitizen)
+	uv run cz commit
+
+bump-version:  ## Bump version based on commits
+	uv run cz bump
+
+changelog:  ## Generate changelog
+	uv run cz changelog
