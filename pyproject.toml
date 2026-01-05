@@ -76,18 +76,97 @@ select = [
     "RUF",    # Ruff-specific rules
     "S",      # flake8-bandit (security)
     "T20",    # flake8-print
+    "FLY",    # flynt (f-string conversion)
+    "PERF",   # Perflint (performance anti-patterns)
+    "PD",     # pandas-vet (if using pandas)
+    "PGH",    # pygrep-hooks
+    "PL",     # Pylint (all categories)
+    "TRY",    # tryceratops (exception handling)
+    "F",      # pyflakes
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade (modern Python syntax)
+    "YTT",    # flake8-2020 (sys.version checks)
+    "ASYNC",  # flake8-async (async/await best practices) - CRITICAL for this project
+    "S",      # flake8-bandit (security)
+    "BLE",    # flake8-blind-except
+    "B",      # flake8-bugbear (common bugs)
+    "A",      # flake8-builtins (shadowing built-ins)
+    "COM",    # flake8-commas
+    "C4",     # flake8-comprehensions
+    "DTZ",    # flake8-datetimez (timezone awareness)
+    "T10",    # flake8-debugger
+    "EM",     # flake8-errmsg (exception message formatting)
+    "ISC",    # flake8-implicit-str-concat
+    "ICN",    # flake8-import-conventions
+    "G",      # flake8-logging-format
+    "PIE",    # flake8-pie (misc best practices)
+    "T20",    # flake8-print (no print statements in production)
+    "PT",     # flake8-pytest-style
+    "Q",      # flake8-quotes
+    "RSE",    # flake8-raise (exception raising)
+    "RET",    # flake8-return (return statement best practices)
+    "SLF",    # flake8-self (private member access)
+    "SIM",    # flake8-simplify
+    "TID",    # flake8-tidy-imports
+    "TCH",    # flake8-type-checking (TYPE_CHECKING blocks)
+    "ARG",    # flake8-unused-arguments
+    "PTH",    # flake8-use-pathlib (prefer pathlib over os.path)
+    "ERA",    # eradicate (commented-out code)
 ]
 ignore = [
     "E501",   # line too long (handled by formatter)
 ]
 
+
+# Test files get more flexibility
+"tests/**/*.py" = [
+  "S101",     # assert allowed
+  "PLR2004",  # Magic values allowed
+  "ARG001",   # Unused arguments (fixtures)
+  "S106",     # Hardcoded passwords in tests ok
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["py_gdelt"]
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
+lines-after-imports = 2
+
+[tool.ruff.lint.mccabe]
+# Complexity threshold
+max-complexity = 15
+
+[tool.ruff.lint.pydocstyle]
+# Google-style docstrings (matching your current style)
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 8
+max-branches = 15
+max-returns = 6
+max-statements = 60
+
+[tool.ruff.format]
+# Formatting settings
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 warn_return_any = true
+warn_unused_configs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -97,17 +176,54 @@ no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_configs = true
 show_error_codes = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+strict_concatenate = true
+
+# Additional strict settings
+no_implicit_optional = true
+no_implicit_reexport = true
 plugins = ["pydantic.mypy"]
+
+
+# Output settings
+show_error_codes = true
+show_column_numbers = true
+show_error_context = true
+pretty = true
+
 
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-testpaths = ["tests"]
-addopts = "-v --tb=short"
+
+# Output options
+addopts = [
+  "-ra",                    # Show summary of all test outcomes
+  "--strict-markers",       # Error on unknown markers
+  "--strict-config",        # Error on unknown config options
+  "--showlocals",           # Show local variables in tracebacks
+  "--tb=short",             # Shorter traceback format
+  "-v",                     # Verbose output
+]
+
 markers = [
     "integration: mark test as integration test (makes live API calls)",
     "slow: mark test as slow (typically integration tests)",
@@ -116,13 +232,40 @@ markers = [
 [tool.coverage.run]
 source = ["src/py_gdelt"]
 branch = true
+parallel = true
+omit = [
+  "tests/*",
+  "examples/*",
+  "*/__main__.py",
+]
 
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "raise NotImplementedError",
+precision = 2
+show_missing = true
+skip_covered = false
+  # Standard exclusions
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
+
+  # Debug and logging that's hard to test
+  "logger\\.debug",
+
+  # Type checking blocks
+  "if TYPE_CHECKING:",
 ]
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.bandit]
+targets = ["deep_research"]
+exclude_dirs = ["/tests", "/examples"]
 
 [tool.pydoclint]
 style = "google"
