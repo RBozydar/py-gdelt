@@ -16,6 +16,21 @@ dependencies = [
     "defusedxml>=0.7.1",
     "anyio>=4.0",
 ]
+keywords = ["gdelt", "news", "events", "data-science", "api"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+[project.urls]
+Homepage = "https://github.com/RBozydar/py-gdelt"
+Documentation = "https://github.com/RBozydar/py-gdelt#readme"
+Repository = "https://github.com/RBozydar/py-gdelt"
+Issues = "https://github.com/RBozydar/py-gdelt/issues"
 
 [build-system]
 requires = ["uv_build>=0.9.8,<0.10.0"]
@@ -133,20 +148,3 @@ version_files = [
 ]
 tag_format = "v$version"
 update_changelog_on_bump = true
-
-[project]
-keywords = ["gdelt", "news", "events", "data-science", "api"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Scientific/Engineering :: Information Analysis",
-]
-[project.urls]
-Homepage = "https://github.com/RBozydar/py-gdelt"
-Documentation = "https://github.com/RBozydar/py-gdelt#readme"
-Repository = "https://github.com/RBozydar/py-gdelt"
-Issues = "https://github.com/RBozydar/py-gdelt/issues"
