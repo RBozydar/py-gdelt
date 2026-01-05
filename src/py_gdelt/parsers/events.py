@@ -26,6 +26,7 @@ from collections.abc import Iterator
 from py_gdelt.exceptions import ParseError
 from py_gdelt.models._internal import _RawEvent
 
+
 __all__ = ["EventsParser"]
 
 logger = logging.getLogger(__name__)
@@ -308,6 +309,7 @@ class EventsParser:
         Raises:
             ValueError: If required fields are missing or invalid
         """
+
         # Helper to get value or None for empty strings
         def get(column_name: str) -> str | None:
             idx = column_map.get(column_name)

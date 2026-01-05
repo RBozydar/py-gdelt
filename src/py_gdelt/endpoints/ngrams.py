@@ -38,6 +38,7 @@ from py_gdelt.parsers.ngrams import NGramsParser
 from py_gdelt.sources.fetcher import DataFetcher
 from py_gdelt.sources.files import FileSource
 
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 

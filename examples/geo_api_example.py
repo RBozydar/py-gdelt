@@ -68,7 +68,9 @@ async def search_with_bounding_box() -> None:
 
             print(f"\nFound {len(result.points)} locations in Europe for 'energy crisis'")
             for point in result.points[:10]:
-                print(f"  - {point.name}: {point.count} articles at ({point.lat:.2f}, {point.lon:.2f})")
+                print(
+                    f"  - {point.name}: {point.count} articles at ({point.lat:.2f}, {point.lon:.2f})",
+                )
         except RateLimitError as e:
             print(f"Rate limit exceeded: {e}")
             if e.retry_after:
@@ -95,7 +97,7 @@ async def get_geojson_output() -> None:
             )
 
             print(f"\nGeoJSON type: {geojson.get('type')}")
-            features = geojson.get('features', [])
+            features = geojson.get("features", [])
             print(f"Number of features: {len(features)}")
 
             if features:

@@ -80,7 +80,7 @@ def test_tv_timeline() -> None:
         points=[
             TVTimelinePoint(date="2024-01-01", count=50),
             TVTimelinePoint(date="2024-01-02", count=75),
-        ]
+        ],
     )
     assert len(timeline.points) == 2
     assert timeline.points[0].count == 50
@@ -109,7 +109,7 @@ def test_tv_station_chart() -> None:
         stations=[
             TVStationData(station="CNN", count=100, percentage=50.0),
             TVStationData(station="FOX", count=100, percentage=50.0),
-        ]
+        ],
     )
     assert len(chart.stations) == 2
     assert chart.stations[0].station == "CNN"
@@ -284,10 +284,10 @@ async def test_search_clips() -> None:
                         "show": "News",
                         "snippet": "Test clip",
                         "date": "20240101120000",
-                    }
-                ]
+                    },
+                ],
             },
-        )
+        ),
     )
 
     endpoint = TVEndpoint()
@@ -305,7 +305,7 @@ async def test_search_clips() -> None:
 async def test_search_with_parameters() -> None:
     """Test search with all parameters."""
     mock_route = respx.get("https://api.gdeltproject.org/api/v2/tv/tv").mock(
-        return_value=httpx.Response(200, json={"clips": []})
+        return_value=httpx.Response(200, json={"clips": []}),
     )
 
     endpoint = TVEndpoint()
@@ -346,10 +346,10 @@ async def test_query_clips() -> None:
                         "preview": "https://example.com/thumb.jpg",
                         "duration": 120,
                         "snippet": "Breaking news story",
-                    }
-                ]
+                    },
+                ],
             },
-        )
+        ),
     )
 
     filter = TVFilter(query="breaking", station="MSNBC")
@@ -375,9 +375,9 @@ async def test_timeline() -> None:
                 "timeline": [
                     {"date": "2024-01-01", "count": 100},
                     {"date": "2024-01-02", "count": 150},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     endpoint = TVEndpoint()
@@ -401,9 +401,9 @@ async def test_timeline_with_station() -> None:
                 "timeline": [
                     {"date": "2024-01-01", "station": "CNN", "count": 50},
                     {"date": "2024-01-01", "station": "FOX", "count": 75},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     endpoint = TVEndpoint()
@@ -425,9 +425,9 @@ async def test_station_chart() -> None:
                 "stations": [
                     {"station": "CNN", "count": 100},
                     {"station": "MSNBC", "count": 50},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     endpoint = TVEndpoint()
@@ -456,9 +456,9 @@ async def test_station_chart_zero_total() -> None:
             json={
                 "stations": [
                     {"station": "CNN", "count": 0},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     endpoint = TVEndpoint()
@@ -473,7 +473,7 @@ async def test_station_chart_zero_total() -> None:
 async def test_empty_response() -> None:
     """Test handling empty response."""
     respx.get("https://api.gdeltproject.org/api/v2/tv/tv").mock(
-        return_value=httpx.Response(200, json={})
+        return_value=httpx.Response(200, json={}),
     )
 
     endpoint = TVEndpoint()
@@ -487,7 +487,7 @@ async def test_empty_response() -> None:
 async def test_empty_clips_array() -> None:
     """Test handling empty clips array."""
     respx.get("https://api.gdeltproject.org/api/v2/tv/tv").mock(
-        return_value=httpx.Response(200, json={"clips": []})
+        return_value=httpx.Response(200, json={"clips": []}),
     )
 
     endpoint = TVEndpoint()
@@ -501,7 +501,7 @@ async def test_empty_clips_array() -> None:
 async def test_empty_timeline() -> None:
     """Test handling empty timeline."""
     respx.get("https://api.gdeltproject.org/api/v2/tv/tv").mock(
-        return_value=httpx.Response(200, json={"timeline": []})
+        return_value=httpx.Response(200, json={"timeline": []}),
     )
 
     endpoint = TVEndpoint()
@@ -515,7 +515,7 @@ async def test_empty_timeline() -> None:
 async def test_empty_stations() -> None:
     """Test handling empty stations."""
     respx.get("https://api.gdeltproject.org/api/v2/tv/tv").mock(
-        return_value=httpx.Response(200, json={"stations": []})
+        return_value=httpx.Response(200, json={"stations": []}),
     )
 
     endpoint = TVEndpoint()
@@ -533,8 +533,8 @@ async def test_tvai_search() -> None:
     """Test TVAI endpoint search."""
     respx.get("https://api.gdeltproject.org/api/v2/tvai/tvai").mock(
         return_value=httpx.Response(
-            200, json={"clips": [{"station": "FOX", "snippet": "AI clip"}]}
-        )
+            200, json={"clips": [{"station": "FOX", "snippet": "AI clip"}]},
+        ),
     )
 
     endpoint = TVAIEndpoint()
@@ -550,7 +550,7 @@ async def test_tvai_search() -> None:
 async def test_tvai_search_with_parameters() -> None:
     """Test TVAI search with all parameters."""
     mock_route = respx.get("https://api.gdeltproject.org/api/v2/tvai/tvai").mock(
-        return_value=httpx.Response(200, json={"clips": []})
+        return_value=httpx.Response(200, json={"clips": []}),
     )
 
     endpoint = TVAIEndpoint()
@@ -578,7 +578,7 @@ async def test_tvai_search_with_parameters() -> None:
 async def test_tvai_empty_response() -> None:
     """Test TVAI handling empty response."""
     respx.get("https://api.gdeltproject.org/api/v2/tvai/tvai").mock(
-        return_value=httpx.Response(200, json={})
+        return_value=httpx.Response(200, json={}),
     )
 
     endpoint = TVAIEndpoint()
@@ -624,7 +624,7 @@ async def test_shared_client() -> None:
 async def test_multiple_queries_same_endpoint() -> None:
     """Test making multiple queries with the same endpoint instance."""
     respx.get("https://api.gdeltproject.org/api/v2/tv/tv").mock(
-        return_value=httpx.Response(200, json={"clips": []})
+        return_value=httpx.Response(200, json={"clips": []}),
     )
 
     endpoint = TVEndpoint()
@@ -652,10 +652,10 @@ async def test_clip_with_missing_fields() -> None:
                     {
                         "station": "CNN",
                         # Missing: show, url, preview, date, duration, snippet
-                    }
-                ]
+                    },
+                ],
             },
-        )
+        ),
     )
 
     endpoint = TVEndpoint()

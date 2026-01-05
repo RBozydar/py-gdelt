@@ -18,6 +18,7 @@ from py_gdelt.filters import DateRange, GKGFilter
 from py_gdelt.models._internal import _RawGKG
 from py_gdelt.models.gkg import GKGRecord
 
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
@@ -147,15 +148,13 @@ class TestGKGEndpointQuery:
 
         # Mock the fetcher to yield raw GKG records
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             result = await endpoint.query(gkg_filter)
 
             assert len(result) == 1
@@ -207,16 +206,14 @@ class TestGKGEndpointQuery:
         )
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
             yield raw_gkg_2
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             result = await endpoint.query(gkg_filter)
 
             assert len(result) == 2
@@ -234,17 +231,15 @@ class TestGKGEndpointQuery:
         endpoint = GKGEndpoint(file_source=mock_file_source)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             # Yield nothing
             if False:  # type: ignore[unreachable]
                 yield
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             result = await endpoint.query(gkg_filter)
 
             assert len(result) == 0
@@ -266,15 +261,13 @@ class TestGKGEndpointQuery:
         )
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ) as mock_fetch:
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg) as mock_fetch:
             result = await endpoint.query(gkg_filter, use_bigquery=True)
 
             assert len(result) == 1
@@ -325,15 +318,13 @@ class TestGKGEndpointQuery:
         )
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield bad_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             # Should not raise, but should skip the bad record
             result = await endpoint.query(gkg_filter)
             assert len(result) == 0
@@ -353,15 +344,13 @@ class TestGKGEndpointStream:
         endpoint = GKGEndpoint(file_source=mock_file_source)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             records = []
             async for record in endpoint.stream(gkg_filter):
                 records.append(record)
@@ -380,9 +369,9 @@ class TestGKGEndpointStream:
         endpoint = GKGEndpoint(file_source=mock_file_source)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(5):
                 raw_gkg = _RawGKG(
@@ -417,9 +406,7 @@ class TestGKGEndpointStream:
                 )
                 yield raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             records = []
             async for record in endpoint.stream(gkg_filter):
                 records.append(record)
@@ -439,9 +426,9 @@ class TestGKGEndpointStream:
         endpoint = GKGEndpoint(file_source=mock_file_source)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(100):
                 raw_gkg = _RawGKG(
@@ -476,9 +463,7 @@ class TestGKGEndpointStream:
                 )
                 yield raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             records = []
             async for record in endpoint.stream(gkg_filter):
                 records.append(record)
@@ -531,17 +516,15 @@ class TestGKGEndpointStream:
         )
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
             yield bad_raw_gkg  # This will fail conversion
             yield sample_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             records = []
             async for record in endpoint.stream(gkg_filter):
                 records.append(record)
@@ -563,15 +546,13 @@ class TestGKGEndpointSyncWrappers:
         endpoint = GKGEndpoint(file_source=mock_file_source)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             result = endpoint.query_sync(gkg_filter)
 
             assert len(result) == 1
@@ -587,9 +568,9 @@ class TestGKGEndpointSyncWrappers:
         endpoint = GKGEndpoint(file_source=mock_file_source)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(3):
                 raw_gkg = _RawGKG(
@@ -624,9 +605,7 @@ class TestGKGEndpointSyncWrappers:
                 )
                 yield raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             records = []
             for record in endpoint.stream_sync(gkg_filter):
                 records.append(record)
@@ -648,17 +627,18 @@ class TestGKGEndpointErrorHandling:
         endpoint = GKGEndpoint(file_source=mock_file_source, fallback_enabled=False)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             raise RateLimitError("Rate limited", retry_after=60)
             if False:  # type: ignore[unreachable]
                 yield
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ), pytest.raises(RateLimitError):
+        with (
+            patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg),
+            pytest.raises(RateLimitError),
+        ):
             await endpoint.query(gkg_filter)
 
     @pytest.mark.asyncio
@@ -671,17 +651,18 @@ class TestGKGEndpointErrorHandling:
         endpoint = GKGEndpoint(file_source=mock_file_source, fallback_enabled=False)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             raise APIError("API failed")
             if False:  # type: ignore[unreachable]
                 yield
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ), pytest.raises(APIError):
+        with (
+            patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg),
+            pytest.raises(APIError),
+        ):
             await endpoint.query(gkg_filter)
 
     @pytest.mark.asyncio
@@ -694,17 +675,18 @@ class TestGKGEndpointErrorHandling:
         endpoint = GKGEndpoint(file_source=mock_file_source)
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             raise ConfigurationError("BigQuery not configured")
             if False:  # type: ignore[unreachable]
                 yield
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ), pytest.raises(ConfigurationError):
+        with (
+            patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg),
+            pytest.raises(ConfigurationError),
+        ):
             await endpoint.query(gkg_filter)
 
 
@@ -728,15 +710,13 @@ class TestGKGEndpointIntegration:
         )
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             # Query data
             result = await endpoint.query(filter_obj)
 
@@ -768,9 +748,9 @@ class TestGKGEndpointIntegration:
         )
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(50):
                 raw_gkg = _RawGKG(
@@ -805,9 +785,7 @@ class TestGKGEndpointIntegration:
                 )
                 yield raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             # Stream and process records one at a time
             count = 0
             async for record in endpoint.stream(filter_obj):
@@ -833,15 +811,13 @@ class TestGKGEndpointIntegration:
         )
 
         async def mock_fetch_gkg(
-            filter_obj: GKGFilter,  # noqa: ARG001
+            filter_obj: GKGFilter,
             *,
-            use_bigquery: bool = False,  # noqa: ARG001
+            use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
-        with patch.object(
-            endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg
-        ):
+        with patch.object(endpoint._fetcher, "fetch_gkg", side_effect=mock_fetch_gkg):
             result = await endpoint.query(filter_obj)
 
             record = result.data[0]

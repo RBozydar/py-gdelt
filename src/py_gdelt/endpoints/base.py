@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import httpx
 from tenacity import (
@@ -30,8 +30,6 @@ from py_gdelt._security import validate_url
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, RateLimitError
 
-if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
 
 __all__ = ["BaseEndpoint"]
 
@@ -68,7 +66,16 @@ class BaseEndpoint(ABC):
             settings: Configuration settings. If None, uses defaults.
             client: Optional shared HTTP client. If None, creates owned client.
                    When provided, the client lifecycle is managed externally.
+
+        Raises:
+            NotImplementedError: If subclass does not define BASE_URL class attribute.
         """
+        # Validate that subclass defines BASE_URL
+        if not hasattr(self.__class__, "BASE_URL") or not self.__class__.BASE_URL:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define a non-empty BASE_URL class attribute",
+            )
+
         self.settings = settings or GDELTSettings()
 
         if client is not None:
@@ -174,15 +181,12 @@ class BaseEndpoint(ABC):
 
                     # Handle server errors
                     if 500 <= response.status_code < 600:
-                        raise APIUnavailableError(
-                            f"Server error {response.status_code} from {url}"
-                        )
+                        raise APIUnavailableError(f"Server error {response.status_code} from {url}")
 
                     # Handle client errors
                     if 400 <= response.status_code < 500:
                         raise APIError(
-                            f"HTTP {response.status_code} from {url}: "
-                            f"{response.text[:200]}"
+                            f"HTTP {response.status_code} from {url}: {response.text[:200]}",
                         )
 
                     return response

@@ -3,8 +3,9 @@
 from py_gdelt.utils.dedup import DedupeStrategy, deduplicate
 from py_gdelt.utils.streaming import ResultStream
 
+
 __all__ = [
     "DedupeStrategy",
-    "deduplicate",
     "ResultStream",
+    "deduplicate",
 ]

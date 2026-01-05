@@ -54,7 +54,7 @@ import asyncio
 import logging
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import httpx
 
@@ -73,8 +73,6 @@ from py_gdelt.endpoints import (
 from py_gdelt.lookups import Lookups
 from py_gdelt.sources import BigQuerySource, FileSource
 
-if TYPE_CHECKING:
-    pass
 
 __all__ = ["GDELTClient"]
 
@@ -186,20 +184,35 @@ class GDELTClient:
         await self._file_source.__aenter__()
 
         # Initialize BigQuery source if credentials are configured
-        if (
-            self.settings.bigquery_project
-            and self.settings.bigquery_credentials
-        ):
+        if self.settings.bigquery_project and self.settings.bigquery_credentials:
             try:
                 self._bigquery_source = BigQuerySource(settings=self.settings)
                 logger.debug(
                     "Initialized BigQuerySource with project %s",
                     self.settings.bigquery_project,
                 )
-            except Exception as e:
+            except ImportError as e:
+                # google-cloud-bigquery package not installed
                 logger.warning(
-                    "Failed to initialize BigQuerySource: %s. "
+                    "BigQuery package not installed: %s. "
+                    "Install with: pip install py-gdelt[bigquery]",
+                    e,
+                )
+                self._bigquery_source = None
+            except (OSError, FileNotFoundError) as e:
+                # Credentials file not found or not readable
+                logger.warning(
+                    "BigQuery credentials file error: %s. BigQuery fallback will be unavailable.",
+                    e,
+                )
+                self._bigquery_source = None
+            except Exception as e:
+                # Catch remaining exceptions (Google SDK errors, etc.)
+                # We can't import Google exceptions without the optional dependency
+                logger.warning(
+                    "Failed to initialize BigQuerySource (%s): %s. "
                     "BigQuery fallback will be unavailable.",
+                    type(e).__name__,
                     e,
                 )
                 self._bigquery_source = None
@@ -257,12 +270,31 @@ class GDELTClient:
     def __enter__(self) -> GDELTClient:
         """Sync context manager entry.
 
+        This provides synchronous (blocking) access to the client for use in
+        non-async code. It uses asyncio.run() internally to manage the event loop.
+
+        Important Limitations:
+            - MUST be called from outside any existing async context/event loop.
+              Calling from within an async function will raise RuntimeError.
+            - Creates a new event loop for each context manager entry.
+            - Use the async context manager (async with) when possible for
+              better performance and compatibility.
+
         Returns:
             Self for use in with statement.
 
+        Raises:
+            RuntimeError: If called from within an already running event loop.
+
         Example:
+            >>> # Correct: Used from synchronous code
             >>> with GDELTClient() as client:
             ...     events = client.events.query_sync(filter_obj)
+            ...
+            >>> # Wrong: Don't use from async code - use 'async with' instead
+            >>> async def bad_example():
+            ...     with GDELTClient() as client:  # RuntimeError!
+            ...         pass
         """
         asyncio.run(self._initialize())
         return self
@@ -270,10 +302,13 @@ class GDELTClient:
     def __exit__(self, *args: Any) -> None:
         """Sync context manager exit.
 
-        Cleans up all owned resources.
+        Cleans up all owned resources. Uses asyncio.run() internally.
 
         Args:
             *args: Exception info (unused, but required by protocol).
+
+        Raises:
+            RuntimeError: If called from within an already running event loop.
         """
         asyncio.run(self._cleanup())
 

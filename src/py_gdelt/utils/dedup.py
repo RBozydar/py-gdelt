@@ -56,6 +56,7 @@ def get_dedup_key(record: HasDedupeFields, strategy: DedupeStrategy) -> tuple:
         Tuple of field values to use as deduplication key.
         None values are normalized to empty strings.
     """
+
     # Normalize None to empty string for consistent comparison
     def normalize(value: str | None) -> str:
         return value if value is not None else ""

@@ -10,10 +10,11 @@ happening during Pydantic model conversion.
 
 from dataclasses import dataclass
 
+
 __all__ = [
     "_RawEvent",
-    "_RawMention",
     "_RawGKG",
+    "_RawMention",
     "_RawNGram",
 ]
 

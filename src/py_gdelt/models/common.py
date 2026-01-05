@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Generic, Iterator, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
 
 __all__ = [
-    "Location",
-    "ToneScores",
     "EntityMention",
     "FailedRequest",
     "FetchResult",
+    "Location",
+    "ToneScores",
 ]
 
 

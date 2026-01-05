@@ -11,6 +11,7 @@ from importlib.resources import files
 from py_gdelt.exceptions import InvalidCodeError
 from py_gdelt.lookups.models import GKGThemeEntry
 
+
 __all__ = ["GKGThemes"]
 
 
@@ -38,9 +39,7 @@ class GKGThemes:
         """Lazy load GKG themes data."""
         if self._themes is None:
             raw_data = self._load_json("gkg_themes.json")
-            self._themes = {
-                theme: GKGThemeEntry(**data) for theme, data in raw_data.items()
-            }
+            self._themes = {theme: GKGThemeEntry(**data) for theme, data in raw_data.items()}
         return self._themes
 
     def __contains__(self, theme: str) -> bool:
@@ -122,11 +121,7 @@ class GKGThemes:
         Returns:
             List of theme codes in the specified category
         """
-        return [
-            theme
-            for theme, entry in self._themes_data.items()
-            if entry.category == category
-        ]
+        return [theme for theme, entry in self._themes_data.items() if entry.category == category]
 
     def validate(self, theme: str) -> None:
         """

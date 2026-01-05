@@ -116,7 +116,7 @@ class TestGetMasterFileList:
 
         async with respx.mock:
             respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, text=mock_content)
+                return_value=httpx.Response(200, text=mock_content),
             )
 
             urls = await file_source.get_master_file_list()
@@ -138,10 +138,10 @@ class TestGetMasterFileList:
 
         async with respx.mock:
             respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, text=master_content)
+                return_value=httpx.Response(200, text=master_content),
             )
             respx.get(TRANSLATION_FILE_LIST_URL.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, text=trans_content)
+                return_value=httpx.Response(200, text=trans_content),
             )
 
             urls = await file_source.get_master_file_list(include_translation=True)
@@ -156,7 +156,7 @@ class TestGetMasterFileList:
         """Test master file list with HTTP error."""
         async with respx.mock:
             respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
-                return_value=httpx.Response(503, text="Service Unavailable")
+                return_value=httpx.Response(503, text="Service Unavailable"),
             )
 
             with pytest.raises(APIUnavailableError):
@@ -170,7 +170,7 @@ class TestGetMasterFileList:
         """Test master file list with network error."""
         async with respx.mock:
             respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
-                side_effect=httpx.ConnectError("Connection failed")
+                side_effect=httpx.ConnectError("Connection failed"),
             )
 
             with pytest.raises(APIError, match="Network error"):
@@ -185,9 +185,9 @@ class TestGetMasterFileList:
         mock_content = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
 
         async with respx.mock:
-            mock_route = respx.get(
-                MASTER_FILE_LIST_URL.replace("http://", "https://")
-            ).mock(return_value=httpx.Response(200, text=mock_content))
+            mock_route = respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
+                return_value=httpx.Response(200, text=mock_content),
+            )
 
             # First call should hit network
             urls1 = await file_source.get_master_file_list()
@@ -348,7 +348,7 @@ class TestDownloadFile:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=mock_data)
+                return_value=httpx.Response(200, content=mock_data),
             )
 
             data = await file_source.download_file(url)
@@ -365,7 +365,7 @@ class TestDownloadFile:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(404, text="Not Found")
+                return_value=httpx.Response(404, text="Not Found"),
             )
 
             with pytest.raises(APIError, match="File not found"):
@@ -381,7 +381,7 @@ class TestDownloadFile:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(500, text="Internal Server Error")
+                return_value=httpx.Response(500, text="Internal Server Error"),
             )
 
             with pytest.raises(APIUnavailableError):
@@ -398,7 +398,7 @@ class TestDownloadFile:
 
         async with respx.mock:
             mock_route = respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=mock_data)
+                return_value=httpx.Response(200, content=mock_data),
             )
 
             # First download
@@ -444,7 +444,7 @@ class TestDownloadAndExtract:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=zip_data)
+                return_value=httpx.Response(200, content=zip_data),
             )
 
             data = await file_source.download_and_extract(url)
@@ -468,7 +468,7 @@ class TestDownloadAndExtract:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=gzip_data)
+                return_value=httpx.Response(200, content=gzip_data),
             )
 
             data = await file_source.download_and_extract(url)
@@ -486,7 +486,7 @@ class TestDownloadAndExtract:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=original_data)
+                return_value=httpx.Response(200, content=original_data),
             )
 
             data = await file_source.download_and_extract(url)
@@ -504,7 +504,7 @@ class TestDownloadAndExtract:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=bad_zip_data)
+                return_value=httpx.Response(200, content=bad_zip_data),
             )
 
             with pytest.raises(DataError, match="Invalid archive format"):
@@ -529,7 +529,7 @@ class TestDownloadAndExtract:
 
         async with respx.mock:
             respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=zip_data)
+                return_value=httpx.Response(200, content=zip_data),
             )
 
             with pytest.raises(SecurityError, match="exceeds maximum allowed size"):
@@ -559,7 +559,7 @@ class TestStreamFiles:
         async with respx.mock:
             for url in urls:
                 respx.get(url.replace("http://", "https://")).mock(
-                    return_value=httpx.Response(200, content=zip_data)
+                    return_value=httpx.Response(200, content=zip_data),
                 )
 
             results = []
@@ -592,15 +592,15 @@ class TestStreamFiles:
         async with respx.mock:
             # First URL succeeds
             respx.get(urls[0].replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=zip_data)
+                return_value=httpx.Response(200, content=zip_data),
             )
             # Second URL fails with 404
             respx.get(urls[1].replace("http://", "https://")).mock(
-                return_value=httpx.Response(404, text="Not Found")
+                return_value=httpx.Response(404, text="Not Found"),
             )
             # Third URL succeeds
             respx.get(urls[2].replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=zip_data)
+                return_value=httpx.Response(200, content=zip_data),
             )
 
             results = []
@@ -632,7 +632,7 @@ class TestStreamFiles:
         async with respx.mock:
             for url in urls:
                 respx.get(url.replace("http://", "https://")).mock(
-                    return_value=httpx.Response(200, content=zip_data)
+                    return_value=httpx.Response(200, content=zip_data),
                 )
 
             results = []
@@ -666,7 +666,7 @@ class TestStreamFiles:
         zip_data = zip_buffer.getvalue()
 
         # Track which downloads have completed
-        download_completed = {url: False for url in urls}
+        download_completed = dict.fromkeys(urls, False)
         first_yield_time = None
         all_complete_time = None
 
@@ -684,7 +684,7 @@ class TestStreamFiles:
         async with respx.mock:
             for url in urls:
                 respx.get(url.replace("http://", "https://")).mock(
-                    side_effect=lambda request, url=url: delayed_response(url)
+                    side_effect=lambda request, url=url: delayed_response(url),
                 )
 
             results = []
@@ -700,9 +700,9 @@ class TestStreamFiles:
             # This would fail with TaskGroup which waits for all tasks before yielding
             assert first_yield_time is not None
             assert all_complete_time is not None
-            assert (
-                first_yield_time < all_complete_time
-            ), "First yield should happen before all downloads complete (true streaming)"
+            assert first_yield_time < all_complete_time, (
+                "First yield should happen before all downloads complete (true streaming)"
+            )
 
 
 class TestHelperMethods:

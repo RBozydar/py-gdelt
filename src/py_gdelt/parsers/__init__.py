@@ -15,6 +15,7 @@ from py_gdelt.parsers.gkg import GKGParser
 from py_gdelt.parsers.mentions import MentionsParser
 from py_gdelt.parsers.ngrams import NGramsParser
 
+
 __all__ = [
     "EventsParser",
     "GKGParser",

@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING
 
 from py_gdelt.models._internal import _RawNGram
 
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 

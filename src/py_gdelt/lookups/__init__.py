@@ -11,6 +11,7 @@ from py_gdelt.lookups.cameo import CAMEOCodes
 from py_gdelt.lookups.countries import Countries
 from py_gdelt.lookups.themes import GKGThemes
 
+
 __all__ = [
     "CAMEOCodes",
     "Countries",

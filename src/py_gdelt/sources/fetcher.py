@@ -27,6 +27,7 @@ from py_gdelt.exceptions import (
 )
 from py_gdelt.filters import EventFilter, GKGFilter, NGramsFilter
 
+
 if TYPE_CHECKING:
     from py_gdelt.models._internal import _RawEvent, _RawGKG, _RawMention, _RawNGram
     from py_gdelt.sources.bigquery import BigQuerySource
@@ -344,7 +345,7 @@ class DataFetcher[T]:
         """
         if self._error_policy == "raise":
             raise error
-        elif self._error_policy == "warn":
+        if self._error_policy == "warn":
             logger.warning("Error occurred: %s (error_policy=warn, continuing)", error)
         elif self._error_policy == "skip":
             logger.debug("Error occurred: %s (error_policy=skip, skipping)", error)

@@ -101,7 +101,7 @@ class TestRequestHandling:
     async def test_successful_request(self) -> None:
         """Test successful GET request returns response."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json={"data": "test"})
+            return_value=httpx.Response(200, json={"data": "test"}),
         )
 
         async with TestEndpoint() as endpoint:
@@ -113,7 +113,7 @@ class TestRequestHandling:
     async def test_successful_request_with_params(self) -> None:
         """Test GET request with query parameters."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json={"key": "value"})
+            return_value=httpx.Response(200, json={"key": "value"}),
         )
 
         async with TestEndpoint() as endpoint:
@@ -127,7 +127,7 @@ class TestRequestHandling:
     async def test_successful_request_with_headers(self) -> None:
         """Test GET request with custom headers."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, text="OK")
+            return_value=httpx.Response(200, text="OK"),
         )
 
         async with TestEndpoint() as endpoint:
@@ -145,7 +145,7 @@ class TestErrorHandling:
     async def test_rate_limit_raises_error_with_retry_after(self) -> None:
         """Test 429 response raises RateLimitError with retry_after."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(429, headers={"Retry-After": "30"})
+            return_value=httpx.Response(429, headers={"Retry-After": "30"}),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
@@ -158,9 +158,7 @@ class TestErrorHandling:
     @respx.mock
     async def test_rate_limit_without_retry_after(self) -> None:
         """Test 429 response without Retry-After header."""
-        respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(429)
-        )
+        respx.get("https://api.gdeltproject.org/test").mock(return_value=httpx.Response(429))
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
             with pytest.raises(RateLimitError) as exc_info:
@@ -171,9 +169,7 @@ class TestErrorHandling:
     @respx.mock
     async def test_server_error_503_raises_unavailable(self) -> None:
         """Test 503 response raises APIUnavailableError."""
-        respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(503)
-        )
+        respx.get("https://api.gdeltproject.org/test").mock(return_value=httpx.Response(503))
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
             with pytest.raises(APIUnavailableError) as exc_info:
@@ -184,9 +180,7 @@ class TestErrorHandling:
     @respx.mock
     async def test_server_error_500_raises_unavailable(self) -> None:
         """Test 500 response raises APIUnavailableError."""
-        respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(500)
-        )
+        respx.get("https://api.gdeltproject.org/test").mock(return_value=httpx.Response(500))
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
             with pytest.raises(APIUnavailableError):
@@ -196,7 +190,7 @@ class TestErrorHandling:
     async def test_client_error_400_raises_api_error(self) -> None:
         """Test 400 response raises APIError."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(400, text="Bad request")
+            return_value=httpx.Response(400, text="Bad request"),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
@@ -210,7 +204,7 @@ class TestErrorHandling:
     async def test_client_error_404_raises_api_error(self) -> None:
         """Test 404 response raises APIError."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(404, text="Not found")
+            return_value=httpx.Response(404, text="Not found"),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
@@ -223,7 +217,7 @@ class TestErrorHandling:
     async def test_connection_error_raises_unavailable(self) -> None:
         """Test connection failure raises APIUnavailableError."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            side_effect=httpx.ConnectError("Connection refused")
+            side_effect=httpx.ConnectError("Connection refused"),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
@@ -236,7 +230,7 @@ class TestErrorHandling:
     async def test_timeout_error_raises_unavailable(self) -> None:
         """Test timeout raises APIUnavailableError."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            side_effect=httpx.TimeoutException("Request timed out")
+            side_effect=httpx.TimeoutException("Request timed out"),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
@@ -253,7 +247,7 @@ class TestErrorHandling:
                 "Bad request",
                 request=httpx.Request("GET", "https://api.gdeltproject.org/test"),
                 response=httpx.Response(400),
-            )
+            ),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
@@ -286,7 +280,7 @@ class TestURLValidation:
     async def test_valid_gdelt_url_accepted(self) -> None:
         """Test valid GDELT URLs are accepted."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json={})
+            return_value=httpx.Response(200, json={}),
         )
 
         async with TestEndpoint() as endpoint:
@@ -297,7 +291,7 @@ class TestURLValidation:
     async def test_data_gdelt_url_accepted(self) -> None:
         """Test data.gdeltproject.org URLs are accepted."""
         respx.get("https://data.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json={})
+            return_value=httpx.Response(200, json={}),
         )
 
         async with TestEndpoint() as endpoint:
@@ -312,7 +306,7 @@ class TestJSONHelper:
     async def test_get_json_returns_parsed_data(self) -> None:
         """Test _get_json returns parsed JSON."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json={"key": "value", "count": 42})
+            return_value=httpx.Response(200, json={"key": "value", "count": 42}),
         )
 
         async with TestEndpoint() as endpoint:
@@ -324,7 +318,7 @@ class TestJSONHelper:
     async def test_get_json_with_params(self) -> None:
         """Test _get_json with query parameters."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json=[1, 2, 3])
+            return_value=httpx.Response(200, json=[1, 2, 3]),
         )
 
         async with TestEndpoint() as endpoint:
@@ -339,7 +333,7 @@ class TestJSONHelper:
     async def test_get_json_raises_on_invalid_json(self) -> None:
         """Test _get_json raises on invalid JSON response."""
         respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, text="not json")
+            return_value=httpx.Response(200, text="not json"),
         )
 
         async with TestEndpoint() as endpoint:
@@ -358,7 +352,7 @@ class TestRetryBehavior:
             side_effect=[
                 httpx.Response(429, headers={"Retry-After": "1"}),
                 httpx.Response(200, json={"success": True}),
-            ]
+            ],
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=3)) as endpoint:
@@ -374,7 +368,7 @@ class TestRetryBehavior:
             side_effect=[
                 httpx.Response(503),
                 httpx.Response(200, json={"data": "ok"}),
-            ]
+            ],
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=3)) as endpoint:
@@ -386,7 +380,7 @@ class TestRetryBehavior:
     async def test_does_not_retry_client_errors(self) -> None:
         """Test request does NOT retry on 4xx errors (except 429)."""
         route = respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(400, text="Bad request")
+            return_value=httpx.Response(400, text="Bad request"),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=3)) as endpoint:
@@ -400,7 +394,7 @@ class TestRetryBehavior:
     async def test_gives_up_after_max_retries(self) -> None:
         """Test request gives up after max_retries attempts."""
         route = respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(503)
+            return_value=httpx.Response(503),
         )
 
         async with TestEndpoint(settings=GDELTSettings(max_retries=2)) as endpoint:

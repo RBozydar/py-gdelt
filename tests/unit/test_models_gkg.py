@@ -4,11 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import pytest
-from pydantic import ValidationError
-
 from py_gdelt.models._internal import _RawGKG
-from py_gdelt.models.common import EntityMention, Location, ToneScores
+from py_gdelt.models.common import EntityMention
 from py_gdelt.models.gkg import Amount, GKGRecord, Quotation
 
 

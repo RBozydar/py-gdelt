@@ -88,7 +88,11 @@ class TestCredentialValidation:
         with pytest.raises(ConfigurationError, match="not a regular file"):
             _validate_credential_path(str(tmp_path))
 
-    def test_validate_credential_path_with_expansion(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_validate_credential_path_with_expansion(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Test path expansion works correctly."""
         # Create credentials in home dir
         monkeypatch.setenv("HOME", str(tmp_path))
@@ -298,10 +302,14 @@ class TestBigQuerySourceQueries:
         mock_job.result.return_value = None
         mock_job.total_rows = 10
         mock_job.total_bytes_processed = 1024
-        mock_job.__iter__ = Mock(return_value=iter([
-            {"GLOBALEVENTID": "123", "EventCode": "141"},
-            {"GLOBALEVENTID": "456", "EventCode": "142"},
-        ]))
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [
+                    {"GLOBALEVENTID": "123", "EventCode": "141"},
+                    {"GLOBALEVENTID": "456", "EventCode": "142"},
+                ],
+            ),
+        )
 
         mock_bigquery_client.query.return_value = mock_job
 
@@ -376,9 +384,13 @@ class TestBigQuerySourceQueries:
         mock_job.result.return_value = None
         mock_job.total_rows = 5
         mock_job.total_bytes_processed = 2048
-        mock_job.__iter__ = Mock(return_value=iter([
-            {"GKGRECORDID": "abc", "V2Themes": "ENV_CLIMATECHANGE"},
-        ]))
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [
+                    {"GKGRECORDID": "abc", "V2Themes": "ENV_CLIMATECHANGE"},
+                ],
+            ),
+        )
 
         mock_bigquery_client.query.return_value = mock_job
 
@@ -419,10 +431,14 @@ class TestBigQuerySourceQueries:
         mock_job.result.return_value = None
         mock_job.total_rows = 3
         mock_job.total_bytes_processed = 512
-        mock_job.__iter__ = Mock(return_value=iter([
-            {"GLOBALEVENTID": "123", "MentionSourceName": "BBC"},
-            {"GLOBALEVENTID": "123", "MentionSourceName": "CNN"},
-        ]))
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [
+                    {"GLOBALEVENTID": "123", "MentionSourceName": "BBC"},
+                    {"GLOBALEVENTID": "123", "MentionSourceName": "CNN"},
+                ],
+            ),
+        )
 
         mock_bigquery_client.query.return_value = mock_job
 
@@ -518,6 +534,7 @@ class TestSecurityFeatures:
 
         # Test that invalid country codes are caught by Pydantic validation
         from py_gdelt.exceptions import InvalidCodeError
+
         with pytest.raises(InvalidCodeError):
             EventFilter(
                 date_range=DateRange(start=date(2024, 1, 1)),
@@ -567,11 +584,13 @@ class TestSecurityFeatures:
         # Error should not contain credential path or content
         try:
             results: list[dict[str, Any]] = []
+
             async def collect() -> None:
                 async for row in source.query_events(filter_obj):
                     results.append(row)
 
             import asyncio
+
             asyncio.run(collect())
         except BigQueryError as e:
             error_msg = str(e)

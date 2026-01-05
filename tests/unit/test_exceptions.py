@@ -335,6 +335,7 @@ class TestExceptionExports:
             "InvalidCodeError",
             "ConfigurationError",
             "BigQueryError",
+            "SecurityError",
         }
         assert hasattr(exceptions, "__all__")
         assert set(exceptions.__all__) == expected_exports

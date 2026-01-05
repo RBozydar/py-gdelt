@@ -10,10 +10,11 @@ from pydantic import BaseModel, Field
 from py_gdelt.models._internal import _RawGKG
 from py_gdelt.models.common import EntityMention, Location, ToneScores
 
+
 __all__ = [
-    "Quotation",
     "Amount",
     "GKGRecord",
+    "Quotation",
 ]
 
 
@@ -130,13 +131,12 @@ class GKGRecord(BaseModel):
         themes = _parse_themes(raw.themes_v2_enhanced or raw.themes_v1)
 
         # Parse persons
-        persons = _parse_entities(
-            raw.persons_v2_enhanced or raw.persons_v1, entity_type="PERSON"
-        )
+        persons = _parse_entities(raw.persons_v2_enhanced or raw.persons_v1, entity_type="PERSON")
 
         # Parse organizations
         organizations = _parse_entities(
-            raw.organizations_v2_enhanced or raw.organizations_v1, entity_type="ORG"
+            raw.organizations_v2_enhanced or raw.organizations_v1,
+            entity_type="ORG",
         )
 
         # Parse locations
@@ -234,9 +234,7 @@ def _parse_themes(themes_str: str) -> list[EntityMention]:
                 except ValueError:
                     logger.warning("Invalid offset in theme: %s", theme_pair)
 
-            result.append(
-                EntityMention(entity_type="THEME", name=name, offset=offset)
-            )
+            result.append(EntityMention(entity_type="THEME", name=name, offset=offset))
 
     return result
 
@@ -269,9 +267,7 @@ def _parse_entities(entities_str: str, entity_type: str) -> list[EntityMention]:
                 except ValueError:
                     logger.warning("Invalid offset in entity: %s", entity_pair)
 
-            result.append(
-                EntityMention(entity_type=entity_type, name=name, offset=offset)
-            )
+            result.append(EntityMention(entity_type=entity_type, name=name, offset=offset))
 
     return result
 
@@ -332,7 +328,7 @@ def _parse_locations(locations_str: str) -> list[Location]:
                 lat=lat,
                 lon=lon,
                 feature_id=feature_id,
-            )
+            ),
         )
 
     return result
@@ -439,9 +435,7 @@ def _parse_quotations(quotations_str: str) -> list[Quotation]:
             verb = parts[2]
             quote = parts[3]
 
-            result.append(
-                Quotation(offset=offset, length=length, verb=verb, quote=quote)
-            )
+            result.append(Quotation(offset=offset, length=length, verb=verb, quote=quote))
         except ValueError as e:
             logger.warning("Failed to parse quotation '%s': %s", quote_record, e)
 

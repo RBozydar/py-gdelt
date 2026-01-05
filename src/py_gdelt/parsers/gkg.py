@@ -19,6 +19,7 @@ from collections.abc import Iterator
 
 from py_gdelt.models._internal import _RawGKG
 
+
 __all__ = ["GKGParser"]
 
 logger = logging.getLogger(__name__)

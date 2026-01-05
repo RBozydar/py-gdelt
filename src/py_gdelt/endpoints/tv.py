@@ -37,14 +37,15 @@ from pydantic import BaseModel
 from py_gdelt.endpoints.base import BaseEndpoint
 from py_gdelt.filters import TVFilter
 
+
 __all__ = [
-    "TVEndpoint",
     "TVAIEndpoint",
     "TVClip",
-    "TVTimeline",
-    "TVTimelinePoint",
+    "TVEndpoint",
     "TVStationChart",
     "TVStationData",
+    "TVTimeline",
+    "TVTimelinePoint",
 ]
 
 
@@ -275,7 +276,7 @@ class TVEndpoint(BaseEndpoint):
                         date=_parse_date(item.get("date")),
                         duration_seconds=item.get("duration"),
                         snippet=item.get("snippet"),
-                    )
+                    ),
                 )
 
         return clips
@@ -330,7 +331,7 @@ class TVEndpoint(BaseEndpoint):
                         date=item.get("date", ""),
                         station=item.get("station"),
                         count=item.get("count", 0),
-                    )
+                    ),
                 )
 
         return TVTimeline(points=points)
@@ -384,7 +385,7 @@ class TVEndpoint(BaseEndpoint):
                         station=item.get("station", ""),
                         count=count,
                         percentage=count / total * 100 if total > 0 else None,
-                    )
+                    ),
                 )
 
         return TVStationChart(stations=stations)
@@ -473,7 +474,7 @@ class TVAIEndpoint(BaseEndpoint):
                         date=_parse_date(item.get("date")),
                         duration_seconds=item.get("duration"),
                         snippet=item.get("snippet"),
-                    )
+                    ),
                 )
 
         return clips

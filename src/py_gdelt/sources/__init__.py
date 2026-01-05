@@ -10,4 +10,5 @@ from py_gdelt.sources.bigquery import BigQuerySource
 from py_gdelt.sources.fetcher import DataFetcher, ErrorPolicy, Parser
 from py_gdelt.sources.files import FileSource
 
-__all__ = ["FileSource", "BigQuerySource", "DataFetcher", "Parser", "ErrorPolicy"]
+
+__all__ = ["BigQuerySource", "DataFetcher", "ErrorPolicy", "FileSource", "Parser"]

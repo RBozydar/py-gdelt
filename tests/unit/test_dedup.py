@@ -5,8 +5,6 @@ Tests cover all deduplication strategies and edge cases.
 
 from dataclasses import dataclass
 
-import pytest
-
 from py_gdelt.utils.dedup import DedupeStrategy, deduplicate, get_dedup_key
 
 
@@ -301,6 +299,7 @@ class TestDeduplicate:
 
     def test_large_dataset_memory_efficiency(self) -> None:
         """Generator doesn't consume all memory upfront."""
+
         # Create a large generator
         def record_generator():
             for i in range(1000):

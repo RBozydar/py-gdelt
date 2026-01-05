@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from py_gdelt.endpoints.base import BaseEndpoint
 from py_gdelt.filters import GeoFilter
 
+
 __all__ = ["GeoEndpoint", "GeoPoint", "GeoResult"]
 
 
@@ -187,7 +188,7 @@ class GeoEndpoint(BaseEndpoint):
                             name=props.get("name"),
                             count=props.get("count", 1),
                             url=props.get("url"),
-                        )
+                        ),
                     )
         elif "points" in data:
             # Plain JSON format
@@ -235,4 +236,4 @@ class GeoEndpoint(BaseEndpoint):
         url = await self._build_url()
 
         result = await self._get_json(url, params=params)
-        return cast(dict[str, Any], result)
+        return cast("dict[str, Any]", result)

@@ -69,9 +69,7 @@ def test_context_entity_creation() -> None:
 
 def test_context_tone_creation() -> None:
     """Test ContextTone model."""
-    tone = ContextTone(
-        average_tone=-2.5, positive_count=100, negative_count=150, neutral_count=50
-    )
+    tone = ContextTone(average_tone=-2.5, positive_count=100, negative_count=150, neutral_count=50)
     assert tone.average_tone == -2.5
     assert tone.positive_count == 100
     assert tone.negative_count == 150
@@ -126,7 +124,7 @@ async def test_analyze() -> None:
                 },
                 "related_queries": ["global warming", "carbon emissions"],
             },
-        )
+        ),
     )
 
     async with ContextEndpoint() as ctx:
@@ -157,7 +155,7 @@ async def test_analyze() -> None:
 async def test_analyze_with_timespan() -> None:
     """Test analyze method with timespan parameter."""
     route = respx.get("https://api.gdeltproject.org/api/v2/context/context").mock(
-        return_value=httpx.Response(200, json={"article_count": 100})
+        return_value=httpx.Response(200, json={"article_count": 100}),
     )
 
     async with ContextEndpoint() as ctx:
@@ -180,9 +178,9 @@ async def test_get_themes() -> None:
                     {"theme": "A", "count": 10},
                     {"theme": "B", "count": 30},
                     {"theme": "C", "count": 20},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     async with ContextEndpoint() as ctx:
@@ -200,9 +198,7 @@ async def test_get_themes() -> None:
 async def test_get_themes_no_limit() -> None:
     """Test get_themes returns all themes when count is less than limit."""
     respx.get("https://api.gdeltproject.org/api/v2/context/context").mock(
-        return_value=httpx.Response(
-            200, json={"themes": [{"theme": "A", "count": 10}]}
-        )
+        return_value=httpx.Response(200, json={"themes": [{"theme": "A", "count": 10}]}),
     )
 
     async with ContextEndpoint() as ctx:
@@ -223,9 +219,9 @@ async def test_get_entities_with_filter() -> None:
                     {"name": "John", "type": "PERSON", "count": 10},
                     {"name": "Acme Corp", "type": "ORG", "count": 20},
                     {"name": "Jane", "type": "PERSON", "count": 15},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     async with ContextEndpoint() as ctx:
@@ -250,9 +246,9 @@ async def test_get_entities_without_filter() -> None:
                 "entities": [
                     {"name": "A", "type": "PERSON", "count": 10},
                     {"name": "B", "type": "ORG", "count": 20},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     async with ContextEndpoint() as ctx:
@@ -274,9 +270,9 @@ async def test_get_entities_with_limit() -> None:
                     {"name": "A", "type": "PERSON", "count": 30},
                     {"name": "B", "type": "ORG", "count": 20},
                     {"name": "C", "type": "LOCATION", "count": 10},
-                ]
+                ],
             },
-        )
+        ),
     )
 
     async with ContextEndpoint() as ctx:
@@ -292,7 +288,7 @@ async def test_get_entities_with_limit() -> None:
 async def test_empty_response() -> None:
     """Test handling of empty response."""
     respx.get("https://api.gdeltproject.org/api/v2/context/context").mock(
-        return_value=httpx.Response(200, json={})
+        return_value=httpx.Response(200, json={}),
     )
 
     async with ContextEndpoint() as ctx:
@@ -317,7 +313,7 @@ async def test_partial_response() -> None:
                 "themes": [{"theme": "TEST", "count": 5}],
                 # Missing entities, tone, related_queries
             },
-        )
+        ),
     )
 
     async with ContextEndpoint() as ctx:
@@ -336,8 +332,9 @@ async def test_malformed_related_queries() -> None:
     """Test handling of non-list related_queries."""
     respx.get("https://api.gdeltproject.org/api/v2/context/context").mock(
         return_value=httpx.Response(
-            200, json={"related_queries": "not a list"}  # Invalid type
-        )
+            200,
+            json={"related_queries": "not a list"},  # Invalid type
+        ),
     )
 
     async with ContextEndpoint() as ctx:

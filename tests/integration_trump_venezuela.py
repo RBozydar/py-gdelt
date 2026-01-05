@@ -6,7 +6,6 @@ Trump and Venezuela, demonstrating real API usage.
 """
 
 import asyncio
-from datetime import date, timedelta
 
 from py_gdelt import GDELTClient
 from py_gdelt.filters import DocFilter
@@ -34,15 +33,41 @@ async def search_trump_venezuela() -> None:
             articles = await client.doc.query(doc_filter)
 
             # Filter for English articles client-side (GDELT sometimes ignores language filter)
-            non_english_domains = ('.ru', '.kr', '.cn', '.jp', '.ua', '.il', '.fi', '.uk.co',
-                                   'qianlong.com', 'vetogate.com', 'alquds.co', 'youm7.com',
-                                   'webdunia.com', 'centralasia.media', 'israelinfo.co',
-                                   'liga.net', 'iltalehti.fi', 'unian.net', 'glavred.info',
-                                   'heraldcorp.com', 'hankookilbo.com', 'koreatimes.com', 'fnnews.com')
-            english_articles = [a for a in articles if a.is_english or
-                               (a.domain and not any(d in a.domain for d in non_english_domains))]
+            non_english_domains = (
+                ".ru",
+                ".kr",
+                ".cn",
+                ".jp",
+                ".ua",
+                ".il",
+                ".fi",
+                ".uk.co",
+                "qianlong.com",
+                "vetogate.com",
+                "alquds.co",
+                "youm7.com",
+                "webdunia.com",
+                "centralasia.media",
+                "israelinfo.co",
+                "liga.net",
+                "iltalehti.fi",
+                "unian.net",
+                "glavred.info",
+                "heraldcorp.com",
+                "hankookilbo.com",
+                "koreatimes.com",
+                "fnnews.com",
+            )
+            english_articles = [
+                a
+                for a in articles
+                if a.is_english
+                or (a.domain and not any(d in a.domain for d in non_english_domains))
+            ]
 
-            print(f"\nFound {len(articles)} total articles, {len(english_articles)} likely English\n")
+            print(
+                f"\nFound {len(articles)} total articles, {len(english_articles)} likely English\n",
+            )
             print("-" * 70)
 
             for i, article in enumerate(english_articles[:20], 1):  # Show top 20
@@ -61,7 +86,13 @@ async def search_trump_venezuela() -> None:
 
                 # Show tone if available
                 if article.tone is not None:
-                    tone_label = "positive" if article.tone > 0 else "negative" if article.tone < 0 else "neutral"
+                    tone_label = (
+                        "positive"
+                        if article.tone > 0
+                        else "negative"
+                        if article.tone < 0
+                        else "neutral"
+                    )
                     print(f"   Tone: {article.tone:.2f} ({tone_label})")
 
             print("\n" + "-" * 70)
@@ -77,9 +108,22 @@ async def search_trump_venezuela() -> None:
                 keywords = {}
                 for article in english_articles:
                     title_lower = article.title.lower()
-                    for word in ["tariff", "oil", "sanction", "maduro", "guaido",
-                                 "military", "invasion", "threat", "economy", "crisis",
-                                 "panama", "canal", "deportation", "immigration"]:
+                    for word in [
+                        "tariff",
+                        "oil",
+                        "sanction",
+                        "maduro",
+                        "guaido",
+                        "military",
+                        "invasion",
+                        "threat",
+                        "economy",
+                        "crisis",
+                        "panama",
+                        "canal",
+                        "deportation",
+                        "immigration",
+                    ]:
                         if word in title_lower:
                             keywords[word] = keywords.get(word, 0) + 1
 
@@ -91,6 +135,7 @@ async def search_trump_venezuela() -> None:
         except Exception as e:
             print(f"Error: {e}")
             import traceback
+
             traceback.print_exc()
 
 

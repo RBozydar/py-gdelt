@@ -120,23 +120,25 @@ class TestGKGParserV1:
     def test_parse_v1_empty_fields(self) -> None:
         """Should handle empty fields as None."""
         # Create v1 record with some empty fields
-        data = b"\t".join([
-            b"20130101000000-1",
-            b"20130101000000",
-            b"1",
-            b"",  # Empty source name
-            b"http://example.com",
-            b"",  # Empty counts
-            b"THEME1",
-            b"",  # Empty locations
-            b"",  # Empty persons
-            b"ORG1",
-            b"-2.5,10,12,0.5,5,3,1500",
-            b"",  # Empty sharing image
-            b"",  # Empty related images
-            b"",  # Empty quotations
-            b"Name1",
-        ])
+        data = b"\t".join(
+            [
+                b"20130101000000-1",
+                b"20130101000000",
+                b"1",
+                b"",  # Empty source name
+                b"http://example.com",
+                b"",  # Empty counts
+                b"THEME1",
+                b"",  # Empty locations
+                b"",  # Empty persons
+                b"ORG1",
+                b"-2.5,10,12,0.5,5,3,1500",
+                b"",  # Empty sharing image
+                b"",  # Empty related images
+                b"",  # Empty quotations
+                b"Name1",
+            ],
+        )
 
         parser = GKGParser()
         records = list(parser.parse(data))
@@ -188,35 +190,37 @@ class TestGKGParserV2:
     def v2_sample_data(self) -> bytes:
         """Sample GKG v2.1 record (27 columns)."""
         # All 27 columns for v2.1
-        return b"\t".join([
-            b"20150218230000-1",  # 0: GKGRECORDID
-            b"20150218230000",  # 1: DATE
-            b"1",  # 2: SourceCollectionId
-            b"NewsSource.com",  # 3: SourceCommonName
-            b"http://news.com/article",  # 4: DocumentIdentifier
-            b"10#OLD_COUNT#50",  # 5: V1Counts
-            b"20#NEW_COUNT#100;30#COUNT2#200",  # 6: V2.1Counts
-            b"OLD_THEME",  # 7: V1Themes
-            b"NEW_THEME1;NEW_THEME2",  # 8: V2EnhancedThemes
-            b"1#Paris#FR",  # 9: V1Locations
-            b"2#London#UK#UK#51.5#-0.1#123456",  # 10: V2EnhancedLocations
-            b"Person A",  # 11: V1Persons
-            b"Person B;Person C",  # 12: V2EnhancedPersons
-            b"Org A",  # 13: V1Organizations
-            b"Org B;Org C",  # 14: V2EnhancedOrganizations
-            b"-3.5,15.2,18.7,0.8,6.5,4.1,2000",  # 15: V1.5Tone
-            b"20150218;20150219",  # 16: V2.1Dates
-            b"c2.14:3.0;c5.1:0.85",  # 17: V2.1GCAM
-            b"http://news.com/share.jpg",  # 18: SharingImage
-            b"http://news.com/img1.jpg",  # 19: RelatedImages
-            b"http://social.com/embed1",  # 20: SocialImageEmbeds
-            b"http://video.com/embed1",  # 21: SocialVideoEmbeds
-            b"Quote text#Speaker#Position",  # 22: Quotations
-            b"Name1;Name2;Name3",  # 23: AllNames
-            b"100;200;$500",  # 24: Amounts
-            b"srclc:eng;eng:0.95",  # 25: TranslationInfo
-            b"<extra>xml</extra>",  # 26: ExtrasXML
-        ])
+        return b"\t".join(
+            [
+                b"20150218230000-1",  # 0: GKGRECORDID
+                b"20150218230000",  # 1: DATE
+                b"1",  # 2: SourceCollectionId
+                b"NewsSource.com",  # 3: SourceCommonName
+                b"http://news.com/article",  # 4: DocumentIdentifier
+                b"10#OLD_COUNT#50",  # 5: V1Counts
+                b"20#NEW_COUNT#100;30#COUNT2#200",  # 6: V2.1Counts
+                b"OLD_THEME",  # 7: V1Themes
+                b"NEW_THEME1;NEW_THEME2",  # 8: V2EnhancedThemes
+                b"1#Paris#FR",  # 9: V1Locations
+                b"2#London#UK#UK#51.5#-0.1#123456",  # 10: V2EnhancedLocations
+                b"Person A",  # 11: V1Persons
+                b"Person B;Person C",  # 12: V2EnhancedPersons
+                b"Org A",  # 13: V1Organizations
+                b"Org B;Org C",  # 14: V2EnhancedOrganizations
+                b"-3.5,15.2,18.7,0.8,6.5,4.1,2000",  # 15: V1.5Tone
+                b"20150218;20150219",  # 16: V2.1Dates
+                b"c2.14:3.0;c5.1:0.85",  # 17: V2.1GCAM
+                b"http://news.com/share.jpg",  # 18: SharingImage
+                b"http://news.com/img1.jpg",  # 19: RelatedImages
+                b"http://social.com/embed1",  # 20: SocialImageEmbeds
+                b"http://video.com/embed1",  # 21: SocialVideoEmbeds
+                b"Quote text#Speaker#Position",  # 22: Quotations
+                b"Name1;Name2;Name3",  # 23: AllNames
+                b"100;200;$500",  # 24: Amounts
+                b"srclc:eng;eng:0.95",  # 25: TranslationInfo
+                b"<extra>xml</extra>",  # 26: ExtrasXML
+            ],
+        )
 
     def test_parse_v2_basic_fields(self, v2_sample_data: bytes) -> None:
         """Should parse basic v2.1 fields correctly."""
@@ -268,35 +272,37 @@ class TestGKGParserV2:
         """Should detect translation from -T suffix in record ID."""
         # Create complete v2.1 row with 27 columns
         # Note: Last column must be non-empty to avoid strip() removing trailing tabs
-        data = b"\t".join([
-            b"20150218230000-T",  # 0: GKGRECORDID (ends with -T to indicate translation)
-            b"20150218230000",      # 1: DATE
-            b"1",                   # 2: SourceCollectionId
-            b"NewsSource",          # 3: SourceCommonName
-            b"http://news.com",     # 4: DocumentIdentifier
-            b"",                    # 5: V1Counts
-            b"",                    # 6: V2.1Counts
-            b"",                    # 7: V1Themes
-            b"",                    # 8: V2EnhancedThemes
-            b"",                    # 9: V1Locations
-            b"",                    # 10: V2EnhancedLocations
-            b"",                    # 11: V1Persons
-            b"",                    # 12: V2EnhancedPersons
-            b"",                    # 13: V1Organizations
-            b"",                    # 14: V2EnhancedOrganizations
-            b"",                    # 15: V1.5Tone
-            b"",                    # 16: V2.1Dates
-            b"",                    # 17: V2.1GCAM
-            b"",                    # 18: SharingImage
-            b"",                    # 19: RelatedImages
-            b"",                    # 20: SocialImageEmbeds
-            b"",                    # 21: SocialVideoEmbeds
-            b"",                    # 22: Quotations
-            b"",                    # 23: AllNames
-            b"",                    # 24: Amounts
-            b"",                    # 25: TranslationInfo
-            b"<xml></xml>",         # 26: ExtrasXML (non-empty to preserve column count)
-        ])
+        data = b"\t".join(
+            [
+                b"20150218230000-T",  # 0: GKGRECORDID (ends with -T to indicate translation)
+                b"20150218230000",  # 1: DATE
+                b"1",  # 2: SourceCollectionId
+                b"NewsSource",  # 3: SourceCommonName
+                b"http://news.com",  # 4: DocumentIdentifier
+                b"",  # 5: V1Counts
+                b"",  # 6: V2.1Counts
+                b"",  # 7: V1Themes
+                b"",  # 8: V2EnhancedThemes
+                b"",  # 9: V1Locations
+                b"",  # 10: V2EnhancedLocations
+                b"",  # 11: V1Persons
+                b"",  # 12: V2EnhancedPersons
+                b"",  # 13: V1Organizations
+                b"",  # 14: V2EnhancedOrganizations
+                b"",  # 15: V1.5Tone
+                b"",  # 16: V2.1Dates
+                b"",  # 17: V2.1GCAM
+                b"",  # 18: SharingImage
+                b"",  # 19: RelatedImages
+                b"",  # 20: SocialImageEmbeds
+                b"",  # 21: SocialVideoEmbeds
+                b"",  # 22: Quotations
+                b"",  # 23: AllNames
+                b"",  # 24: Amounts
+                b"",  # 25: TranslationInfo
+                b"<xml></xml>",  # 26: ExtrasXML (non-empty to preserve column count)
+            ],
+        )
 
         parser = GKGParser()
         records = list(parser.parse(data, is_translated=False))
@@ -308,10 +314,14 @@ class TestGKGParserV2:
         """Should set translation from is_translated parameter."""
         # Create complete v2.1 row with 27 columns
         # Note: Last column must be non-empty to avoid strip() removing trailing tabs
-        data = b"\t".join([
-            b"20150218230000-1",  # 0: GKGRECORDID (No -T suffix)
-            b"20150218230000",    # 1: DATE
-        ] + [b""] * 24 + [b"<xml></xml>"])  # Columns 2-25 empty, 26 non-empty
+        data = b"\t".join(
+            [
+                b"20150218230000-1",  # 0: GKGRECORDID (No -T suffix)
+                b"20150218230000",  # 1: DATE
+            ]
+            + [b""] * 24
+            + [b"<xml></xml>"],
+        )  # Columns 2-25 empty, 26 non-empty
 
         parser = GKGParser()
         records = list(parser.parse(data, is_translated=True))
@@ -323,35 +333,37 @@ class TestGKGParserV2:
         """Should handle empty optional fields as None."""
         # All 27 columns present, with empty optional fields at the end
         # Note: We make ExtrasXML non-empty to ensure all 27 columns are preserved
-        data = b"\t".join([
-            b"20150218230000-1",  # 0: GKGRECORDID
-            b"20150218230000",    # 1: DATE
-            b"1",                 # 2: SourceCollectionId
-            b"NewsSource",        # 3: SourceCommonName
-            b"http://news.com",   # 4: DocumentIdentifier
-            b"counts1",           # 5: V1Counts
-            b"counts2",           # 6: V2.1Counts
-            b"themes1",           # 7: V1Themes
-            b"themes2",           # 8: V2EnhancedThemes
-            b"locs1",             # 9: V1Locations
-            b"locs2",             # 10: V2EnhancedLocations
-            b"pers1",             # 11: V1Persons
-            b"pers2",             # 12: V2EnhancedPersons
-            b"orgs1",             # 13: V1Organizations
-            b"orgs2",             # 14: V2EnhancedOrganizations
-            b"tone",              # 15: V1.5Tone
-            b"dates",             # 16: V2.1Dates
-            b"gcam",              # 17: V2.1GCAM
-            b"",                  # 18: SharingImage (empty)
-            b"",                  # 19: RelatedImages (empty)
-            b"",                  # 20: SocialImageEmbeds (empty)
-            b"",                  # 21: SocialVideoEmbeds (empty)
-            b"",                  # 22: Quotations (empty)
-            b"",                  # 23: AllNames (empty)
-            b"",                  # 24: Amounts (empty)
-            b"",                  # 25: TranslationInfo (empty)
-            b"<xml></xml>",       # 26: ExtrasXML (non-empty to preserve column count)
-        ])
+        data = b"\t".join(
+            [
+                b"20150218230000-1",  # 0: GKGRECORDID
+                b"20150218230000",  # 1: DATE
+                b"1",  # 2: SourceCollectionId
+                b"NewsSource",  # 3: SourceCommonName
+                b"http://news.com",  # 4: DocumentIdentifier
+                b"counts1",  # 5: V1Counts
+                b"counts2",  # 6: V2.1Counts
+                b"themes1",  # 7: V1Themes
+                b"themes2",  # 8: V2EnhancedThemes
+                b"locs1",  # 9: V1Locations
+                b"locs2",  # 10: V2EnhancedLocations
+                b"pers1",  # 11: V1Persons
+                b"pers2",  # 12: V2EnhancedPersons
+                b"orgs1",  # 13: V1Organizations
+                b"orgs2",  # 14: V2EnhancedOrganizations
+                b"tone",  # 15: V1.5Tone
+                b"dates",  # 16: V2.1Dates
+                b"gcam",  # 17: V2.1GCAM
+                b"",  # 18: SharingImage (empty)
+                b"",  # 19: RelatedImages (empty)
+                b"",  # 20: SocialImageEmbeds (empty)
+                b"",  # 21: SocialVideoEmbeds (empty)
+                b"",  # 22: Quotations (empty)
+                b"",  # 23: AllNames (empty)
+                b"",  # 24: Amounts (empty)
+                b"",  # 25: TranslationInfo (empty)
+                b"<xml></xml>",  # 26: ExtrasXML (non-empty to preserve column count)
+            ],
+        )
 
         parser = GKGParser()
         records = list(parser.parse(data))
@@ -413,13 +425,17 @@ class TestGKGParserEdgeCases:
         """Should handle invalid UTF-8 characters gracefully."""
         # Create complete v2.1 record with invalid UTF-8 in a field (27 columns total)
         # Note: Last column must be non-empty to avoid strip() removing trailing tabs
-        data = b"\t".join([
-            b"20150218230000-1",       # 0: GKGRECORDID
-            b"20150218230000",          # 1: DATE
-            b"1",                       # 2: SourceCollectionId
-            b"News\xff\xfeSource",      # 3: SourceCommonName (Invalid UTF-8 sequence)
-            b"http://news.com",         # 4: DocumentIdentifier
-        ] + [b""] * 21 + [b"<xml></xml>"])  # 5-25: empty, 26: non-empty
+        data = b"\t".join(
+            [
+                b"20150218230000-1",  # 0: GKGRECORDID
+                b"20150218230000",  # 1: DATE
+                b"1",  # 2: SourceCollectionId
+                b"News\xff\xfeSource",  # 3: SourceCommonName (Invalid UTF-8 sequence)
+                b"http://news.com",  # 4: DocumentIdentifier
+            ]
+            + [b""] * 21
+            + [b"<xml></xml>"],
+        )  # 5-25: empty, 26: non-empty
 
         parser = GKGParser()
         records = list(parser.parse(data))

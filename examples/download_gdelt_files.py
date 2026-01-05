@@ -14,6 +14,7 @@ from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, DataError, SecurityError
 from py_gdelt.sources import FileSource
 
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

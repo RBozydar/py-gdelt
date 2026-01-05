@@ -14,6 +14,7 @@ import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+
 logger = logging.getLogger(__name__)
 
 __all__ = ["Cache"]
@@ -92,7 +93,13 @@ class Cache:
             logger.warning("Error reading cache for key '%s': %s", key, e)
             return None
 
-    def set(self, key: str, data: bytes, file_date: datetime | None = None) -> None:
+    def set(
+        self,
+        key: str,
+        data: bytes,
+        file_date: datetime | None = None,
+        ttl: int | None = None,
+    ) -> None:
         """Store data in cache.
 
         Args:
@@ -100,13 +107,15 @@ class Cache:
             data: Raw bytes to cache
             file_date: Date of the GDELT file (if known).
                       Files >30 days old are cached indefinitely.
+            ttl: Custom TTL in seconds (overrides default_ttl if provided).
+                Use for master file lists or other short-lived cache entries.
         """
         try:
             cache_path = self._get_cache_path(key)
             meta_path = self._get_metadata_path(key)
 
-            # Ensure cache directory exists
-            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            # Ensure cache directory exists with secure permissions (owner only)
+            cache_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
             # Write data file
             cache_path.write_bytes(data)
@@ -117,9 +126,9 @@ class Cache:
                 # Historical files never expire
                 expires_at = "never"
             else:
-                # Use default TTL for recent/unknown files
-                ttl = self.default_ttl
-                expires_at = (now + timedelta(seconds=ttl)).isoformat()
+                # Use custom TTL if provided, otherwise default
+                effective_ttl = ttl if ttl is not None else self.default_ttl
+                expires_at = (now + timedelta(seconds=effective_ttl)).isoformat()
 
             # Write metadata
             metadata = {

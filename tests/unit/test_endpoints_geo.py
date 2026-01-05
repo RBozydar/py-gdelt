@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import httpx
-import pytest
 import respx
 
 from py_gdelt.endpoints.geo import GeoEndpoint, GeoPoint, GeoResult
@@ -147,11 +146,11 @@ class TestAPIRequests:
                                 "coordinates": [-122.4, 37.8],
                             },
                             "properties": {"name": "San Francisco", "count": 50},
-                        }
+                        },
                     ],
                     "count": 1,
                 },
-            )
+            ),
         )
 
         async with GeoEndpoint() as geo:
@@ -170,12 +169,10 @@ class TestAPIRequests:
             return_value=httpx.Response(
                 200,
                 json={
-                    "points": [
-                        {"lat": 40.7, "lon": -74.0, "name": "New York", "count": 100}
-                    ],
+                    "points": [{"lat": 40.7, "lon": -74.0, "name": "New York", "count": 100}],
                     "count": 1,
                 },
-            )
+            ),
         )
 
         async with GeoEndpoint() as geo:
@@ -196,11 +193,11 @@ class TestAPIRequests:
                     "type": "Feature",
                     "geometry": {"type": "Point", "coordinates": [0, 0]},
                     "properties": {"name": "Null Island"},
-                }
+                },
             ],
         }
         respx.get("https://api.gdeltproject.org/api/v2/geo/geo").mock(
-            return_value=httpx.Response(200, json=expected_geojson)
+            return_value=httpx.Response(200, json=expected_geojson),
         )
 
         async with GeoEndpoint() as geo:
@@ -213,7 +210,7 @@ class TestAPIRequests:
     async def test_empty_response(self) -> None:
         """Test handling empty response."""
         respx.get("https://api.gdeltproject.org/api/v2/geo/geo").mock(
-            return_value=httpx.Response(200, json={})
+            return_value=httpx.Response(200, json={}),
         )
 
         async with GeoEndpoint() as geo:
@@ -261,7 +258,7 @@ class TestAPIRequests:
                     ],
                     "count": 3,
                 },
-            )
+            ),
         )
 
         async with GeoEndpoint() as geo:
@@ -296,10 +293,10 @@ class TestAPIRequests:
                                 "coordinates": [10.0, 20.0],
                             },
                             "properties": {},
-                        }
+                        },
                     ],
                 },
-            )
+            ),
         )
 
         async with GeoEndpoint() as geo:
@@ -314,7 +311,7 @@ class TestAPIRequests:
     async def test_search_with_all_parameters(self) -> None:
         """Test search method with all parameters."""
         respx.get("https://api.gdeltproject.org/api/v2/geo/geo").mock(
-            return_value=httpx.Response(200, json={"points": [], "count": 0})
+            return_value=httpx.Response(200, json={"points": [], "count": 0}),
         )
 
         async with GeoEndpoint() as geo:
@@ -336,7 +333,7 @@ class TestAPIRequests:
                     "points": [{"lat": 35.0, "lon": -100.0, "name": "Test"}],
                     "count": 1,
                 },
-            )
+            ),
         )
 
         filter = GeoFilter(query="test", timespan="24h", max_results=100)
@@ -350,7 +347,7 @@ class TestAPIRequests:
     async def test_max_points_capped(self) -> None:
         """Test that max_points is capped at 250."""
         respx.get("https://api.gdeltproject.org/api/v2/geo/geo").mock(
-            return_value=httpx.Response(200, json={})
+            return_value=httpx.Response(200, json={}),
         )
 
         async with GeoEndpoint() as geo:
@@ -383,7 +380,7 @@ class TestContextManager:
     async def test_context_manager_usage(self) -> None:
         """Test using endpoint as async context manager."""
         respx.get("https://api.gdeltproject.org/api/v2/geo/geo").mock(
-            return_value=httpx.Response(200, json={"points": [], "count": 0})
+            return_value=httpx.Response(200, json={"points": [], "count": 0}),
         )
 
         async with GeoEndpoint() as geo:

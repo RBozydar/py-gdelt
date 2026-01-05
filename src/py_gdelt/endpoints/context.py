@@ -15,11 +15,12 @@ from pydantic import BaseModel
 
 from py_gdelt.endpoints.base import BaseEndpoint
 
+
 __all__ = [
     "ContextEndpoint",
+    "ContextEntity",
     "ContextResult",
     "ContextTheme",
-    "ContextEntity",
     "ContextTone",
 ]
 
@@ -198,7 +199,7 @@ class ContextEndpoint(BaseEndpoint):
                         theme=item.get("theme", ""),
                         count=item.get("count", 0),
                         score=item.get("score"),
-                    )
+                    ),
                 )
 
         # Parse entities
@@ -210,7 +211,7 @@ class ContextEndpoint(BaseEndpoint):
                         name=item.get("name", ""),
                         entity_type=item.get("type", "UNKNOWN"),
                         count=item.get("count", 0),
-                    )
+                    ),
                 )
 
         # Parse tone

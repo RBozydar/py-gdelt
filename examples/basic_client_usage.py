@@ -150,6 +150,7 @@ async def config_file_usage() -> None:
 
     fd, config_path_str = tempfile.mkstemp(suffix=".toml", prefix="gdelt_")
     import os
+
     os.close(fd)  # Close the file descriptor
     config_path = Path(config_path_str)
 

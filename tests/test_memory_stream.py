@@ -9,7 +9,6 @@ import asyncio
 import io
 import os
 import random
-import string
 import tempfile
 import tracemalloc
 import zipfile
@@ -20,6 +19,7 @@ import respx
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.sources import FileSource
+
 
 # File size in bytes (~500KB uncompressed to stay within compression ratio)
 # Compression ratio limit is 100x, so compressed size should be > decompressed/100
@@ -43,14 +43,16 @@ def create_mock_zip(size: int) -> bytes:
 
     while bytes_generated < size:
         # Mix of random hex (incompressible) and structured text (compressible)
-        chunk = os.urandom(100).hex() + f"\t{random.randint(1, 9999999)}\t{random.uniform(-180, 180)}\n"
+        chunk = (
+            os.urandom(100).hex() + f"\t{random.randint(1, 9999999)}\t{random.uniform(-180, 180)}\n"
+        )
         chunks.append(chunk)
         bytes_generated += len(chunk)
 
     csv_content = "".join(chunks)[:size]
 
     buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("data.export.CSV", csv_content)
     return buffer.getvalue()
 
@@ -85,9 +87,13 @@ async def _run_test(temp_cache: str) -> None:
     # Calculate actual compression ratio
     ratio = UNCOMPRESSED_SIZE / compressed_size
 
-    print(f"Mock ZIP: {compressed_size/1024:.1f}KB compressed -> ~{UNCOMPRESSED_SIZE/1024:.0f}KB uncompressed (ratio: {ratio:.1f}x)")
+    print(
+        f"Mock ZIP: {compressed_size / 1024:.1f}KB compressed -> ~{UNCOMPRESSED_SIZE / 1024:.0f}KB uncompressed (ratio: {ratio:.1f}x)",
+    )
     print(f"Total data if all held in memory: {NUM_FILES * UNCOMPRESSED_SIZE / 1024 / 1024:.0f}MB")
-    print(f"Expected peak with sliding window: ~{MAX_CONCURRENT * UNCOMPRESSED_SIZE / 1024 / 1024:.0f}MB")
+    print(
+        f"Expected peak with sliding window: ~{MAX_CONCURRENT * UNCOMPRESSED_SIZE / 1024 / 1024:.0f}MB",
+    )
     print()
 
     if ratio > 90:
@@ -113,9 +119,9 @@ async def _run_test(temp_cache: str) -> None:
                     current, peak = tracemalloc.get_traced_memory()
                     print(
                         f"File {file_count}/{NUM_FILES}: "
-                        f"Current={current/1024/1024:.1f}MB, "
-                        f"Peak={peak/1024/1024:.1f}MB, "
-                        f"Data={total_bytes/1024/1024:.1f}MB"
+                        f"Current={current / 1024 / 1024:.1f}MB, "
+                        f"Peak={peak / 1024 / 1024:.1f}MB, "
+                        f"Data={total_bytes / 1024 / 1024:.1f}MB",
                     )
 
     current, peak = tracemalloc.get_traced_memory()
@@ -123,8 +129,8 @@ async def _run_test(temp_cache: str) -> None:
 
     print()
     print("=" * 70)
-    print(f"Processed {file_count} files ({total_bytes/1024/1024:.1f} MB total data)")
-    print(f"Peak memory: {peak/1024/1024:.1f} MB")
+    print(f"Processed {file_count} files ({total_bytes / 1024 / 1024:.1f} MB total data)")
+    print(f"Peak memory: {peak / 1024 / 1024:.1f} MB")
     print()
 
     # Memory should be bounded to roughly max_concurrent × file_size
@@ -132,14 +138,14 @@ async def _run_test(temp_cache: str) -> None:
     expected_max = MAX_CONCURRENT * UNCOMPRESSED_SIZE + 50 * 1024 * 1024  # + 50MB overhead
 
     if peak < expected_max:
-        print(f"✅ PASS: Memory stayed bounded (< {expected_max/1024/1024:.0f}MB)")
+        print(f"✅ PASS: Memory stayed bounded (< {expected_max / 1024 / 1024:.0f}MB)")
         if file_count == NUM_FILES:
             print(f"   Sliding window working correctly - processed all {NUM_FILES} files!")
         else:
             print(f"   Note: Only {file_count}/{NUM_FILES} files succeeded")
     else:
-        print(f"❌ FAIL: Memory exceeded {expected_max/1024/1024:.0f}MB threshold")
-        print(f"   Sliding window may not be working - memory accumulated!")
+        print(f"❌ FAIL: Memory exceeded {expected_max / 1024 / 1024:.0f}MB threshold")
+        print("   Sliding window may not be working - memory accumulated!")
 
 
 if __name__ == "__main__":

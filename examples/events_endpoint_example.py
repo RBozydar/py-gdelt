@@ -163,14 +163,17 @@ async def main() -> None:
     except DataError as e:
         print(f"\nData error running examples: {e}")
         import traceback
+
         traceback.print_exc()
     except APIError as e:
         print(f"\nAPI error running examples: {e}")
         import traceback
+
         traceback.print_exc()
     except Exception as e:
         print(f"\nUnexpected error running examples: {e}")
         import traceback
+
         traceback.print_exc()
 
 

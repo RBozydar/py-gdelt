@@ -15,10 +15,10 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from py_gdelt.exceptions import ConfigurationError
-from py_gdelt.filters import DateRange, EventFilter
+from py_gdelt.filters import EventFilter
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Mention
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -169,7 +169,11 @@ class MentionsEndpoint:
         ):
             mentions.append(mention)
 
-        logger.info("Query complete: fetched %d mentions for event %s", len(mentions), global_event_id)
+        logger.info(
+            "Query complete: fetched %d mentions for event %s",
+            len(mentions),
+            global_event_id,
+        )
 
         # For now, return FetchResult with no failures
         # In future, we could track file-level failures if using file source
@@ -323,7 +327,7 @@ class MentionsEndpoint:
                 global_event_id=global_event_id,
                 filter_obj=filter_obj,
                 use_bigquery=use_bigquery,
-            )
+            ),
         )
 
     def stream_sync(
@@ -335,9 +339,12 @@ class MentionsEndpoint:
     ) -> Iterator[Mention]:
         """Synchronous wrapper for stream().
 
-        This is a convenience method for synchronous code. It materializes the async
-        iterator into a regular iterator. For better performance and memory efficiency,
-        use the async version directly.
+        This method provides a synchronous iterator interface over async streaming.
+        It internally manages the event loop and yields mentions one at a time,
+        providing true streaming behavior with memory efficiency.
+
+        Note: This creates a new event loop for each iteration, which has some overhead.
+        For better performance, use the async stream() method directly if possible.
 
         Args:
             global_event_id: Global event ID to fetch mentions for
@@ -350,6 +357,7 @@ class MentionsEndpoint:
         Raises:
             ConfigurationError: If BigQuery not configured but required
             ValueError: If date range is invalid
+            RuntimeError: If called from within an already running event loop
 
         Example:
             >>> filter_obj = EventFilter(
@@ -360,7 +368,7 @@ class MentionsEndpoint:
         """
 
         async def _async_generator() -> AsyncIterator[Mention]:
-            """Helper to run async stream in sync context."""
+            """Internal async generator for sync wrapper."""
             async for mention in self.stream(
                 global_event_id=global_event_id,
                 filter_obj=filter_obj,
@@ -368,13 +376,16 @@ class MentionsEndpoint:
             ):
                 yield mention
 
-        async def _collect_all() -> list[Mention]:
-            """Collect all mentions from async generator."""
-            mentions: list[Mention] = []
-            async for mention in _async_generator():
-                mentions.append(mention)
-            return mentions
-
-        # Run async collection and yield results
-        mentions = asyncio.run(_collect_all())
-        yield from mentions
+        # Run async generator and yield results synchronously
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            async_gen = _async_generator()
+            while True:
+                try:
+                    mention = loop.run_until_complete(async_gen.__anext__())
+                    yield mention
+                except StopAsyncIteration:
+                    break
+        finally:
+            loop.close()

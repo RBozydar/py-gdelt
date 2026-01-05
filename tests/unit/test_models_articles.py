@@ -1,9 +1,5 @@
 """Tests for py_gdelt.models.articles."""
 
-from datetime import datetime
-
-import pytest
-
 from py_gdelt.models.articles import Article, Timeline, TimelinePoint
 
 
@@ -138,7 +134,7 @@ class TestTimeline:
             timeline=[
                 TimelinePoint(date="2024-01-01", value=10),
                 TimelinePoint(date="2024-01-02", value=20),
-            ]
+            ],
         )
         assert len(timeline.points) == 2
         assert timeline.points[0].value == 10
@@ -149,7 +145,7 @@ class TestTimeline:
             timeline=[
                 {"date": "2024-01-01", "count": 100},
                 {"date": "2024-01-02", "count": 200},
-            ]
+            ],
         )
         assert len(timeline.points) == 2
         assert timeline.points[1].value == 200
@@ -160,7 +156,7 @@ class TestTimeline:
             timeline=[
                 TimelinePoint(date="2024-01-01", value=10),
                 TimelinePoint(date="2024-01-02", value=20),
-            ]
+            ],
         )
         assert timeline.dates == ["2024-01-01", "2024-01-02"]
 
@@ -170,7 +166,7 @@ class TestTimeline:
             timeline=[
                 TimelinePoint(date="2024-01-01", value=10),
                 TimelinePoint(date="2024-01-02", value=20),
-            ]
+            ],
         )
         assert timeline.values == [10, 20]
 
@@ -180,7 +176,7 @@ class TestTimeline:
             timeline=[
                 TimelinePoint(date="2024-01-01", value=10),
                 TimelinePoint(date="2024-01-02", value=20),
-            ]
+            ],
         )
         series = timeline.to_series()
         assert series == {"2024-01-01": 10, "2024-01-02": 20}
@@ -203,7 +199,7 @@ class TestTimeline:
             "timeline": [
                 {"date": "2024-01-01", "count": 100},
                 {"date": "2024-01-02", "count": 150},
-            ]
+            ],
         }
         timeline = Timeline.model_validate(api_data)
         assert len(timeline.points) == 2

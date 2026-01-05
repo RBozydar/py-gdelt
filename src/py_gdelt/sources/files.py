@@ -38,16 +38,17 @@ from py_gdelt.cache import Cache
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
 
+
 __all__ = ["FileSource", "FileType"]
 
 logger = logging.getLogger(__name__)
 
-# GDELT file list URLs
-MASTER_FILE_LIST_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
+# GDELT file list URLs (use HTTPS for security)
+MASTER_FILE_LIST_URL: Final[str] = "https://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
 TRANSLATION_FILE_LIST_URL: Final[str] = (
-    "http://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt"
+    "https://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt"
 )
-LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
+LAST_UPDATE_URL: Final[str] = "https://data.gdeltproject.org/gdeltv2/lastupdate.txt"
 
 # File type patterns
 FILE_TYPE_PATTERNS: Final[dict[str, str]] = {
@@ -162,8 +163,12 @@ class FileSource:
 
                     content = response.text
 
-                    # Cache with short TTL (5 minutes for master lists)
-                    self.cache.set(url, content.encode("utf-8"))
+                    # Cache with configurable TTL for master lists
+                    self.cache.set(
+                        url,
+                        content.encode("utf-8"),
+                        ttl=self.settings.master_file_list_ttl,
+                    )
 
                 # Parse URLs from content (one URL per line)
                 file_urls = [line.strip() for line in content.splitlines() if line.strip()]
@@ -360,7 +365,7 @@ class FileSource:
     ) -> AsyncIterator[tuple[str, bytes]]:
         """Stream downloads with bounded memory via sliding window.
 
-        Memory bounded to max_concurrent × max_file_size (~500MB default).
+        Memory bounded to max_concurrent * max_file_size (~500MB default).
         Natural backpressure: downloads throttle to caller's consumption rate.
 
         Args:
@@ -375,9 +380,7 @@ class FileSource:
             This is by design as GDELT files may have gaps.
         """
         limit = (
-            max_concurrent
-            if max_concurrent is not None
-            else self.settings.max_concurrent_downloads
+            max_concurrent if max_concurrent is not None else self.settings.max_concurrent_downloads
         )
         url_iter = iter(urls)
         pending: set[asyncio.Task[tuple[str, bytes] | None]] = set()
@@ -393,9 +396,7 @@ class FileSource:
                 spawn()
 
             while pending:
-                done, pending = await asyncio.wait(
-                    pending, return_when=asyncio.FIRST_COMPLETED
-                )
+                done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
 
                 for task in done:
                     spawn()  # Replenish immediately (keeps pipeline full)
@@ -499,7 +500,7 @@ class FileSource:
                     raise SecurityError(
                         f"Decompressed size {bytes_read} bytes "
                         f"exceeds maximum allowed size {MAX_DECOMPRESSED_SIZE} bytes "
-                        f"({MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB)"
+                        f"({MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB)",
                     )
 
                 # Check compression ratio
@@ -509,7 +510,7 @@ class FileSource:
                         raise SecurityError(
                             f"Suspicious compression ratio: {ratio:.1f}x "
                             f"(max allowed: {MAX_COMPRESSION_RATIO}x). "
-                            f"Possible zip bomb attack."
+                            f"Possible zip bomb attack.",
                         )
 
                 result.write(chunk)

@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from py_gdelt.models._internal import _RawEvent, _RawMention
 from py_gdelt.models.common import Location
 
+
 __all__ = ["Actor", "Event", "Mention"]
 
 
@@ -100,6 +101,7 @@ class Event(BaseModel):
         Raises:
             ValueError: If required fields are missing or invalid.
         """
+
         # Helper to safely parse int
         def _parse_int(value: str | None, default: int = 0) -> int:
             if not value or value == "":
@@ -146,7 +148,7 @@ class Event(BaseModel):
                     lat,
                     lon,
                     feature_id,
-                ]
+                ],
             ):
                 return None
 
@@ -187,7 +189,7 @@ class Event(BaseModel):
                     type1_code,
                     type2_code,
                     type3_code,
-                ]
+                ],
             ):
                 return None
 
@@ -357,6 +359,7 @@ class Mention(BaseModel):
         Raises:
             ValueError: If required fields are missing or invalid.
         """
+
         # Helper to safely parse int
         def _parse_int(value: str | None, default: int = 0) -> int:
             if not value or value == "":
@@ -420,8 +423,6 @@ class Mention(BaseModel):
             doc_length=_parse_int(raw.mention_doc_length, default=0),
             doc_tone=_parse_float(raw.mention_doc_tone, default=0.0),
             translation_info=(
-                raw.mention_doc_translation_info
-                if raw.mention_doc_translation_info
-                else None
+                raw.mention_doc_translation_info if raw.mention_doc_translation_info else None
             ),
         )

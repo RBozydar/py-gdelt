@@ -15,6 +15,7 @@ from py_gdelt._security import (
     validate_url,
 )
 
+
 logger = logging.getLogger(__name__)
 
 

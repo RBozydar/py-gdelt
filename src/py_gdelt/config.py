@@ -24,6 +24,7 @@ from pydantic import Field
 from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
+
 __all__ = ["GDELTSettings"]
 
 logger = logging.getLogger(__name__)
@@ -146,6 +147,10 @@ class GDELTSettings(BaseSettings):
     cache_ttl: int = Field(
         default=3600,
         description="Cache time-to-live in seconds",
+    )
+    master_file_list_ttl: int = Field(
+        default=300,
+        description="Master file list cache TTL in seconds (default 5 minutes)",
     )
 
     # HTTP settings

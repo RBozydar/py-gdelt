@@ -14,14 +14,15 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from py_gdelt.exceptions import InvalidCodeError
 
+
 __all__ = [
     "DateRange",
+    "DocFilter",
     "EventFilter",
     "GKGFilter",
-    "DocFilter",
     "GeoFilter",
-    "TVFilter",
     "NGramsFilter",
+    "TVFilter",
 ]
 
 
@@ -228,7 +229,8 @@ class GeoFilter(BaseModel):
     @field_validator("bounding_box", mode="before")
     @classmethod
     def validate_bbox(
-        cls, v: tuple[float, float, float, float] | None
+        cls,
+        v: tuple[float, float, float, float] | None,
     ) -> tuple[float, float, float, float] | None:
         """Validate bounding box coordinates."""
         if v is None:

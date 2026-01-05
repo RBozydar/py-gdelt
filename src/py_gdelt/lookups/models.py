@@ -8,6 +8,7 @@ and GKG themes.
 
 from pydantic import BaseModel
 
+
 __all__ = [
     "CAMEOCodeEntry",
     "CountryEntry",

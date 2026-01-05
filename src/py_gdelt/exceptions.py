@@ -15,7 +15,8 @@ Exception Hierarchy:
     │   └── ValidationError
     │       └── InvalidCodeError (with code: str, code_type: str)
     ├── ConfigurationError
-    └── BigQueryError
+    ├── BigQueryError
+    └── SecurityError
 """
 
 __all__ = [
@@ -29,6 +30,7 @@ __all__ = [
     "InvalidQueryError",
     "ParseError",
     "RateLimitError",
+    "SecurityError",
     "ValidationError",
 ]
 
@@ -184,4 +186,13 @@ class BigQueryError(GDELTError):
 
     This includes query execution errors, authentication failures,
     and quota/billing issues.
+    """
+
+
+class SecurityError(GDELTError):
+    """
+    Raised when a security check fails.
+
+    This includes URL validation failures, path traversal detection,
+    zip bomb detection, and other security-related issues.
     """

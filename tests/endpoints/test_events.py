@@ -15,6 +15,7 @@ from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Event
 from py_gdelt.utils.dedup import DedupeStrategy
 
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
@@ -155,7 +156,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test basic query without deduplication."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields sample data."""
             yield sample_raw_event
 
@@ -185,7 +186,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test query with deduplication enabled."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields duplicate data."""
             yield sample_raw_event
             yield sample_raw_event_duplicate
@@ -215,9 +216,9 @@ class TestEventsEndpoint:
     ) -> None:
         """Test query with empty result."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields nothing."""
-            if False:  # noqa: SIM112
+            if False:
                 yield
 
         endpoint = EventsEndpoint(file_source=mock_file_source)
@@ -241,7 +242,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test basic streaming without deduplication."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields sample data."""
             yield sample_raw_event
 
@@ -270,7 +271,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test streaming with deduplication enabled."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields duplicate data."""
             yield sample_raw_event
             yield sample_raw_event_duplicate
@@ -302,9 +303,9 @@ class TestEventsEndpoint:
     ) -> None:
         """Test streaming with empty result."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields nothing."""
-            if False:  # noqa: SIM112
+            if False:
                 yield
 
         endpoint = EventsEndpoint(file_source=mock_file_source)
@@ -330,7 +331,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test that use_bigquery parameter is passed through."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields sample data."""
             yield sample_raw_event
 
@@ -360,7 +361,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test that default deduplication strategy is URL_DATE_LOCATION."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields sample data."""
             yield sample_raw_event
 
@@ -384,7 +385,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test synchronous query wrapper."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields sample data."""
             yield sample_raw_event
 
@@ -409,7 +410,7 @@ class TestEventsEndpoint:
     ) -> None:
         """Test synchronous stream wrapper."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields sample data."""
             yield sample_raw_event
 
@@ -446,7 +447,7 @@ class TestEventsEndpointIntegration:
     ) -> None:
         """Test that _RawEvent is properly converted to Event model."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields sample data."""
             yield sample_raw_event
 
@@ -482,10 +483,7 @@ class TestEventsEndpointIntegration:
 
         # Verify geo conversion
         assert event.action_geo is not None
-        assert (
-            event.action_geo.name
-            == "Washington, District of Columbia, United States"
-        )
+        assert event.action_geo.name == "Washington, District of Columbia, United States"
         assert event.action_geo.country_code == "US"
 
     @pytest.mark.asyncio
@@ -496,7 +494,7 @@ class TestEventsEndpointIntegration:
     ) -> None:
         """Test conversion of multiple events."""
 
-        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:  # noqa: ARG001
+        async def mock_fetch_events(*args, **kwargs) -> AsyncIterator[_RawEvent]:
             """Mock fetch_events that yields multiple events."""
             for i in range(3):
                 yield _RawEvent(

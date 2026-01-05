@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
+
 if TYPE_CHECKING:
     import pandas as pd  # type: ignore[import-untyped]
 
@@ -92,8 +93,7 @@ class ResultStream(Generic[T]):
             import pandas as pd
         except ImportError:
             raise ImportError(
-                "pandas is required for to_dataframe(). "
-                "Install with: pip install pandas"
+                "pandas is required for to_dataframe(). Install with: pip install pandas",
             ) from None
 
         items = await self.to_list()
@@ -115,7 +115,7 @@ class ResultStream(Generic[T]):
         else:
             raise TypeError(
                 f"Cannot convert {type(first).__name__} to DataFrame. "
-                "Items must be Pydantic models, dataclasses, or dicts."
+                "Items must be Pydantic models, dataclasses, or dicts.",
             )
 
         return pd.DataFrame(records, **kwargs)

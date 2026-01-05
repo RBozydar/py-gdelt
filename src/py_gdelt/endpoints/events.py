@@ -45,7 +45,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any
 
 from py_gdelt.filters import EventFilter
@@ -53,9 +53,14 @@ from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Event
 from py_gdelt.utils.dedup import (
     DedupeStrategy,
+)
+from py_gdelt.utils.dedup import (
     deduplicate as apply_dedup,
+)
+from py_gdelt.utils.dedup import (
     deduplicate_async as apply_dedup_async,
 )
+
 
 if TYPE_CHECKING:
     from py_gdelt.models._internal import _RawEvent
@@ -322,7 +327,7 @@ class EventsEndpoint:
                 deduplicate=deduplicate,
                 dedupe_strategy=dedupe_strategy,
                 use_bigquery=use_bigquery,
-            )
+            ),
         )
 
     def stream_sync(
@@ -332,12 +337,15 @@ class EventsEndpoint:
         deduplicate: bool = False,
         dedupe_strategy: DedupeStrategy | None = None,
         use_bigquery: bool = False,
-    ) -> list[Event]:
+    ) -> Iterator[Event]:
         """Synchronous wrapper for stream().
 
-        This is a convenience method that runs the async stream() method
-        in a new event loop and materializes all results. Prefer using
-        the async version when possible for better memory efficiency.
+        This method provides a synchronous iterator interface over async streaming.
+        It internally manages the event loop and yields events one at a time,
+        providing true streaming behavior with memory efficiency.
+
+        Note: This creates a new event loop for each iteration, which has some overhead.
+        For better performance, use the async stream() method directly if possible.
 
         Args:
             filter_obj: Event filter with date range and query parameters
@@ -345,8 +353,8 @@ class EventsEndpoint:
             dedupe_strategy: Deduplication strategy (default: URL_DATE_LOCATION)
             use_bigquery: If True, skip files and use BigQuery directly
 
-        Returns:
-            List of Event instances
+        Yields:
+            Event instances for each matching event
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -359,23 +367,33 @@ class EventsEndpoint:
             ...     date_range=DateRange(start=date(2024, 1, 1)),
             ...     actor1_country="USA",
             ... )
-            >>> events = endpoint.stream_sync(filter_obj, deduplicate=True)
-            >>> print(f"Found {len(events)} events")
+            >>> for event in endpoint.stream_sync(filter_obj, deduplicate=True):
+            ...     print(event.global_event_id)
         """
 
-        async def _collect() -> list[Event]:
-            """Collect all events from async iterator."""
-            events: list[Event] = []
+        async def _async_generator() -> AsyncIterator[Event]:
+            """Internal async generator for sync wrapper."""
             async for event in self.stream(
                 filter_obj,
                 deduplicate=deduplicate,
                 dedupe_strategy=dedupe_strategy,
                 use_bigquery=use_bigquery,
             ):
-                events.append(event)
-            return events
+                yield event
 
-        return asyncio.run(_collect())
+        # Run async generator and yield results synchronously
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            async_gen = _async_generator()
+            while True:
+                try:
+                    event = loop.run_until_complete(async_gen.__anext__())
+                    yield event
+                except StopAsyncIteration:
+                    break
+        finally:
+            loop.close()
 
     async def _build_url(self, **kwargs: Any) -> str:  # noqa: ARG002
         """Build URL for events endpoint.

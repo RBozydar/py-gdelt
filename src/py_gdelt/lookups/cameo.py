@@ -12,6 +12,7 @@ from typing import Final
 from py_gdelt.exceptions import InvalidCodeError
 from py_gdelt.lookups.models import CAMEOCodeEntry, GoldsteinEntry
 
+
 __all__ = ["CAMEOCodes"]
 
 # CAMEO code ranges
@@ -52,9 +53,7 @@ class CAMEOCodes:
         """Lazy load CAMEO codes data."""
         if self._codes is None:
             raw_data = self._load_json("cameo_codes.json")
-            self._codes = {
-                code: CAMEOCodeEntry(**data) for code, data in raw_data.items()
-            }
+            self._codes = {code: CAMEOCodeEntry(**data) for code, data in raw_data.items()}
         return self._codes
 
     @property
@@ -62,9 +61,7 @@ class CAMEOCodes:
         """Lazy load Goldstein scale data."""
         if self._goldstein is None:
             raw_data = self._load_json("cameo_goldstein.json")
-            self._goldstein = {
-                code: GoldsteinEntry(**data) for code, data in raw_data.items()
-            }
+            self._goldstein = {code: GoldsteinEntry(**data) for code, data in raw_data.items()}
         return self._goldstein
 
     def __contains__(self, code: str) -> bool:
@@ -134,8 +131,7 @@ class CAMEOCodes:
         return [
             code
             for code, entry in self._codes_data.items()
-            if query_lower in entry.name.lower()
-            or query_lower in entry.description.lower()
+            if query_lower in entry.name.lower() or query_lower in entry.description.lower()
         ]
 
     def is_conflict(self, code: str) -> bool:

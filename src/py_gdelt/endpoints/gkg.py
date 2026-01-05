@@ -17,13 +17,14 @@ from typing import TYPE_CHECKING, Any
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.gkg import GKGRecord
 
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from py_gdelt.config import GDELTSettings
     from py_gdelt.filters import GKGFilter
     from py_gdelt.sources.bigquery import BigQuerySource
-    from py_gdelt.sources.fetcher import DataFetcher, ErrorPolicy
+    from py_gdelt.sources.fetcher import ErrorPolicy
     from py_gdelt.sources.files import FileSource
 
 __all__ = ["GKGEndpoint"]
@@ -221,18 +222,14 @@ class GKGEndpoint:
         logger.debug("Starting GKG stream for filter: %s", filter_obj)
 
         # Use DataFetcher to fetch raw GKG records
-        async for raw_gkg in self._fetcher.fetch_gkg(
-            filter_obj, use_bigquery=use_bigquery
-        ):
+        async for raw_gkg in self._fetcher.fetch_gkg(filter_obj, use_bigquery=use_bigquery):
             # Convert _RawGKG to GKGRecord at yield boundary
             try:
                 record = GKGRecord.from_raw(raw_gkg)
                 yield record
             except Exception as e:
                 # Log conversion errors but continue processing
-                logger.warning(
-                    "Failed to convert raw GKG record to GKGRecord: %s", e
-                )
+                logger.warning("Failed to convert raw GKG record to GKGRecord: %s", e)
                 continue
 
     def query_sync(

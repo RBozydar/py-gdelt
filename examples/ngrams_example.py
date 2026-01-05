@@ -14,6 +14,7 @@ from py_gdelt.config import GDELTSettings
 from py_gdelt.endpoints import NGramsEndpoint
 from py_gdelt.filters import DateRange, NGramsFilter
 
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -87,9 +88,7 @@ async def stream_language_diversity() -> None:
         # Stream records for memory efficiency
         async for record in endpoint.stream(filter_obj):
             total_records += 1
-            language_counts[record.language] = (
-                language_counts.get(record.language, 0) + 1
-            )
+            language_counts[record.language] = language_counts.get(record.language, 0) + 1
 
             # Limit to first 1000 records for this example
             if total_records >= 1000:
@@ -98,9 +97,7 @@ async def stream_language_diversity() -> None:
         logger.info("Processed %d records across %d languages", total_records, len(language_counts))
 
         # Display top languages
-        sorted_languages = sorted(
-            language_counts.items(), key=lambda x: x[1], reverse=True
-        )
+        sorted_languages = sorted(language_counts.items(), key=lambda x: x[1], reverse=True)
         for lang, count in sorted_languages[:5]:
             logger.info("  %s: %d mentions (%.1f%%)", lang, count, 100 * count / total_records)
 

@@ -34,6 +34,7 @@ from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import BigQueryError, ConfigurationError
 from py_gdelt.filters import DateRange, EventFilter, GKGFilter
 
+
 __all__ = ["BigQuerySource", "TableType"]
 
 logger = logging.getLogger(__name__)
@@ -55,116 +56,122 @@ TABLES: Final[dict[TableType, str]] = {
 # Column allowlists for each table type (prevents unauthorized column access)
 # Only commonly used columns are included to minimize data transfer costs
 ALLOWED_COLUMNS: Final[dict[TableType, frozenset[str]]] = {
-    "events": frozenset({
-        "GLOBALEVENTID",
-        "SQLDATE",
-        "MonthYear",
-        "Year",
-        "FractionDate",
-        "Actor1Code",
-        "Actor1Name",
-        "Actor1CountryCode",
-        "Actor1KnownGroupCode",
-        "Actor1EthnicCode",
-        "Actor1Religion1Code",
-        "Actor1Religion2Code",
-        "Actor1Type1Code",
-        "Actor1Type2Code",
-        "Actor1Type3Code",
-        "Actor2Code",
-        "Actor2Name",
-        "Actor2CountryCode",
-        "Actor2KnownGroupCode",
-        "Actor2EthnicCode",
-        "Actor2Religion1Code",
-        "Actor2Religion2Code",
-        "Actor2Type1Code",
-        "Actor2Type2Code",
-        "Actor2Type3Code",
-        "IsRootEvent",
-        "EventCode",
-        "EventBaseCode",
-        "EventRootCode",
-        "QuadClass",
-        "GoldsteinScale",
-        "NumMentions",
-        "NumSources",
-        "NumArticles",
-        "AvgTone",
-        "Actor1Geo_Type",
-        "Actor1Geo_FullName",
-        "Actor1Geo_CountryCode",
-        "Actor1Geo_ADM1Code",
-        "Actor1Geo_ADM2Code",
-        "Actor1Geo_Lat",
-        "Actor1Geo_Long",
-        "Actor1Geo_FeatureID",
-        "Actor2Geo_Type",
-        "Actor2Geo_FullName",
-        "Actor2Geo_CountryCode",
-        "Actor2Geo_ADM1Code",
-        "Actor2Geo_ADM2Code",
-        "Actor2Geo_Lat",
-        "Actor2Geo_Long",
-        "Actor2Geo_FeatureID",
-        "ActionGeo_Type",
-        "ActionGeo_FullName",
-        "ActionGeo_CountryCode",
-        "ActionGeo_ADM1Code",
-        "ActionGeo_ADM2Code",
-        "ActionGeo_Lat",
-        "ActionGeo_Long",
-        "ActionGeo_FeatureID",
-        "DATEADDED",
-        "SOURCEURL",
-    }),
-    "eventmentions": frozenset({
-        "GLOBALEVENTID",
-        "EventTimeDate",
-        "MentionTimeDate",
-        "MentionType",
-        "MentionSourceName",
-        "MentionIdentifier",
-        "SentenceID",
-        "Actor1CharOffset",
-        "Actor2CharOffset",
-        "ActionCharOffset",
-        "InRawText",
-        "Confidence",
-        "MentionDocLen",
-        "MentionDocTone",
-        "MentionDocTranslationInfo",
-        "Extras",
-    }),
-    "gkg": frozenset({
-        "GKGRECORDID",
-        "DATE",
-        "SourceCollectionIdentifier",
-        "SourceCommonName",
-        "DocumentIdentifier",
-        "Counts",
-        "V2Counts",
-        "Themes",
-        "V2Themes",
-        "Locations",
-        "V2Locations",
-        "Persons",
-        "V2Persons",
-        "Organizations",
-        "V2Organizations",
-        "V2Tone",
-        "Dates",
-        "GCAM",
-        "SharingImage",
-        "RelatedImages",
-        "SocialImageEmbeds",
-        "SocialVideoEmbeds",
-        "Quotations",
-        "AllNames",
-        "Amounts",
-        "TranslationInfo",
-        "Extras",
-    }),
+    "events": frozenset(
+        {
+            "GLOBALEVENTID",
+            "SQLDATE",
+            "MonthYear",
+            "Year",
+            "FractionDate",
+            "Actor1Code",
+            "Actor1Name",
+            "Actor1CountryCode",
+            "Actor1KnownGroupCode",
+            "Actor1EthnicCode",
+            "Actor1Religion1Code",
+            "Actor1Religion2Code",
+            "Actor1Type1Code",
+            "Actor1Type2Code",
+            "Actor1Type3Code",
+            "Actor2Code",
+            "Actor2Name",
+            "Actor2CountryCode",
+            "Actor2KnownGroupCode",
+            "Actor2EthnicCode",
+            "Actor2Religion1Code",
+            "Actor2Religion2Code",
+            "Actor2Type1Code",
+            "Actor2Type2Code",
+            "Actor2Type3Code",
+            "IsRootEvent",
+            "EventCode",
+            "EventBaseCode",
+            "EventRootCode",
+            "QuadClass",
+            "GoldsteinScale",
+            "NumMentions",
+            "NumSources",
+            "NumArticles",
+            "AvgTone",
+            "Actor1Geo_Type",
+            "Actor1Geo_FullName",
+            "Actor1Geo_CountryCode",
+            "Actor1Geo_ADM1Code",
+            "Actor1Geo_ADM2Code",
+            "Actor1Geo_Lat",
+            "Actor1Geo_Long",
+            "Actor1Geo_FeatureID",
+            "Actor2Geo_Type",
+            "Actor2Geo_FullName",
+            "Actor2Geo_CountryCode",
+            "Actor2Geo_ADM1Code",
+            "Actor2Geo_ADM2Code",
+            "Actor2Geo_Lat",
+            "Actor2Geo_Long",
+            "Actor2Geo_FeatureID",
+            "ActionGeo_Type",
+            "ActionGeo_FullName",
+            "ActionGeo_CountryCode",
+            "ActionGeo_ADM1Code",
+            "ActionGeo_ADM2Code",
+            "ActionGeo_Lat",
+            "ActionGeo_Long",
+            "ActionGeo_FeatureID",
+            "DATEADDED",
+            "SOURCEURL",
+        },
+    ),
+    "eventmentions": frozenset(
+        {
+            "GLOBALEVENTID",
+            "EventTimeDate",
+            "MentionTimeDate",
+            "MentionType",
+            "MentionSourceName",
+            "MentionIdentifier",
+            "SentenceID",
+            "Actor1CharOffset",
+            "Actor2CharOffset",
+            "ActionCharOffset",
+            "InRawText",
+            "Confidence",
+            "MentionDocLen",
+            "MentionDocTone",
+            "MentionDocTranslationInfo",
+            "Extras",
+        },
+    ),
+    "gkg": frozenset(
+        {
+            "GKGRECORDID",
+            "DATE",
+            "SourceCollectionIdentifier",
+            "SourceCommonName",
+            "DocumentIdentifier",
+            "Counts",
+            "V2Counts",
+            "Themes",
+            "V2Themes",
+            "Locations",
+            "V2Locations",
+            "Persons",
+            "V2Persons",
+            "Organizations",
+            "V2Organizations",
+            "V2Tone",
+            "Dates",
+            "GCAM",
+            "SharingImage",
+            "RelatedImages",
+            "SocialImageEmbeds",
+            "SocialVideoEmbeds",
+            "Quotations",
+            "AllNames",
+            "Amounts",
+            "TranslationInfo",
+            "Extras",
+        },
+    ),
 }
 
 
@@ -228,7 +235,7 @@ def _validate_columns(columns: list[str], table_type: TableType) -> None:
         )
         raise BigQueryError(
             f"Invalid columns for table '{table_type}': {invalid_columns}. "
-            f"Allowed columns: {sorted(allowed)}"
+            f"Allowed columns: {sorted(allowed)}",
         )
 
 
@@ -259,41 +266,43 @@ def _build_where_clause_for_events(
     end_date = filter_obj.date_range.end or filter_obj.date_range.start
     end_datetime = datetime.combine(end_date, datetime.max.time())
 
-    parameters.extend([
-        bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
-        bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
-    ])
+    parameters.extend(
+        [
+            bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
+            bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
+        ],
+    )
 
     # Optional: Actor filters
     if filter_obj.actor1_country is not None:
         conditions.append("Actor1CountryCode = @actor1_country")
         parameters.append(
-            bigquery.ScalarQueryParameter("actor1_country", "STRING", filter_obj.actor1_country)
+            bigquery.ScalarQueryParameter("actor1_country", "STRING", filter_obj.actor1_country),
         )
 
     if filter_obj.actor2_country is not None:
         conditions.append("Actor2CountryCode = @actor2_country")
         parameters.append(
-            bigquery.ScalarQueryParameter("actor2_country", "STRING", filter_obj.actor2_country)
+            bigquery.ScalarQueryParameter("actor2_country", "STRING", filter_obj.actor2_country),
         )
 
     # Optional: Event code filters
     if filter_obj.event_code is not None:
         conditions.append("EventCode = @event_code")
         parameters.append(
-            bigquery.ScalarQueryParameter("event_code", "STRING", filter_obj.event_code)
+            bigquery.ScalarQueryParameter("event_code", "STRING", filter_obj.event_code),
         )
 
     if filter_obj.event_root_code is not None:
         conditions.append("EventRootCode = @event_root_code")
         parameters.append(
-            bigquery.ScalarQueryParameter("event_root_code", "STRING", filter_obj.event_root_code)
+            bigquery.ScalarQueryParameter("event_root_code", "STRING", filter_obj.event_root_code),
         )
 
     if filter_obj.event_base_code is not None:
         conditions.append("EventBaseCode = @event_base_code")
         parameters.append(
-            bigquery.ScalarQueryParameter("event_base_code", "STRING", filter_obj.event_base_code)
+            bigquery.ScalarQueryParameter("event_base_code", "STRING", filter_obj.event_base_code),
         )
 
     # Optional: Tone filters
@@ -309,7 +318,7 @@ def _build_where_clause_for_events(
     if filter_obj.action_country is not None:
         conditions.append("ActionGeo_CountryCode = @action_country")
         parameters.append(
-            bigquery.ScalarQueryParameter("action_country", "STRING", filter_obj.action_country)
+            bigquery.ScalarQueryParameter("action_country", "STRING", filter_obj.action_country),
         )
 
     where_clause = " AND ".join(conditions)
@@ -342,10 +351,12 @@ def _build_where_clause_for_gkg(
     end_date = filter_obj.date_range.end or filter_obj.date_range.start
     end_datetime = datetime.combine(end_date, datetime.max.time())
 
-    parameters.extend([
-        bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
-        bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
-    ])
+    parameters.extend(
+        [
+            bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
+            bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
+        ],
+    )
 
     # Optional: Theme filters
     if filter_obj.themes is not None and len(filter_obj.themes) > 0:
@@ -360,8 +371,10 @@ def _build_where_clause_for_gkg(
         conditions.append("REGEXP_CONTAINS(V2Themes, @theme_prefix_pattern)")
         parameters.append(
             bigquery.ScalarQueryParameter(
-                "theme_prefix_pattern", "STRING", f"{filter_obj.theme_prefix}"
-            )
+                "theme_prefix_pattern",
+                "STRING",
+                f"{filter_obj.theme_prefix}",
+            ),
         )
 
     # Optional: Entity filters (persons, organizations)
@@ -379,7 +392,7 @@ def _build_where_clause_for_gkg(
     if filter_obj.country is not None:
         conditions.append("REGEXP_CONTAINS(V2Locations, @country_code)")
         parameters.append(
-            bigquery.ScalarQueryParameter("country_code", "STRING", filter_obj.country)
+            bigquery.ScalarQueryParameter("country_code", "STRING", filter_obj.country),
         )
 
     # Optional: Tone filters (V2Tone format: tone,positive,negative,polarity,activity_ref_density,self_ref_density,word_count)
@@ -491,7 +504,7 @@ class BigQuerySource:
                 project = self.settings.bigquery_project or credentials.project_id
                 if project is None:
                     raise ConfigurationError(
-                        "BigQuery project not specified in settings or credentials"
+                        "BigQuery project not specified in settings or credentials",
                     )
 
                 self._client = bigquery.Client(credentials=credentials, project=project)
@@ -502,7 +515,7 @@ class BigQuerySource:
                 project = self.settings.bigquery_project
                 if project is None:
                     raise ConfigurationError(
-                        "BigQuery project must be specified when using Application Default Credentials"
+                        "BigQuery project must be specified when using Application Default Credentials",
                     )
 
                 self._client = bigquery.Client(project=project)
@@ -530,7 +543,7 @@ class BigQuerySource:
                 "BigQuery credentials not configured. Set either:\n"
                 "  1. GDELT_BIGQUERY_CREDENTIALS (path to credentials JSON) + GDELT_BIGQUERY_PROJECT, or\n"
                 "  2. GDELT_BIGQUERY_PROJECT (uses Application Default Credentials)\n"
-                "See: https://cloud.google.com/docs/authentication/application-default-credentials"
+                "See: https://cloud.google.com/docs/authentication/application-default-credentials",
             )
 
         if has_explicit_creds:
@@ -714,10 +727,12 @@ class BigQuerySource:
             end_date = date_range.end or date_range.start
             end_datetime = datetime.combine(end_date, datetime.max.time())
 
-            parameters.extend([
-                bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
-                bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
-            ])
+            parameters.extend(
+                [
+                    bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
+                    bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
+                ],
+            )
 
         where_clause = " AND ".join(conditions)
         column_list = ", ".join(columns)

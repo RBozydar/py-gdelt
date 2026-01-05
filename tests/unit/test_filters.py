@@ -47,9 +47,7 @@ class TestDateRange:
 
     def test_range_exceeds_365_days(self) -> None:
         """Test that range > 365 days raises ValueError."""
-        with pytest.raises(
-            ValidationError, match="date range cannot exceed 365 days"
-        ):
+        with pytest.raises(ValidationError, match="date range cannot exceed 365 days"):
             DateRange(start=date(2024, 1, 1), end=date(2025, 1, 2))
 
     def test_exactly_365_days_allowed(self) -> None:
@@ -309,14 +307,10 @@ class TestGeoFilter:
 
     def test_invalid_longitude_range(self) -> None:
         """Test that longitude outside -180 to 180 raises ValueError."""
-        with pytest.raises(
-            ValidationError, match="Longitude must be between -180 and 180"
-        ):
+        with pytest.raises(ValidationError, match="Longitude must be between -180 and 180"):
             GeoFilter(query="test", bounding_box=(0.0, 181.0, 10.0, 185.0))
 
-        with pytest.raises(
-            ValidationError, match="Longitude must be between -180 and 180"
-        ):
+        with pytest.raises(ValidationError, match="Longitude must be between -180 and 180"):
             GeoFilter(query="test", bounding_box=(0.0, -181.0, 10.0, -175.0))
 
     def test_invalid_bbox_ordering_lat(self) -> None:

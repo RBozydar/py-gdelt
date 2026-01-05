@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 from py_gdelt.endpoints.base import BaseEndpoint
 from py_gdelt.filters import DocFilter
 
+
 if TYPE_CHECKING:
     from py_gdelt.models.articles import Article, Timeline
 

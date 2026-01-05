@@ -371,7 +371,7 @@ class TestStreamMethod:
             ),
         ]
 
-        async def mock_fetch_ngrams(filter_obj):  # noqa: ARG001
+        async def mock_fetch_ngrams(filter_obj):
             for record in raw_records:
                 yield record
 
@@ -427,7 +427,7 @@ class TestStreamMethod:
             ),
         ]
 
-        async def mock_fetch_ngrams(filter_obj):  # noqa: ARG001
+        async def mock_fetch_ngrams(filter_obj):
             for record in raw_records:
                 yield record
 
@@ -467,7 +467,7 @@ class TestStreamMethod:
             ),
         ]
 
-        async def mock_fetch_ngrams(filter_obj):  # noqa: ARG001
+        async def mock_fetch_ngrams(filter_obj):
             for record in raw_records:
                 yield record
 
@@ -516,7 +516,7 @@ class TestQueryMethod:
             ),
         ]
 
-        async def mock_fetch_ngrams(filter_obj):  # noqa: ARG001
+        async def mock_fetch_ngrams(filter_obj):
             for record in raw_records:
                 yield record
 
@@ -539,7 +539,7 @@ class TestQueryMethod:
         """Test query() with no matching records."""
         endpoint = NGramsEndpoint()
 
-        async def mock_fetch_ngrams(filter_obj):  # noqa: ARG001
+        async def mock_fetch_ngrams(filter_obj):
             # Yield nothing
             if False:
                 yield
@@ -593,7 +593,7 @@ class TestSyncWrappers:
             ),
         ]
 
-        async def mock_fetch_ngrams(filter_obj):  # noqa: ARG001
+        async def mock_fetch_ngrams(filter_obj):
             for record in raw_records:
                 yield record
 

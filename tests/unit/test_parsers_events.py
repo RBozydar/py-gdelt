@@ -14,7 +14,6 @@ Tests cover:
 import pytest
 
 from py_gdelt.exceptions import ParseError
-from py_gdelt.models._internal import _RawEvent
 from py_gdelt.parsers.events import EventsParser
 
 
@@ -70,73 +69,73 @@ class TestV2Parsing:
         return [
             # Event identification (0-4)
             "1234567890",  # GLOBALEVENTID
-            "20240101",    # SQLDATE
-            "202401",      # MonthYear
-            "2024",        # Year
-            "2024.0014",   # FractionDate
+            "20240101",  # SQLDATE
+            "202401",  # MonthYear
+            "2024",  # Year
+            "2024.0014",  # FractionDate
             # Actor1 (5-14)
-            "USA",         # Actor1Code
-            "UNITED STATES", # Actor1Name
-            "USA",         # Actor1CountryCode
-            "GOV",         # Actor1KnownGroupCode
-            "",            # Actor1EthnicCode (empty)
-            "CHR",         # Actor1Religion1Code
-            "",            # Actor1Religion2Code (empty)
-            "GOV",         # Actor1Type1Code
-            "EXEC",        # Actor1Type2Code
-            "",            # Actor1Type3Code (empty)
+            "USA",  # Actor1Code
+            "UNITED STATES",  # Actor1Name
+            "USA",  # Actor1CountryCode
+            "GOV",  # Actor1KnownGroupCode
+            "",  # Actor1EthnicCode (empty)
+            "CHR",  # Actor1Religion1Code
+            "",  # Actor1Religion2Code (empty)
+            "GOV",  # Actor1Type1Code
+            "EXEC",  # Actor1Type2Code
+            "",  # Actor1Type3Code (empty)
             # Actor2 (15-24)
-            "CHN",         # Actor2Code
-            "CHINA",       # Actor2Name
-            "CHN",         # Actor2CountryCode
-            "GOV",         # Actor2KnownGroupCode
-            "",            # Actor2EthnicCode (empty)
-            "",            # Actor2Religion1Code (empty)
-            "",            # Actor2Religion2Code (empty)
-            "GOV",         # Actor2Type1Code
-            "",            # Actor2Type2Code (empty)
-            "",            # Actor2Type3Code (empty)
+            "CHN",  # Actor2Code
+            "CHINA",  # Actor2Name
+            "CHN",  # Actor2CountryCode
+            "GOV",  # Actor2KnownGroupCode
+            "",  # Actor2EthnicCode (empty)
+            "",  # Actor2Religion1Code (empty)
+            "",  # Actor2Religion2Code (empty)
+            "GOV",  # Actor2Type1Code
+            "",  # Actor2Type2Code (empty)
+            "",  # Actor2Type3Code (empty)
             # Event attributes (25-34)
-            "1",           # IsRootEvent
-            "042",         # EventCode (CAMEO with leading zero)
-            "04",          # EventBaseCode
-            "04",          # EventRootCode
-            "1",           # QuadClass
-            "3.4",         # GoldsteinScale
-            "5",           # NumMentions
-            "3",           # NumSources
-            "2",           # NumArticles
-            "-2.5",        # AvgTone
+            "1",  # IsRootEvent
+            "042",  # EventCode (CAMEO with leading zero)
+            "04",  # EventBaseCode
+            "04",  # EventRootCode
+            "1",  # QuadClass
+            "3.4",  # GoldsteinScale
+            "5",  # NumMentions
+            "3",  # NumSources
+            "2",  # NumArticles
+            "-2.5",  # AvgTone
             # Actor1Geo (35-42)
-            "3",           # Actor1Geo_Type
-            "Washington, District of Columbia, United States", # Actor1Geo_Fullname
-            "US",          # Actor1Geo_CountryCode
-            "USDC",        # Actor1Geo_ADM1Code
-            "",            # Actor1Geo_ADM2Code (empty)
-            "38.8951",     # Actor1Geo_Lat
-            "-77.0364",    # Actor1Geo_Long
-            "531871",      # Actor1Geo_FeatureID
+            "3",  # Actor1Geo_Type
+            "Washington, District of Columbia, United States",  # Actor1Geo_Fullname
+            "US",  # Actor1Geo_CountryCode
+            "USDC",  # Actor1Geo_ADM1Code
+            "",  # Actor1Geo_ADM2Code (empty)
+            "38.8951",  # Actor1Geo_Lat
+            "-77.0364",  # Actor1Geo_Long
+            "531871",  # Actor1Geo_FeatureID
             # Actor2Geo (43-50)
-            "3",           # Actor2Geo_Type
-            "Beijing, Beijing, China", # Actor2Geo_Fullname
-            "CH",          # Actor2Geo_CountryCode
-            "CH22",        # Actor2Geo_ADM1Code
-            "",            # Actor2Geo_ADM2Code (empty)
-            "39.9042",     # Actor2Geo_Lat
-            "116.4074",    # Actor2Geo_Long
-            "1816670",     # Actor2Geo_FeatureID
+            "3",  # Actor2Geo_Type
+            "Beijing, Beijing, China",  # Actor2Geo_Fullname
+            "CH",  # Actor2Geo_CountryCode
+            "CH22",  # Actor2Geo_ADM1Code
+            "",  # Actor2Geo_ADM2Code (empty)
+            "39.9042",  # Actor2Geo_Lat
+            "116.4074",  # Actor2Geo_Long
+            "1816670",  # Actor2Geo_FeatureID
             # ActionGeo (51-58)
-            "3",           # ActionGeo_Type
-            "New York, New York, United States", # ActionGeo_Fullname
-            "US",          # ActionGeo_CountryCode
-            "USNY",        # ActionGeo_ADM1Code
-            "",            # ActionGeo_ADM2Code (empty)
-            "40.7128",     # ActionGeo_Lat
-            "-74.0060",    # ActionGeo_Long
-            "5128581",     # ActionGeo_FeatureID
+            "3",  # ActionGeo_Type
+            "New York, New York, United States",  # ActionGeo_Fullname
+            "US",  # ActionGeo_CountryCode
+            "USNY",  # ActionGeo_ADM1Code
+            "",  # ActionGeo_ADM2Code (empty)
+            "40.7128",  # ActionGeo_Lat
+            "-74.0060",  # ActionGeo_Long
+            "5128581",  # ActionGeo_FeatureID
             # Metadata (59-60)
-            "20240101120000", # DATEADDED
-            "http://example.com/article.html", # SOURCEURL
+            "20240101120000",  # DATEADDED
+            "http://example.com/article.html",  # SOURCEURL
         ]
 
     def test_parse_complete_v2_row(self, sample_v2_row: list[str]) -> None:
@@ -215,22 +214,22 @@ class TestV2Parsing:
         # Create minimal row with required fields and empty optionals
         row = [""] * 61
         # Fill required fields
-        row[0] = "123"          # GLOBALEVENTID
-        row[1] = "20240101"     # SQLDATE
-        row[2] = "202401"       # MonthYear
-        row[3] = "2024"         # Year
-        row[4] = "2024.0014"    # FractionDate
-        row[25] = "1"           # IsRootEvent
-        row[26] = "010"         # EventCode
-        row[27] = "01"          # EventBaseCode
-        row[28] = "01"          # EventRootCode
-        row[29] = "1"           # QuadClass
-        row[30] = "0.0"         # GoldsteinScale
-        row[31] = "1"           # NumMentions
-        row[32] = "1"           # NumSources
-        row[33] = "1"           # NumArticles
-        row[34] = "0.0"         # AvgTone
-        row[59] = "20240101"    # DATEADDED
+        row[0] = "123"  # GLOBALEVENTID
+        row[1] = "20240101"  # SQLDATE
+        row[2] = "202401"  # MonthYear
+        row[3] = "2024"  # Year
+        row[4] = "2024.0014"  # FractionDate
+        row[25] = "1"  # IsRootEvent
+        row[26] = "010"  # EventCode
+        row[27] = "01"  # EventBaseCode
+        row[28] = "01"  # EventRootCode
+        row[29] = "1"  # QuadClass
+        row[30] = "0.0"  # GoldsteinScale
+        row[31] = "1"  # NumMentions
+        row[32] = "1"  # NumSources
+        row[33] = "1"  # NumArticles
+        row[34] = "0.0"  # AvgTone
+        row[59] = "20240101"  # DATEADDED
         row[60] = "http://example.com/test"  # SOURCEURL (v2 specific, position 60)
 
         data = "\t".join(row).encode("utf-8")
@@ -292,69 +291,69 @@ class TestV1Parsing:
         return [
             # Event identification (0-4)
             "1234567890",  # GLOBALEVENTID
-            "20240101",    # SQLDATE
-            "202401",      # MonthYear
-            "2024",        # Year
-            "2024.0014",   # FractionDate
+            "20240101",  # SQLDATE
+            "202401",  # MonthYear
+            "2024",  # Year
+            "2024.0014",  # FractionDate
             # Actor1 (5-14)
-            "USA",         # Actor1Code
-            "UNITED STATES", # Actor1Name
-            "USA",         # Actor1CountryCode
-            "GOV",         # Actor1KnownGroupCode
-            "",            # Actor1EthnicCode (empty)
-            "CHR",         # Actor1Religion1Code
-            "",            # Actor1Religion2Code (empty)
-            "GOV",         # Actor1Type1Code
-            "EXEC",        # Actor1Type2Code
-            "",            # Actor1Type3Code (empty)
+            "USA",  # Actor1Code
+            "UNITED STATES",  # Actor1Name
+            "USA",  # Actor1CountryCode
+            "GOV",  # Actor1KnownGroupCode
+            "",  # Actor1EthnicCode (empty)
+            "CHR",  # Actor1Religion1Code
+            "",  # Actor1Religion2Code (empty)
+            "GOV",  # Actor1Type1Code
+            "EXEC",  # Actor1Type2Code
+            "",  # Actor1Type3Code (empty)
             # Actor2 (15-24)
-            "CHN",         # Actor2Code
-            "CHINA",       # Actor2Name
-            "CHN",         # Actor2CountryCode
-            "GOV",         # Actor2KnownGroupCode
-            "",            # Actor2EthnicCode (empty)
-            "",            # Actor2Religion1Code (empty)
-            "",            # Actor2Religion2Code (empty)
-            "GOV",         # Actor2Type1Code
-            "",            # Actor2Type2Code (empty)
-            "",            # Actor2Type3Code (empty)
+            "CHN",  # Actor2Code
+            "CHINA",  # Actor2Name
+            "CHN",  # Actor2CountryCode
+            "GOV",  # Actor2KnownGroupCode
+            "",  # Actor2EthnicCode (empty)
+            "",  # Actor2Religion1Code (empty)
+            "",  # Actor2Religion2Code (empty)
+            "GOV",  # Actor2Type1Code
+            "",  # Actor2Type2Code (empty)
+            "",  # Actor2Type3Code (empty)
             # Event attributes (25-34)
-            "1",           # IsRootEvent
-            "042",         # EventCode (CAMEO with leading zero)
-            "04",          # EventBaseCode
-            "04",          # EventRootCode
-            "1",           # QuadClass
-            "3.4",         # GoldsteinScale
-            "5",           # NumMentions
-            "3",           # NumSources
-            "2",           # NumArticles
-            "-2.5",        # AvgTone
+            "1",  # IsRootEvent
+            "042",  # EventCode (CAMEO with leading zero)
+            "04",  # EventBaseCode
+            "04",  # EventRootCode
+            "1",  # QuadClass
+            "3.4",  # GoldsteinScale
+            "5",  # NumMentions
+            "3",  # NumSources
+            "2",  # NumArticles
+            "-2.5",  # AvgTone
             # Actor1Geo (35-41) - v1 has no FeatureID
-            "3",           # Actor1Geo_Type
-            "Washington, District of Columbia, United States", # Actor1Geo_Fullname
-            "US",          # Actor1Geo_CountryCode
-            "USDC",        # Actor1Geo_ADM1Code
-            "",            # Actor1Geo_ADM2Code (empty)
-            "38.8951",     # Actor1Geo_Lat
-            "-77.0364",    # Actor1Geo_Long
+            "3",  # Actor1Geo_Type
+            "Washington, District of Columbia, United States",  # Actor1Geo_Fullname
+            "US",  # Actor1Geo_CountryCode
+            "USDC",  # Actor1Geo_ADM1Code
+            "",  # Actor1Geo_ADM2Code (empty)
+            "38.8951",  # Actor1Geo_Lat
+            "-77.0364",  # Actor1Geo_Long
             # Actor2Geo (42-48) - v1 has no FeatureID
-            "3",           # Actor2Geo_Type
-            "Beijing, Beijing, China", # Actor2Geo_Fullname
-            "CH",          # Actor2Geo_CountryCode
-            "CH22",        # Actor2Geo_ADM1Code
-            "",            # Actor2Geo_ADM2Code (empty)
-            "39.9042",     # Actor2Geo_Lat
-            "116.4074",    # Actor2Geo_Long
+            "3",  # Actor2Geo_Type
+            "Beijing, Beijing, China",  # Actor2Geo_Fullname
+            "CH",  # Actor2Geo_CountryCode
+            "CH22",  # Actor2Geo_ADM1Code
+            "",  # Actor2Geo_ADM2Code (empty)
+            "39.9042",  # Actor2Geo_Lat
+            "116.4074",  # Actor2Geo_Long
             # ActionGeo (49-55) - v1 has no FeatureID
-            "3",           # ActionGeo_Type
-            "New York, New York, United States", # ActionGeo_Fullname
-            "US",          # ActionGeo_CountryCode
-            "USNY",        # ActionGeo_ADM1Code
-            "",            # ActionGeo_ADM2Code (empty)
-            "40.7128",     # ActionGeo_Lat
-            "-74.0060",    # ActionGeo_Long
+            "3",  # ActionGeo_Type
+            "New York, New York, United States",  # ActionGeo_Fullname
+            "US",  # ActionGeo_CountryCode
+            "USNY",  # ActionGeo_ADM1Code
+            "",  # ActionGeo_ADM2Code (empty)
+            "40.7128",  # ActionGeo_Lat
+            "-74.0060",  # ActionGeo_Long
             # Metadata (56)
-            "20240101",    # DATEADDED (v1: YYYYMMDD at position 56, no timestamp)
+            "20240101",  # DATEADDED (v1: YYYYMMDD at position 56, no timestamp)
         ]
 
     def test_parse_complete_v1_row(self, sample_v1_row: list[str]) -> None:
@@ -384,22 +383,22 @@ class TestV1Parsing:
         # Create minimal row with required fields and empty optionals
         row = [""] * 57
         # Fill required fields (v1 format)
-        row[0] = "123"          # GLOBALEVENTID
-        row[1] = "20240101"     # SQLDATE
-        row[2] = "202401"       # MonthYear
-        row[3] = "2024"         # Year
-        row[4] = "2024.0014"    # FractionDate
-        row[25] = "1"           # IsRootEvent
-        row[26] = "010"         # EventCode
-        row[27] = "01"          # EventBaseCode
-        row[28] = "01"          # EventRootCode
-        row[29] = "1"           # QuadClass
-        row[30] = "0.0"         # GoldsteinScale
-        row[31] = "1"           # NumMentions
-        row[32] = "1"           # NumSources
-        row[33] = "1"           # NumArticles
-        row[34] = "0.0"         # AvgTone
-        row[56] = "20240101"    # DATEADDED (v1 position: 56)
+        row[0] = "123"  # GLOBALEVENTID
+        row[1] = "20240101"  # SQLDATE
+        row[2] = "202401"  # MonthYear
+        row[3] = "2024"  # Year
+        row[4] = "2024.0014"  # FractionDate
+        row[25] = "1"  # IsRootEvent
+        row[26] = "010"  # EventCode
+        row[27] = "01"  # EventBaseCode
+        row[28] = "01"  # EventRootCode
+        row[29] = "1"  # QuadClass
+        row[30] = "0.0"  # GoldsteinScale
+        row[31] = "1"  # NumMentions
+        row[32] = "1"  # NumSources
+        row[33] = "1"  # NumArticles
+        row[34] = "0.0"  # AvgTone
+        row[56] = "20240101"  # DATEADDED (v1 position: 56)
 
         data = "\t".join(row).encode("utf-8")
         events = list(parser.parse(data))
@@ -456,7 +455,7 @@ class TestEdgeCases:
 
         row_str = "\t".join(row)
         # Test with empty lines interspersed (but not leading, as parser checks first line)
-        data = f"{row_str}\n\n{row_str}\n".encode("utf-8")
+        data = f"{row_str}\n\n{row_str}\n".encode()
         events = list(parser.parse(data))
 
         assert len(events) == 2
@@ -498,10 +497,7 @@ class TestEdgeCases:
         # Malformed row: wrong column count (only 10 columns instead of 61)
         malformed_row = ["malformed"] * 10
 
-        data = (
-            "\t".join(valid_row) + "\n" +
-            "\t".join(malformed_row)
-        ).encode("utf-8")
+        data = ("\t".join(valid_row) + "\n" + "\t".join(malformed_row)).encode("utf-8")
 
         events = list(parser.parse(data))
 
@@ -523,8 +519,8 @@ class TestEdgeCases:
         row[4] = "2024.0014"
         row[25] = "1"
         row[26] = "010"  # Leading zero
-        row[27] = "01"   # Leading zero
-        row[28] = "0"    # Single digit
+        row[27] = "01"  # Leading zero
+        row[28] = "0"  # Single digit
         row[29] = "1"
         row[30] = "0.0"
         row[31] = "1"

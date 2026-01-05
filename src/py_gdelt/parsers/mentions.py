@@ -8,9 +8,10 @@ Mentions files are TAB-delimited with 16 columns (v2 only, no v1 format exists).
 """
 
 import logging
-from typing import Iterator
+from collections.abc import Iterator
 
 from py_gdelt.models._internal import _RawMention
+
 
 logger = logging.getLogger(__name__)
 

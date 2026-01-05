@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from py_gdelt.models._internal import _RawNGram
 
+
 __all__ = ["NGramRecord"]
 
 

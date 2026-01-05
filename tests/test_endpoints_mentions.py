@@ -4,13 +4,12 @@ This module tests the MentionsEndpoint class which provides access to GDELT Ment
 using DataFetcher for source orchestration.
 """
 
-from datetime import date, datetime
+from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from py_gdelt.endpoints.mentions import MentionsEndpoint
-from py_gdelt.exceptions import ConfigurationError
 from py_gdelt.filters import DateRange, EventFilter
 from py_gdelt.models._internal import _RawMention
 from py_gdelt.models.common import FetchResult
@@ -156,6 +155,7 @@ class TestMentionsEndpointQuery:
         sample_raw_mention: _RawMention,
     ) -> None:
         """Test that query() returns FetchResult."""
+
         # Setup mock to return async iterator
         async def mock_fetch_mentions(*args, **kwargs):
             yield sample_raw_mention
@@ -484,7 +484,7 @@ class TestMentionsEndpointSyncWrappers:
             endpoint.stream_sync(
                 global_event_id="123456789",
                 filter_obj=event_filter,
-            )
+            ),
         )
 
         assert len(mentions) == 3

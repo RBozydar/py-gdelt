@@ -11,6 +11,7 @@ from importlib.resources import files
 from py_gdelt.exceptions import InvalidCodeError
 from py_gdelt.lookups.models import CountryEntry
 
+
 __all__ = ["Countries"]
 
 
@@ -39,9 +40,7 @@ class Countries:
         """Lazy load countries data (FIPS as key)."""
         if self._countries is None:
             raw_data = self._load_json("countries.json")
-            self._countries = {
-                code: CountryEntry(**data) for code, data in raw_data.items()
-            }
+            self._countries = {code: CountryEntry(**data) for code, data in raw_data.items()}
         return self._countries
 
     @property

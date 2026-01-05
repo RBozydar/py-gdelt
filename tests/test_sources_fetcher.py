@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from py_gdelt.exceptions import (
-    APIError,
     APIUnavailableError,
     ConfigurationError,
     RateLimitError,
@@ -166,7 +165,7 @@ class TestDataFetcherFetchFromFiles:
         """Test fetching events from file source."""
         # Mock file source methods
         mock_file_source.get_files_for_date_range = AsyncMock(
-            return_value=["http://example.com/file1.zip"]
+            return_value=["http://example.com/file1.zip"],
         )
 
         # Mock stream_files to yield URL and data
@@ -182,7 +181,7 @@ class TestDataFetcherFetchFromFiles:
             "event_code": "010",
         }
 
-        def mock_parse(data: bytes, is_translated: bool = False) -> Iterator[dict]:  # type: ignore[type-arg] # noqa: ARG001
+        def mock_parse(data: bytes, is_translated: bool = False) -> Iterator[dict]:  # type: ignore[type-arg]
             yield mock_event
 
         mock_parser.parse = mock_parse
@@ -215,7 +214,7 @@ class TestDataFetcherFetchFromFiles:
         """Test fetching GKG from file source."""
         # Mock file source methods
         mock_file_source.get_files_for_date_range = AsyncMock(
-            return_value=["http://example.com/file1.zip"]
+            return_value=["http://example.com/file1.zip"],
         )
 
         # Mock stream_files
@@ -231,7 +230,7 @@ class TestDataFetcherFetchFromFiles:
             "themes": "ENV_CLIMATECHANGE",
         }
 
-        def mock_parse(data: bytes, is_translated: bool = False) -> Iterator[dict]:  # type: ignore[type-arg] # noqa: ARG001
+        def mock_parse(data: bytes, is_translated: bool = False) -> Iterator[dict]:  # type: ignore[type-arg]
             yield mock_gkg
 
         mock_parser.parse = mock_parse
@@ -269,11 +268,11 @@ class TestDataFetcherFallback:
         """Test fallback to BigQuery on rate limit error."""
         # Mock file source to raise RateLimitError
         mock_file_source.get_files_for_date_range = AsyncMock(
-            side_effect=RateLimitError("Rate limited", retry_after=60)
+            side_effect=RateLimitError("Rate limited", retry_after=60),
         )
 
         # Mock BigQuery to return data
-        async def mock_query_events(filter_obj, columns=None, limit=None):  # type: ignore[no-untyped-def] # noqa: ARG001
+        async def mock_query_events(filter_obj, columns=None, limit=None):  # type: ignore[no-untyped-def]
             yield {"GLOBALEVENTID": "123", "EventCode": "010"}
 
         mock_bigquery_source.query_events = mock_query_events
@@ -304,11 +303,11 @@ class TestDataFetcherFallback:
         """Test fallback to BigQuery on API error."""
         # Mock file source to raise APIError
         mock_file_source.get_files_for_date_range = AsyncMock(
-            side_effect=APIUnavailableError("Service unavailable")
+            side_effect=APIUnavailableError("Service unavailable"),
         )
 
         # Mock BigQuery to return data
-        async def mock_query_events(filter_obj, columns=None, limit=None):  # type: ignore[no-untyped-def] # noqa: ARG001
+        async def mock_query_events(filter_obj, columns=None, limit=None):  # type: ignore[no-untyped-def]
             yield {"GLOBALEVENTID": "456", "EventCode": "020"}
 
         mock_bigquery_source.query_events = mock_query_events
@@ -339,7 +338,7 @@ class TestDataFetcherFallback:
         """Test that fallback is disabled when fallback_enabled=False."""
         # Mock file source to raise RateLimitError
         mock_file_source.get_files_for_date_range = AsyncMock(
-            side_effect=RateLimitError("Rate limited")
+            side_effect=RateLimitError("Rate limited"),
         )
 
         # Create fetcher with fallback DISABLED
@@ -365,7 +364,7 @@ class TestDataFetcherFallback:
         """Test that fallback doesn't happen when BigQuery not configured."""
         # Mock file source to raise RateLimitError
         mock_file_source.get_files_for_date_range = AsyncMock(
-            side_effect=RateLimitError("Rate limited")
+            side_effect=RateLimitError("Rate limited"),
         )
 
         # Create fetcher WITHOUT BigQuery source
@@ -393,8 +392,9 @@ class TestDataFetcherUseBigQuery:
         event_filter: EventFilter,
     ) -> None:
         """Test using BigQuery directly when use_bigquery=True."""
+
         # Mock BigQuery to return data
-        async def mock_query_events(filter_obj, columns=None, limit=None):  # type: ignore[no-untyped-def] # noqa: ARG001
+        async def mock_query_events(filter_obj, columns=None, limit=None):  # type: ignore[no-untyped-def]
             yield {"GLOBALEVENTID": "789", "EventCode": "030"}
 
         mock_bigquery_source.query_events = mock_query_events
@@ -445,12 +445,12 @@ class TestDataFetcherConvenienceMethods:
         """Test fetch_events convenience method."""
         # Mock file source
         mock_file_source.get_files_for_date_range = AsyncMock(
-            return_value=["http://example.com/file1.zip"]
+            return_value=["http://example.com/file1.zip"],
         )
 
         async def mock_stream_files(urls):  # type: ignore[no-untyped-def]
             # Async generator that yields nothing (to avoid parser errors)
-            if False:  # noqa: SIM112
+            if False:
                 yield
 
         mock_file_source.stream_files = mock_stream_files
@@ -475,12 +475,12 @@ class TestDataFetcherConvenienceMethods:
         """Test fetch_gkg convenience method."""
         # Mock file source
         mock_file_source.get_files_for_date_range = AsyncMock(
-            return_value=["http://example.com/file1.zip"]
+            return_value=["http://example.com/file1.zip"],
         )
 
         async def mock_stream_files(urls):  # type: ignore[no-untyped-def]
             # Async generator that yields nothing (to avoid parser errors)
-            if False:  # noqa: SIM112
+            if False:
                 yield
 
         mock_file_source.stream_files = mock_stream_files
@@ -519,8 +519,9 @@ class TestDataFetcherConvenienceMethods:
         event_filter: EventFilter,
     ) -> None:
         """Test fetch_mentions with BigQuery configured."""
+
         # Mock BigQuery to return mentions
-        async def mock_query_mentions(global_event_id, columns=None, date_range=None):  # type: ignore[no-untyped-def] # noqa: ARG001
+        async def mock_query_mentions(global_event_id, columns=None, date_range=None):  # type: ignore[no-untyped-def]
             yield {
                 "GLOBALEVENTID": global_event_id,
                 "MentionTimeDate": "20240101",
@@ -552,12 +553,12 @@ class TestDataFetcherConvenienceMethods:
         """Test fetch_ngrams convenience method."""
         # Mock file source
         mock_file_source.get_files_for_date_range = AsyncMock(
-            return_value=["http://example.com/file1.gz"]
+            return_value=["http://example.com/file1.gz"],
         )
 
         async def mock_stream_files(urls):  # type: ignore[no-untyped-def]
             # Async generator that yields nothing (to avoid parser errors)
-            if False:  # noqa: SIM112
+            if False:
                 yield
 
         mock_file_source.stream_files = mock_stream_files
@@ -589,6 +590,7 @@ class TestDataFetcherEdgeCases:
         mock_parser: MagicMock,
     ) -> None:
         """Test that unsupported filter types raise ValueError."""
+
         # Create a mock filter that's not EventFilter or GKGFilter
         class UnsupportedFilter:
             pass
@@ -613,7 +615,7 @@ class TestDataFetcherEdgeCases:
         """Test that parsing errors are handled according to error policy."""
         # Mock file source
         mock_file_source.get_files_for_date_range = AsyncMock(
-            return_value=["http://example.com/file1.zip"]
+            return_value=["http://example.com/file1.zip"],
         )
 
         async def mock_stream_files(urls):  # type: ignore[no-untyped-def]
@@ -622,7 +624,7 @@ class TestDataFetcherEdgeCases:
         mock_file_source.stream_files = mock_stream_files
 
         # Mock parser to raise error
-        def mock_parse(data: bytes, is_translated: bool = False) -> Iterator[dict]:  # type: ignore[type-arg] # noqa: ARG001
+        def mock_parse(data: bytes, is_translated: bool = False) -> Iterator[dict]:  # type: ignore[type-arg]
             raise ValueError("Parse error")
 
         mock_parser.parse = mock_parse

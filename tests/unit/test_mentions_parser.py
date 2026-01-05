@@ -17,23 +17,23 @@ class TestMentionsParser:
     def test_parse_single_mention_full_fields(self, parser: MentionsParser) -> None:
         """Test parsing a single mention with all fields populated."""
         data = (
-            "123456789\t"  # GlobalEventID
-            "20240104120000\t"  # EventTimeDate (YYYYMMDDHHMMSS)
-            "20240104121500\t"  # MentionTimeDate (YYYYMMDDHHMMSS)
-            "1\t"  # MentionType (1=Web)
-            "CNN\t"  # MentionSourceName
-            "https://cnn.com/article/123\t"  # MentionIdentifier
-            "5\t"  # SentenceID
-            "45\t"  # Actor1CharOffset
-            "78\t"  # Actor2CharOffset
-            "100\t"  # ActionCharOffset
-            "1\t"  # InRawText (1=in raw)
-            "95\t"  # Confidence (1-100)
-            "5000\t"  # MentionDocLen
-            "-2.5\t"  # MentionDocTone
-            "eng;spa\t"  # MentionDocTranslationInfo
-            ""  # Extras (empty)
-        ).encode("utf-8")
+            b"123456789\t"  # GlobalEventID
+            b"20240104120000\t"  # EventTimeDate (YYYYMMDDHHMMSS)
+            b"20240104121500\t"  # MentionTimeDate (YYYYMMDDHHMMSS)
+            b"1\t"  # MentionType (1=Web)
+            b"CNN\t"  # MentionSourceName
+            b"https://cnn.com/article/123\t"  # MentionIdentifier
+            b"5\t"  # SentenceID
+            b"45\t"  # Actor1CharOffset
+            b"78\t"  # Actor2CharOffset
+            b"100\t"  # ActionCharOffset
+            b"1\t"  # InRawText (1=in raw)
+            b"95\t"  # Confidence (1-100)
+            b"5000\t"  # MentionDocLen
+            b"-2.5\t"  # MentionDocTone
+            b"eng;spa\t"  # MentionDocTranslationInfo
+            b""  # Extras (empty)
+        )
 
         mentions = list(parser.parse(data))
 
@@ -63,23 +63,23 @@ class TestMentionsParser:
     def test_parse_mention_with_empty_optional_fields(self, parser: MentionsParser) -> None:
         """Test parsing mention with empty optional fields."""
         data = (
-            "987654321\t"
-            "20240104130000\t"
-            "20240104130500\t"
-            "2\t"  # MentionType (2=Citation)
-            "BBC\t"
-            "https://bbc.com/news/456\t"
-            "1\t"
-            "0\t"
-            "0\t"
-            "0\t"
-            "0\t"
-            "80\t"
-            "3000\t"
-            "1.2\t"
-            "\t"  # Empty translation info
-            ""  # Empty extras
-        ).encode("utf-8")
+            b"987654321\t"
+            b"20240104130000\t"
+            b"20240104130500\t"
+            b"2\t"  # MentionType (2=Citation)
+            b"BBC\t"
+            b"https://bbc.com/news/456\t"
+            b"1\t"
+            b"0\t"
+            b"0\t"
+            b"0\t"
+            b"0\t"
+            b"80\t"
+            b"3000\t"
+            b"1.2\t"
+            b"\t"  # Empty translation info
+            b""  # Empty extras
+        )
 
         mentions = list(parser.parse(data))
 
@@ -92,10 +92,10 @@ class TestMentionsParser:
     def test_parse_multiple_mentions(self, parser: MentionsParser) -> None:
         """Test parsing multiple mentions in one file."""
         data = (
-            "111\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t1\t10\t20\t30\t1\t90\t1000\t-1.0\t\t\n"
-            "222\t20240104110000\t20240104110500\t2\tBBC\thttp://b.com\t2\t15\t25\t35\t0\t85\t2000\t0.5\t\t\n"
-            "333\t20240104120000\t20240104120500\t3\tNYT\thttp://c.com\t3\t20\t30\t40\t1\t95\t3000\t2.0\t\t"
-        ).encode("utf-8")
+            b"111\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t1\t10\t20\t30\t1\t90\t1000\t-1.0\t\t\n"
+            b"222\t20240104110000\t20240104110500\t2\tBBC\thttp://b.com\t2\t15\t25\t35\t0\t85\t2000\t0.5\t\t\n"
+            b"333\t20240104120000\t20240104120500\t3\tNYT\thttp://c.com\t3\t20\t30\t40\t1\t95\t3000\t2.0\t\t"
+        )
 
         mentions = list(parser.parse(data))
 
@@ -117,14 +117,16 @@ class TestMentionsParser:
         assert len(mentions) == 0
 
     def test_parse_malformed_line_wrong_column_count(
-        self, parser: MentionsParser, caplog: pytest.LogCaptureFixture
+        self,
+        parser: MentionsParser,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test that malformed lines with wrong column count are skipped."""
         data = (
-            "111\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t1\t10\t20\t30\t1\t90\t1000\t-1.0\t\t\n"
-            "222\t20240104110000\t20240104110500\t2\tBBC\n"  # Only 5 columns (should be 16)
-            "333\t20240104120000\t20240104120500\t3\tNYT\thttp://c.com\t3\t20\t30\t40\t1\t95\t3000\t2.0\t\t"
-        ).encode("utf-8")
+            b"111\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t1\t10\t20\t30\t1\t90\t1000\t-1.0\t\t\n"
+            b"222\t20240104110000\t20240104110500\t2\tBBC\n"  # Only 5 columns (should be 16)
+            b"333\t20240104120000\t20240104120500\t3\tNYT\thttp://c.com\t3\t20\t30\t40\t1\t95\t3000\t2.0\t\t"
+        )
 
         with caplog.at_level("WARNING"):
             mentions = list(parser.parse(data))
@@ -139,7 +141,9 @@ class TestMentionsParser:
         assert "expected 16 columns, got 5" in caplog.text
 
     def test_parse_invalid_utf8(
-        self, parser: MentionsParser, caplog: pytest.LogCaptureFixture
+        self,
+        parser: MentionsParser,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test that invalid UTF-8 data is handled gracefully."""
         # Invalid UTF-8 sequence
@@ -154,12 +158,12 @@ class TestMentionsParser:
     def test_parse_mention_types(self, parser: MentionsParser) -> None:
         """Test parsing different mention types (1=Web, 2=Citation, 3=Core, 4=Dtic, 5=Translation)."""
         data = (
-            "1\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
-            "2\t20240104100000\t20240104100500\t2\tBBC\thttp://b.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
-            "3\t20240104100000\t20240104100500\t3\tNYT\thttp://c.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
-            "4\t20240104100000\t20240104100500\t4\tDTIC\thttp://d.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
-            "5\t20240104100000\t20240104100500\t5\tTranslated\thttp://e.com\t1\t0\t0\t0\t1\t90\t1000\t0\teng;fra\t"
-        ).encode("utf-8")
+            b"1\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
+            b"2\t20240104100000\t20240104100500\t2\tBBC\thttp://b.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
+            b"3\t20240104100000\t20240104100500\t3\tNYT\thttp://c.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
+            b"4\t20240104100000\t20240104100500\t4\tDTIC\thttp://d.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t\n"
+            b"5\t20240104100000\t20240104100500\t5\tTranslated\thttp://e.com\t1\t0\t0\t0\t1\t90\t1000\t0\teng;fra\t"
+        )
 
         mentions = list(parser.parse(data))
 
@@ -174,10 +178,10 @@ class TestMentionsParser:
     def test_parse_confidence_range(self, parser: MentionsParser) -> None:
         """Test parsing confidence values (1-100 range)."""
         data = (
-            "1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t0\t0\t0\t1\t1\t1000\t0\t\t\n"
-            "2\t20240104100000\t20240104100500\t1\tB\thttp://b.com\t1\t0\t0\t0\t1\t50\t1000\t0\t\t\n"
-            "3\t20240104100000\t20240104100500\t1\tC\thttp://c.com\t1\t0\t0\t0\t1\t100\t1000\t0\t\t"
-        ).encode("utf-8")
+            b"1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t0\t0\t0\t1\t1\t1000\t0\t\t\n"
+            b"2\t20240104100000\t20240104100500\t1\tB\thttp://b.com\t1\t0\t0\t0\t1\t50\t1000\t0\t\t\n"
+            b"3\t20240104100000\t20240104100500\t1\tC\thttp://c.com\t1\t0\t0\t0\t1\t100\t1000\t0\t\t"
+        )
 
         mentions = list(parser.parse(data))
 
@@ -188,9 +192,7 @@ class TestMentionsParser:
 
     def test_parse_negative_tone(self, parser: MentionsParser) -> None:
         """Test parsing negative tone values."""
-        data = (
-            "1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t0\t0\t0\t1\t90\t1000\t-10.5\t\t"
-        ).encode("utf-8")
+        data = b"1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t0\t0\t0\t1\t90\t1000\t-10.5\t\t"
 
         mentions = list(parser.parse(data))
 
@@ -200,9 +202,9 @@ class TestMentionsParser:
     def test_parse_in_raw_text_flag(self, parser: MentionsParser) -> None:
         """Test parsing InRawText flag (0=extracted, 1=in raw)."""
         data = (
-            "1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t0\t0\t0\t0\t90\t1000\t0\t\t\n"
-            "2\t20240104100000\t20240104100500\t1\tB\thttp://b.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t"
-        ).encode("utf-8")
+            b"1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t0\t0\t0\t0\t90\t1000\t0\t\t\n"
+            b"2\t20240104100000\t20240104100500\t1\tB\thttp://b.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t"
+        )
 
         mentions = list(parser.parse(data))
 
@@ -212,9 +214,7 @@ class TestMentionsParser:
 
     def test_parse_character_offsets(self, parser: MentionsParser) -> None:
         """Test parsing character offset fields."""
-        data = (
-            "1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t100\t200\t300\t1\t90\t1000\t0\t\t"
-        ).encode("utf-8")
+        data = b"1\t20240104100000\t20240104100500\t1\tA\thttp://a.com\t1\t100\t200\t300\t1\t90\t1000\t0\t\t"
 
         mentions = list(parser.parse(data))
 
@@ -225,9 +225,7 @@ class TestMentionsParser:
 
     def test_parse_preserves_string_types(self, parser: MentionsParser) -> None:
         """Test that all fields remain as strings for later type conversion."""
-        data = (
-            "123\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t5\t10\t20\t30\t1\t95\t5000\t-2.5\t\t"
-        ).encode("utf-8")
+        data = b"123\t20240104100000\t20240104100500\t1\tCNN\thttp://a.com\t5\t10\t20\t30\t1\t95\t5000\t-2.5\t\t"
 
         mentions = list(parser.parse(data))
 
@@ -243,8 +241,8 @@ class TestMentionsParser:
     def test_parse_date_extraction_from_timestamp(self, parser: MentionsParser) -> None:
         """Test that date portion is correctly extracted from full timestamp."""
         data = (
-            "1\t20240104235959\t20240105010203\t1\tA\thttp://a.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t"
-        ).encode("utf-8")
+            b"1\t20240104235959\t20240105010203\t1\tA\thttp://a.com\t1\t0\t0\t0\t1\t90\t1000\t0\t\t"
+        )
 
         mentions = list(parser.parse(data))
 

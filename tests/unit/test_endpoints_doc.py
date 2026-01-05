@@ -144,10 +144,10 @@ class TestSearchMethod:
                             "sourcecountry": "US",
                             "language": "English",
                             "domain": "example.com",
-                        }
-                    ]
+                        },
+                    ],
                 },
-            )
+            ),
         )
 
         async with DocEndpoint() as doc:
@@ -162,7 +162,7 @@ class TestSearchMethod:
     async def test_search_with_all_params(self) -> None:
         """Test search with all optional parameters."""
         route = respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={"articles": []})
+            return_value=httpx.Response(200, json={"articles": []}),
         )
 
         async with DocEndpoint() as doc:
@@ -208,9 +208,9 @@ class TestSearchMethod:
                             "title": "Article 3",
                             "seendate": "20240101140000",
                         },
-                    ]
+                    ],
                 },
-            )
+            ),
         )
 
         async with DocEndpoint() as doc:
@@ -235,10 +235,10 @@ class TestQueryMethod:
                             "url": "https://example.com/test",
                             "title": "Filtered Article",
                             "seendate": "20240101120000",
-                        }
-                    ]
+                        },
+                    ],
                 },
-            )
+            ),
         )
 
         async with DocEndpoint() as doc:
@@ -253,7 +253,7 @@ class TestQueryMethod:
     async def test_query_empty_results(self) -> None:
         """Test query with no matching articles."""
         respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={"articles": []})
+            return_value=httpx.Response(200, json={"articles": []}),
         )
 
         async with DocEndpoint() as doc:
@@ -267,7 +267,7 @@ class TestQueryMethod:
     async def test_query_complex_filter(self) -> None:
         """Test query with complex filter parameters."""
         route = respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={"articles": []})
+            return_value=httpx.Response(200, json={"articles": []}),
         )
 
         async with DocEndpoint() as doc:
@@ -305,9 +305,9 @@ class TestTimelineMethod:
                         {"date": "2024-01-01", "value": 100},
                         {"date": "2024-01-02", "value": 150},
                         {"date": "2024-01-03", "value": 120},
-                    ]
+                    ],
                 },
-            )
+            ),
         )
 
         async with DocEndpoint() as doc:
@@ -323,7 +323,7 @@ class TestTimelineMethod:
     async def test_timeline_custom_timespan(self) -> None:
         """Test timeline with custom timespan."""
         route = respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={"timeline": []})
+            return_value=httpx.Response(200, json={"timeline": []}),
         )
 
         async with DocEndpoint() as doc:
@@ -339,7 +339,7 @@ class TestTimelineMethod:
     async def test_timeline_empty(self) -> None:
         """Test timeline with no data points."""
         respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={"timeline": []})
+            return_value=httpx.Response(200, json={"timeline": []}),
         )
 
         async with DocEndpoint() as doc:
@@ -357,7 +357,7 @@ class TestResponseHandling:
     async def test_empty_response(self) -> None:
         """Test handling of empty JSON response."""
         respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={})
+            return_value=httpx.Response(200, json={}),
         )
 
         async with DocEndpoint() as doc:
@@ -369,7 +369,7 @@ class TestResponseHandling:
     async def test_missing_articles_key(self) -> None:
         """Test handling when 'articles' key is missing."""
         respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={"other_key": "value"})
+            return_value=httpx.Response(200, json={"other_key": "value"}),
         )
 
         async with DocEndpoint() as doc:
@@ -381,7 +381,7 @@ class TestResponseHandling:
     async def test_http_error_handling(self) -> None:
         """Test handling of HTTP errors."""
         respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(400, text="Bad Request")
+            return_value=httpx.Response(400, text="Bad Request"),
         )
 
         async with DocEndpoint() as doc:
@@ -407,10 +407,10 @@ class TestResponseHandling:
                             "socialimage": "https://example.com/image.jpg",
                             "tone": 2.5,
                             "sharecount": 1000,
-                        }
-                    ]
+                        },
+                    ],
                 },
-            )
+            ),
         )
 
         async with DocEndpoint() as doc:
@@ -435,7 +435,7 @@ class TestContextManager:
     async def test_context_manager(self) -> None:
         """Test using endpoint as async context manager."""
         respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
-            return_value=httpx.Response(200, json={"articles": []})
+            return_value=httpx.Response(200, json={"articles": []}),
         )
 
         async with DocEndpoint() as doc:
@@ -475,9 +475,9 @@ class TestIntegrationScenarios:
                             "language": "English",
                         }
                         for i in range(1, 6)
-                    ]
+                    ],
                 },
-            )
+            ),
         )
 
         async with DocEndpoint() as doc:
@@ -505,11 +505,10 @@ class TestIntegrationScenarios:
                 200,
                 json={
                     "timeline": [
-                        {"date": f"2024-01-{i:02d}", "value": i * 10}
-                        for i in range(1, 31)
-                    ]
+                        {"date": f"2024-01-{i:02d}", "value": i * 10} for i in range(1, 31)
+                    ],
                 },
-            )
+            ),
         )
 
         async with DocEndpoint() as doc:

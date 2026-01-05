@@ -2,10 +2,8 @@
 
 import json
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-
-import pytest
 
 from py_gdelt.cache import Cache
 
@@ -67,7 +65,7 @@ class TestCacheTTL:
         """Test that recent files expire after default TTL."""
         cache = Cache(cache_dir=tmp_path, default_ttl=1)  # 1 second TTL
         key = "recent_file.csv"
-        recent_date = datetime.now(timezone.utc) - timedelta(days=1)
+        recent_date = datetime.now(UTC) - timedelta(days=1)
 
         cache.set(key, b"test_data", file_date=recent_date)
         assert cache.get(key) == b"test_data"
@@ -82,7 +80,7 @@ class TestCacheTTL:
         """Test that historical files (>30 days) never expire."""
         cache = Cache(cache_dir=tmp_path, default_ttl=1)  # 1 second TTL
         key = "historical_file.csv"
-        historical_date = datetime.now(timezone.utc) - timedelta(days=31)
+        historical_date = datetime.now(UTC) - timedelta(days=31)
 
         cache.set(key, b"historical_data", file_date=historical_date)
         assert cache.get(key) == b"historical_data"
@@ -126,13 +124,13 @@ class TestCacheIsHistorical:
     def test_is_historical_with_old_date(self, tmp_path: Path) -> None:
         """Test that dates >30 days ago are historical."""
         cache = Cache(cache_dir=tmp_path)
-        old_date = datetime.now(timezone.utc) - timedelta(days=31)
+        old_date = datetime.now(UTC) - timedelta(days=31)
         assert cache._is_historical(old_date) is True
 
     def test_is_historical_with_recent_date(self, tmp_path: Path) -> None:
         """Test that dates <30 days ago are not historical."""
         cache = Cache(cache_dir=tmp_path)
-        recent_date = datetime.now(timezone.utc) - timedelta(days=29)
+        recent_date = datetime.now(UTC) - timedelta(days=29)
         assert cache._is_historical(recent_date) is False
 
     def test_is_historical_with_none(self, tmp_path: Path) -> None:
@@ -144,7 +142,7 @@ class TestCacheIsHistorical:
         """Test the 30-day boundary."""
         cache = Cache(cache_dir=tmp_path)
         # Use a fixed point in time to avoid race conditions
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         exactly_30_days = now - timedelta(days=30)
         just_over_30_days = now - timedelta(days=30, seconds=1)
         just_under_30_days = now - timedelta(days=30, seconds=-1)
@@ -190,7 +188,7 @@ class TestCacheClear:
         time.sleep(0.2)
 
         # Mark when we want to split old vs new
-        cutoff = datetime.now(timezone.utc)
+        cutoff = datetime.now(UTC)
 
         # Wait a bit more
         time.sleep(0.2)
@@ -216,7 +214,7 @@ class TestCacheClear:
         time.sleep(0.2)
 
         # Get cutoff time as ISO string
-        cutoff = datetime.now(timezone.utc).isoformat()
+        cutoff = datetime.now(UTC).isoformat()
 
         # Clear entries created before cutoff (should clear the file)
         count = cache.clear(before=cutoff)
@@ -312,7 +310,7 @@ class TestCacheMetadata:
         """Test that historical files have no expiry in metadata."""
         cache = Cache(cache_dir=tmp_path)
         key = "historical.csv"
-        historical_date = datetime.now(timezone.utc) - timedelta(days=31)
+        historical_date = datetime.now(UTC) - timedelta(days=31)
 
         cache.set(key, b"data", file_date=historical_date)
 

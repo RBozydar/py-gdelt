@@ -29,6 +29,7 @@ from py_gdelt.endpoints.tv import (
     TVTimelinePoint,
 )
 
+
 __all__ = [
     "BaseEndpoint",
     "ContextEndpoint",
@@ -38,17 +39,17 @@ __all__ = [
     "ContextTone",
     "DocEndpoint",
     "EventsEndpoint",
+    "GKGEndpoint",
     "GeoEndpoint",
     "GeoPoint",
     "GeoResult",
-    "GKGEndpoint",
     "MentionsEndpoint",
     "NGramsEndpoint",
-    "TVEndpoint",
     "TVAIEndpoint",
     "TVClip",
-    "TVTimeline",
-    "TVTimelinePoint",
+    "TVEndpoint",
     "TVStationChart",
     "TVStationData",
+    "TVTimeline",
+    "TVTimelinePoint",
 ]

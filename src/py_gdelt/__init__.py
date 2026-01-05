@@ -20,6 +20,7 @@ from py_gdelt.exceptions import (
     ValidationError,
 )
 
+
 __version__ = "0.1.0"
 
 __all__ = [

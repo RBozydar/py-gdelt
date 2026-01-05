@@ -8,6 +8,9 @@ import logging
 from pathlib import Path
 from urllib.parse import urlparse
 
+from py_gdelt.exceptions import SecurityError
+
+
 logger = logging.getLogger(__name__)
 
 # Allowed GDELT hosts for URL validation
@@ -17,9 +20,8 @@ ALLOWED_HOSTS: frozenset[str] = frozenset({"api.gdeltproject.org", "data.gdeltpr
 MAX_DECOMPRESSED_SIZE: int = 500 * 1024 * 1024  # 500MB
 MAX_COMPRESSION_RATIO: int = 100
 
-
-class SecurityError(Exception):
-    """Raised when a security check fails."""
+# Re-export SecurityError for backward compatibility
+__all__ = ["SecurityError", "check_decompression_safety", "safe_cache_path", "validate_url"]
 
 
 def safe_cache_path(cache_dir: Path, filename: str) -> Path:
@@ -116,7 +118,7 @@ def validate_url(url: str) -> str:
         logger.error("Disallowed host: %s (allowed: %s)", parsed.hostname, ALLOWED_HOSTS)
         raise SecurityError(
             f"Host '{parsed.hostname}' is not an allowed GDELT host. "
-            f"Allowed hosts: {', '.join(sorted(ALLOWED_HOSTS))}"
+            f"Allowed hosts: {', '.join(sorted(ALLOWED_HOSTS))}",
         )
 
     return url
@@ -155,7 +157,7 @@ def check_decompression_safety(compressed_size: int, decompressed_size: int) -> 
         raise SecurityError(
             f"Decompressed size {decompressed_size} bytes "
             f"exceeds maximum allowed size {MAX_DECOMPRESSED_SIZE} bytes "
-            f"({MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB)"
+            f"({MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB)",
         )
 
     # Check compression ratio (potential zip bomb)
@@ -170,5 +172,5 @@ def check_decompression_safety(compressed_size: int, decompressed_size: int) -> 
         raise SecurityError(
             f"Suspicious compression ratio: {ratio:.1f}x "
             f"(max allowed: {MAX_COMPRESSION_RATIO}x). "
-            f"Possible zip bomb attack."
+            f"Possible zip bomb attack.",
         )

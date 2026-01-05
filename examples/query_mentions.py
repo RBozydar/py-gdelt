@@ -39,7 +39,7 @@ async def query_mentions_batch():
             date_range=DateRange(
                 start=date(2026, 1, 1),
                 end=date(2026, 1, 7),
-            )
+            ),
         )
 
         # Query mentions for a specific event
@@ -59,7 +59,7 @@ async def query_mentions_batch():
 
         # Show first 5 mentions
         for i, mention in enumerate(result[:5]):
-            print(f"Mention {i+1}:")
+            print(f"Mention {i + 1}:")
             print(f"  Source: {mention.source_name}")
             print(f"  Identifier: {mention.identifier}")
             print(f"  Confidence: {mention.confidence}%")
@@ -84,7 +84,7 @@ async def stream_mentions():
             date_range=DateRange(
                 start=date(2026, 1, 1),
                 end=date(2026, 1, 7),
-            )
+            ),
         )
 
         global_event_id = "123456789"
@@ -133,9 +133,7 @@ def query_mentions_sync():
         bigquery_source=bq_source,
     )
 
-    filter_obj = EventFilter(
-        date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 3))
-    )
+    filter_obj = EventFilter(date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 3)))
 
     global_event_id = "123456789"
 
@@ -161,9 +159,7 @@ async def analyze_mention_sources():
             bigquery_source=bq_source,
         )
 
-        filter_obj = EventFilter(
-            date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 7))
-        )
+        filter_obj = EventFilter(date_range=DateRange(start=date(2026, 1, 1), end=date(2026, 1, 7)))
 
         global_event_id = "123456789"
 
