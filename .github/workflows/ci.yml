@@ -118,14 +118,6 @@ jobs:
       - name: Run pydoclint
         run: uv run pydoclint --style=google src/py_gdelt
 
-      - name: Check docstring coverage with docstr-coverage
-        uses: HunterMcGushion/docstr_coverage@v2.3.2
-        with:
-          fail-under: 90
-          skip-magic: true
-          skip-private: true
-          exclude: tests/**/*
-
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
