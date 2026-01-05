@@ -96,6 +96,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Extract version from pyproject.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
       - name: Add PyPI link to release notes
         uses: softprops/action-gh-release@v1
         with:
@@ -106,9 +113,9 @@ jobs:
             ## Installation
 
             ```bash
-            pip install py-gdelt==${{ github.ref_name }}
+            pip install py-gdelt==${{ steps.get_version.outputs.version }}
             # or with uv
-            uv add py-gdelt==${{ github.ref_name }}
+            uv add py-gdelt==${{ steps.get_version.outputs.version }}
             ```
 
-            View on [PyPI](https://pypi.org/project/py-gdelt/${{ github.ref_name }}/)
+            View on [PyPI](https://pypi.org/project/py-gdelt/${{ steps.get_version.outputs.version }}/)
