@@ -45,10 +45,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any
 
-from py_gdelt.filters import EventFilter
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Event
 from py_gdelt.utils.dedup import (
@@ -63,6 +61,9 @@ from py_gdelt.utils.dedup import (
 
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
+    from py_gdelt.filters import EventFilter
     from py_gdelt.models._internal import _RawEvent
     from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.fetcher import DataFetcher
@@ -127,7 +128,7 @@ class EventsEndpoint:
         # Import DataFetcher here to avoid circular imports
         from py_gdelt.sources.fetcher import DataFetcher
 
-        self._fetcher: DataFetcher[_RawEvent] = DataFetcher(
+        self._fetcher: DataFetcher = DataFetcher(
             file_source=file_source,
             bigquery_source=bigquery_source,
             fallback_enabled=fallback_enabled,
@@ -273,7 +274,7 @@ class EventsEndpoint:
         # Apply deduplication if requested
         if deduplicate and dedupe_strategy is not None:
             logger.debug("Applying deduplication (strategy=%s)", dedupe_strategy)
-            raw_events = apply_dedup_async(raw_events, dedupe_strategy)  # type: ignore[assignment]
+            raw_events = apply_dedup_async(raw_events, dedupe_strategy)
 
         # Convert _RawEvent to Event at yield boundary
         count = 0
@@ -395,7 +396,7 @@ class EventsEndpoint:
         finally:
             loop.close()
 
-    async def _build_url(self, **kwargs: Any) -> str:  # noqa: ARG002
+    async def _build_url(self, **kwargs: Any) -> str:
         """Build URL for events endpoint.
 
         Note: Events endpoint doesn't use URLs since it fetches from files/BigQuery.

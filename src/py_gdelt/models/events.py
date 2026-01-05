@@ -7,12 +7,17 @@ after parsing from TAB-delimited files.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from contextlib import suppress
+from datetime import UTC, date, datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from py_gdelt.models._internal import _RawEvent, _RawMention
 from py_gdelt.models.common import Location
+
+
+if TYPE_CHECKING:
+    from py_gdelt.models._internal import _RawEvent, _RawMention
 
 
 __all__ = ["Actor", "Event", "Mention"]
@@ -207,16 +212,15 @@ class Event(BaseModel):
             )
 
         # Parse date from sql_date (YYYYMMDD)
-        event_date = datetime.strptime(raw.sql_date, "%Y%m%d").date()
+        event_date = datetime.strptime(raw.sql_date, "%Y%m%d").replace(tzinfo=UTC).date()
 
         # Parse date_added (YYYYMMDDHHMMSS)
         date_added_dt: datetime | None = None
         if raw.date_added:
-            try:
-                date_added_dt = datetime.strptime(raw.date_added, "%Y%m%d%H%M%S")
-            except ValueError:
-                # If parsing fails, leave as None
-                pass
+            with suppress(ValueError):
+                date_added_dt = datetime.strptime(raw.date_added, "%Y%m%d%H%M%S").replace(
+                    tzinfo=UTC,
+                )
 
         # Create actors
         actor1 = _make_actor(
@@ -385,10 +389,10 @@ class Mention(BaseModel):
             return value.strip() == "1"
 
         # Parse event_time (YYYYMMDDHHMMSS)
-        event_time = datetime.strptime(raw.event_time_full, "%Y%m%d%H%M%S")
+        event_time = datetime.strptime(raw.event_time_full, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
 
         # Parse mention_time (YYYYMMDDHHMMSS)
-        mention_time = datetime.strptime(raw.mention_time_full, "%Y%m%d%H%M%S")
+        mention_time = datetime.strptime(raw.mention_time_full, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
 
         # Parse char offsets (can be empty string)
         actor1_offset = (

@@ -16,7 +16,7 @@ making it easy to test and configure.
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator, Iterator  # noqa: TC003
+from datetime import datetime
 from typing import TYPE_CHECKING, Literal, Protocol, TypeVar
 
 from py_gdelt.exceptions import (
@@ -29,29 +29,31 @@ from py_gdelt.filters import EventFilter, GKGFilter, NGramsFilter
 
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from py_gdelt.models._internal import _RawEvent, _RawGKG, _RawMention, _RawNGram
     from py_gdelt.sources.bigquery import BigQuerySource
-    from py_gdelt.sources.files import FileSource
+    from py_gdelt.sources.files import FileSource, FileType
 
 __all__ = ["DataFetcher", "ErrorPolicy", "Parser"]
 
 logger = logging.getLogger(__name__)
 
-# Type variable for parser output
-T = TypeVar("T")
+# Type variable for parser output (covariant since only used in return position)
+T_co = TypeVar("T_co", covariant=True)
 
 # Error handling policy
 ErrorPolicy = Literal["raise", "warn", "skip"]
 
 
-class Parser(Protocol[T]):
+class Parser(Protocol[T_co]):
     """Interface for file format parsers.
 
     All GDELT parsers must implement this protocol to be used with DataFetcher.
     The parser is responsible for converting raw bytes into typed records.
     """
 
-    def parse(self, data: bytes, is_translated: bool = False) -> AsyncIterator[T] | Iterator[T]:
+    def parse(self, data: bytes, is_translated: bool = False) -> Iterator[T_co]:
         """Parse raw bytes into typed records.
 
         Args:
@@ -81,7 +83,7 @@ class Parser(Protocol[T]):
         ...
 
 
-class DataFetcher[T]:
+class DataFetcher:
     """Orchestrates source selection and fallback for GDELT data fetching.
 
     This class implements the primary/fallback pattern where file downloads are
@@ -142,13 +144,13 @@ class DataFetcher[T]:
             error_policy,
         )
 
-    async def fetch(
+    async def fetch[R](
         self,
         filter_obj: EventFilter | GKGFilter,
-        parser: Parser[T],
+        parser: Parser[R],
         *,
         use_bigquery: bool = False,
-    ) -> AsyncIterator[T]:
+    ) -> AsyncIterator[R]:
         """Generic fetch method with automatic fallback.
 
         This is a low-level method that powers all the high-level fetch methods.
@@ -213,11 +215,11 @@ class DataFetcher[T]:
                 logger.error("File source failed and fallback not enabled: %s", e)
                 self._handle_error(e)
 
-    async def _fetch_from_files(
+    async def _fetch_from_files[R](
         self,
         filter_obj: EventFilter | GKGFilter,
-        parser: Parser[T],
-    ) -> AsyncIterator[T]:
+        parser: Parser[R],
+    ) -> AsyncIterator[R]:
         """Fetch data from file source and parse.
 
         Args:
@@ -232,21 +234,26 @@ class DataFetcher[T]:
             APIError: If download fails
         """
         # Determine file type from filter
-        file_type: str
+        file_type: FileType
         if isinstance(filter_obj, EventFilter):
             file_type = "export"
         elif isinstance(filter_obj, GKGFilter):
             file_type = "gkg"
-        else:
-            # This shouldn't happen with current filter types, but be defensive
-            msg = f"Unsupported filter type: {type(filter_obj).__name__}"
+        else:  # pragma: no cover
+            # Defensive: unreachable given current type union, but protects against future changes
+            msg = f"Unsupported filter type: {type(filter_obj).__name__}"  # type: ignore[unreachable]
             logger.error(msg)
-            raise ValueError(msg)
+            raise TypeError(msg)
+
+        # Convert dates to datetimes (at midnight)
+        start_dt = datetime.combine(filter_obj.date_range.start, datetime.min.time())
+        end_date = filter_obj.date_range.end or filter_obj.date_range.start
+        end_dt = datetime.combine(end_date, datetime.min.time())
 
         # Get file URLs for date range
         urls = await self._file.get_files_for_date_range(
-            start_date=filter_obj.date_range.start,
-            end_date=filter_obj.date_range.end or filter_obj.date_range.start,
+            start_date=start_dt,
+            end_date=end_dt,
             file_type=file_type,
             include_translation=filter_obj.include_translated,
         )
@@ -273,27 +280,27 @@ class DataFetcher[T]:
                 # Check if result is async iterator
                 if hasattr(parse_result, "__aiter__"):
                     # Async parser
-                    async for record in parse_result:  # type: ignore[union-attr]
+                    async for record in parse_result:
                         yield record
                         records_yielded += 1
                 else:
                     # Sync parser (most common)
-                    for record in parse_result:  # type: ignore[union-attr]
+                    for record in parse_result:
                         yield record
                         records_yielded += 1
 
-            except Exception as e:
-                # Handle parsing errors according to error policy
+            except Exception as e:  # noqa: BLE001
+                # Error boundary: handle parsing errors according to error policy
                 logger.error("Failed to parse file %s: %s", url, e)
                 self._handle_error(e)
 
         logger.info("Fetched %d records from file source", records_yielded)
 
-    async def _fetch_from_bigquery(
+    async def _fetch_from_bigquery[R](
         self,
         filter_obj: EventFilter | GKGFilter,
-        parser: Parser[T],  # noqa: ARG002
-    ) -> AsyncIterator[T]:
+        parser: Parser[R],
+    ) -> AsyncIterator[R]:
         """Fetch data from BigQuery source.
 
         Note: BigQuery returns data in a different format than files, so we don't
@@ -329,10 +336,11 @@ class DataFetcher[T]:
                 # BigQuery returns dict, yield as-is
                 yield row  # type: ignore[misc]
 
-        else:
-            msg = f"Unsupported filter type for BigQuery: {type(filter_obj).__name__}"
+        else:  # pragma: no cover
+            # Defensive: unreachable given current type union
+            msg = f"Unsupported filter type for BigQuery: {type(filter_obj).__name__}"  # type: ignore[unreachable]
             logger.error(msg)
-            raise ValueError(msg)
+            raise TypeError(msg)
 
     def _handle_error(self, error: Exception) -> None:
         """Handle errors according to the configured error policy.
@@ -349,9 +357,9 @@ class DataFetcher[T]:
             logger.warning("Error occurred: %s (error_policy=warn, continuing)", error)
         elif self._error_policy == "skip":
             logger.debug("Error occurred: %s (error_policy=skip, skipping)", error)
-        else:
-            # This shouldn't happen with the Literal type, but be defensive
-            logger.error("Unknown error_policy: %s, raising error", self._error_policy)
+        else:  # pragma: no cover
+            # Defensive: unreachable given Literal type
+            logger.error("Unknown error_policy: %s, raising error", self._error_policy)  # type: ignore[unreachable]
             raise error
 
     async def fetch_events(
@@ -520,10 +528,15 @@ class DataFetcher[T]:
 
         parser = NGramsParser()
 
+        # Convert dates to datetimes (at midnight)
+        start_dt = datetime.combine(filter_obj.date_range.start, datetime.min.time())
+        end_date = filter_obj.date_range.end or filter_obj.date_range.start
+        end_dt = datetime.combine(end_date, datetime.min.time())
+
         # Get ngrams file URLs
         urls = await self._file.get_files_for_date_range(
-            start_date=filter_obj.date_range.start,
-            end_date=filter_obj.date_range.end or filter_obj.date_range.start,
+            start_date=start_dt,
+            end_date=end_dt,
             file_type="ngrams",
             include_translation=False,  # NGrams don't have translations
         )
@@ -545,8 +558,8 @@ class DataFetcher[T]:
                     yield record
                     records_yielded += 1
 
-            except Exception as e:
-                # Handle parsing errors according to error policy
+            except Exception as e:  # noqa: BLE001
+                # Error boundary: handle parsing errors according to error policy
                 logger.error("Failed to parse ngrams file %s: %s", url, e)
                 self._handle_error(e)
 

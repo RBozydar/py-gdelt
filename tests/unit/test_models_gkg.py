@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from py_gdelt.models._internal import _RawGKG
 from py_gdelt.models.common import EntityMention
@@ -230,7 +230,7 @@ class TestGKGRecordFromRaw:
         )
         record = GKGRecord.from_raw(raw)
         assert record.record_id == "20150101120000-1"
-        assert record.date == datetime(2015, 1, 1, 12, 0, 0)
+        assert record.date == datetime(2015, 1, 1, 12, 0, 0, tzinfo=UTC)
         assert record.source_url == "http://example.com/article"
         assert record.source_name == "Test News"
         assert record.source_collection == 1

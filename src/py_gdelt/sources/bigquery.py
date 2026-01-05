@@ -520,11 +520,11 @@ class BigQuerySource:
                 self._client = bigquery.Client(project=project)
                 logger.info("BigQuery client initialized with Application Default Credentials")
 
-            return self._client
-
         except GoogleCloudError as e:
             logger.error("Failed to create BigQuery client: %s", e)
             raise BigQueryError(f"Failed to create BigQuery client: {e}") from e
+        else:
+            return self._client
 
     def _validate_credentials(self) -> None:
         """Validate BigQuery credentials configuration.

@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import pytest
 from pydantic import BaseModel
 
 from py_gdelt.utils.streaming import ResultStream
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 
 # Basic Iteration Tests

@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from py_gdelt.models._internal import _RawGKG
 from py_gdelt.models.common import EntityMention, Location, ToneScores
+
+
+if TYPE_CHECKING:
+    from py_gdelt.models._internal import _RawGKG
 
 
 __all__ = [
@@ -125,7 +129,7 @@ class GKGRecord(BaseModel):
 
         # Parse date (format: YYYYMMDDHHMMSS)
         date_str = raw.date
-        date = datetime.strptime(date_str, "%Y%m%d%H%M%S")
+        date = datetime.strptime(date_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
 
         # Parse themes from V2 enhanced (preferred) or V1
         themes = _parse_themes(raw.themes_v2_enhanced or raw.themes_v1)

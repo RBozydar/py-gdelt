@@ -1,6 +1,6 @@
 """Tests for TV and TVAI API endpoints."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import httpx
 import pytest
@@ -122,14 +122,14 @@ def test_tv_station_chart() -> None:
 def test_parse_date_gdelt_format() -> None:
     """Test parsing GDELT date format."""
     result = _parse_date("20240115120000")
-    assert result == datetime(2024, 1, 15, 12, 0, 0)
+    assert result == datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
 def test_parse_date_iso_format() -> None:
     """Test parsing ISO date format."""
     result = _parse_date("2024-01-15T12:00:00")
     assert result is not None
-    assert result == datetime(2024, 1, 15, 12, 0, 0)
+    assert result == datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
 def test_parse_date_none() -> None:
@@ -297,7 +297,7 @@ async def test_search_clips() -> None:
         assert clips[0].station == "CNN"
         assert clips[0].show_name == "News"
         assert clips[0].snippet == "Test clip"
-        assert clips[0].date == datetime(2024, 1, 1, 12, 0, 0)
+        assert clips[0].date == datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
 
 
 @respx.mock
@@ -533,7 +533,8 @@ async def test_tvai_search() -> None:
     """Test TVAI endpoint search."""
     respx.get("https://api.gdeltproject.org/api/v2/tvai/tvai").mock(
         return_value=httpx.Response(
-            200, json={"clips": [{"station": "FOX", "snippet": "AI clip"}]},
+            200,
+            json={"clips": [{"station": "FOX", "snippet": "AI clip"}]},
         ),
     )
 

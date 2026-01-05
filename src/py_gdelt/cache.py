@@ -201,10 +201,9 @@ class Cache:
                             should_delete = True
 
                     except (json.JSONDecodeError, KeyError, ValueError, OSError):
-                        # If we can't read metadata, consider it for deletion
-                        # when clearing all, but skip if doing conditional clear
-                        if cutoff_time is None:
-                            should_delete = True
+                        # If we can't read metadata, skip (only delete if cutoff_time is None,
+                        # which is already handled above)
+                        pass
 
                 if should_delete:
                     # Delete both data file and metadata
@@ -338,6 +337,4 @@ class Cache:
             safe_chars = hashlib.sha256(key.encode()).hexdigest()
 
         # Build final path
-        result_path = base_dir / safe_chars
-
-        return result_path
+        return base_dir / safe_chars

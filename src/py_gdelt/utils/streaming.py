@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     import pandas as pd  # type: ignore[import-untyped]
 
 T = TypeVar("T")
 
 
-class ResultStream(Generic[T]):
+class ResultStream[T]:
     """
     Wrapper around async iterator with terminal methods for convenience.
 

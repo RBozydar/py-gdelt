@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from py_gdelt.models._internal import _RawNGram
+
+if TYPE_CHECKING:
+    from py_gdelt.models._internal import _RawNGram
 
 
 __all__ = ["NGramRecord"]
@@ -42,7 +45,7 @@ class NGramRecord(BaseModel):
             ValueError: If date parsing or type conversion fails
         """
         return cls(
-            date=datetime.strptime(raw.date, "%Y%m%d%H%M%S"),
+            date=datetime.strptime(raw.date, "%Y%m%d%H%M%S").replace(tzinfo=UTC),
             ngram=raw.ngram,
             language=raw.language,
             segment_type=int(raw.segment_type),

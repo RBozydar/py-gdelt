@@ -411,6 +411,7 @@ class TestDownloadFile:
             assert not mock_route.called
             assert data2 == mock_data
 
+
 class TestDownloadAndExtract:
     """Test file download and extraction."""
 

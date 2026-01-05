@@ -61,70 +61,171 @@ line-length = 100
 
 [tool.ruff.lint]
 select = [
+    # === Core Quality (PEP 8, Pyflakes, Bugbear) ===
     "E",      # pycodestyle errors
     "W",      # pycodestyle warnings
     "F",      # Pyflakes
-    "I",      # isort
     "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
-    "UP",     # pyupgrade
-    "ARG",    # flake8-unused-arguments
-    "SIM",    # flake8-simplify
-    "TCH",    # flake8-type-checking
-    "PTH",    # flake8-use-pathlib
-    "ERA",    # eradicate (commented code)
-    "RUF",    # Ruff-specific rules
-    "S",      # flake8-bandit (security)
-    "T20",    # flake8-print
-    "FLY",    # flynt (f-string conversion)
-    "PERF",   # Perflint (performance anti-patterns)
-    "PD",     # pandas-vet (if using pandas)
-    "PGH",    # pygrep-hooks
-    "PL",     # Pylint (all categories)
-    "TRY",    # tryceratops (exception handling)
-    "F",      # pyflakes
-    "I",      # isort (import sorting)
-    "N",      # pep8-naming
-    "UP",     # pyupgrade (modern Python syntax)
-    "YTT",    # flake8-2020 (sys.version checks)
-    "ASYNC",  # flake8-async (async/await best practices) - CRITICAL for this project
-    "S",      # flake8-bandit (security)
-    "BLE",    # flake8-blind-except
-    "B",      # flake8-bugbear (common bugs)
-    "A",      # flake8-builtins (shadowing built-ins)
-    "COM",    # flake8-commas
-    "C4",     # flake8-comprehensions
-    "DTZ",    # flake8-datetimez (timezone awareness)
-    "T10",    # flake8-debugger
-    "EM",     # flake8-errmsg (exception message formatting)
-    "ISC",    # flake8-implicit-str-concat
-    "ICN",    # flake8-import-conventions
-    "G",      # flake8-logging-format
-    "PIE",    # flake8-pie (misc best practices)
-    "T20",    # flake8-print (no print statements in production)
-    "PT",     # flake8-pytest-style
-    "Q",      # flake8-quotes
-    "RSE",    # flake8-raise (exception raising)
-    "RET",    # flake8-return (return statement best practices)
-    "SLF",    # flake8-self (private member access)
-    "SIM",    # flake8-simplify
+
+    # === Import & Organization ===
+    "I",      # isort
     "TID",    # flake8-tidy-imports
     "TCH",    # flake8-type-checking (TYPE_CHECKING blocks)
-    "ARG",    # flake8-unused-arguments
-    "PTH",    # flake8-use-pathlib (prefer pathlib over os.path)
+
+    # === Modern Python ===
+    "UP",     # pyupgrade
+    "YTT",    # flake8-2020 (sys.version checks)
+    "FLY",    # flynt (f-string conversion)
+
+    # === Code Quality & Simplification ===
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "PIE",    # flake8-pie (misc best practices)
+    "RET",    # flake8-return (return statement best practices)
+
+    # === Naming & Style ===
+    "N",      # pep8-naming
+    "Q",      # flake8-quotes
+    "COM",    # flake8-commas
+    "ISC",    # flake8-implicit-str-concat
+
+    # === Security ===
+    "S",      # flake8-bandit (security)
+    "BLE",    # flake8-blind-except
+
+    # === Exception Handling ===
+    "TRY",    # tryceratops (exception handling)
+    "RSE",    # flake8-raise (exception raising)
+    "EM",     # flake8-errmsg (exception message formatting)
+
+    # === Type Safety ===
+    "A",      # flake8-builtins (shadowing built-ins)
+
+    # === Performance ===
+    "PERF",   # Perflint (performance anti-patterns)
+
+    # === Async/Await (CRITICAL for py-gdelt) ===
+    "ASYNC",  # flake8-async (async/await best practices)
+
+    # === Framework-Specific ===
+    "PD",     # pandas-vet (optional dependency)
+    "PT",     # flake8-pytest-style
+
+    # === Debugging & Maintenance ===
+    "T10",    # flake8-debugger
+    "T20",    # flake8-print (no print statements in production)
     "ERA",    # eradicate (commented-out code)
+
+    # === Logging ===
+    "G",      # flake8-logging-format
+
+    # === File Hygiene ===
+    "PTH",    # flake8-use-pathlib (prefer pathlib over os.path)
+    "DTZ",    # flake8-datetimez (timezone awareness)
+
+    # === Argument Handling ===
+    "ARG",    # flake8-unused-arguments
+
+    # === Private Access ===
+    "SLF",    # flake8-self (private member access)
+
+    # === Conventions ===
+    "ICN",    # flake8-import-conventions
+
+    # === Pylint (All Categories) ===
+    "PL",     # Pylint (PLC, PLE, PLR, PLW)
+
+    # === Misc Checks ===
+    "PGH",    # pygrep-hooks
+
+    # === Ruff-Specific ===
+    "RUF",    # Ruff-specific rules
 ]
 ignore = [
-    "E501",   # line too long (handled by formatter)
+    # === PERMANENT - Justified by Architecture (3 rules) ===
+    "ARG002",   # unused-method-argument (8 violations - protocol compliance)
+    "S608",     # hardcoded-sql-expression (3 violations - BigQuery safe builders)
+    "PLR0913",  # too-many-arguments (1 violation - dataclass constructor)
+
+    # === MAJOR TECHNICAL DEBT - Keep Ignored (3 rules, 992 violations) ===
+    "PLR2004",  # magic-value-comparison (398 violations - HTTP codes are self-documenting)
+    "TRY003",   # raise-vanilla-args (374 violations - would require exception class refactor)
+    "TRY400",   # error-instead-of-exception (220 violations - logger.error is our style)
+
+    # === INCREMENTAL TECHNICAL DEBT - Plan to Fix (3 rules, 224 violations) ===
+    # TODO(Q1-2026): Fix incrementally - 20 violations per week
+    "PERF401",  # manual-list-comprehension (181 violations in src/)
+    "EM101",    # raw-string-in-exception (19 violations)
+    "EM102",    # f-string-in-exception (24 violations)
+
+    # === CONFIGURATION ===
+    "E501",     # line-too-long (handled by formatter)
+    "COM812",   # missing-trailing-comma (conflicts with formatter)
 ]
 
 [tool.ruff.lint.per-file-ignores]
+# Lazy imports for optional dependencies and parser imports
+"src/py_gdelt/endpoints/*.py" = ["PLC0415"]  # Lazy parser imports
+"src/py_gdelt/sources/fetcher.py" = ["PLC0415"]  # Lazy parser imports
+"src/py_gdelt/filters.py" = ["PLC0415"]  # Lazy validation imports
+"src/py_gdelt/utils/streaming.py" = ["PLC0415"]  # Optional dependency (pandas)
+
 # Test files get more flexibility
 "tests/**/*.py" = [
   "S101",     # assert allowed
   "PLR2004",  # Magic values allowed
-  "ARG001",   # Unused arguments (fixtures)
-  "S106",     # Hardcoded passwords in tests ok
+  "ARG001",   # Unused arguments/fixtures
+  "ARG005",   # Unused lambda arguments
+  "S106",     # Hardcoded passwords in tests
+  "S108",     # Hardcoded temp file OK in tests
+  "S311",     # Random OK in tests
+  "T201",     # print statements OK in tests
+  "SLF001",   # Private member access OK in tests
+  "DTZ001",   # datetime without tz OK in tests
+  "DTZ007",   # strptime without tz OK in tests
+  "DTZ011",   # date.today() OK in tests
+  "BLE001",   # Blind except OK in tests
+  "TRY003",   # Raise vanilla args OK in tests
+  "A001",     # Builtin shadowing OK in tests
+  "A002",     # Builtin argument shadowing OK in tests
+  "F841",     # Unused variables OK in tests
+  "B007",     # Unused loop variable OK in tests
+  "B017",     # assert-raises-exception OK in tests
+  "B905",     # zip-without-strict OK in tests
+  "PT011",    # pytest-raises-too-broad OK
+  "RET504",   # unnecessary-assign OK in tests
+  "SIM117",   # multiple-with OK in tests
+  "PERF402",  # manual-list-copy OK in tests
+  "ERA001",   # commented-out-code OK in tests
+  "PLR1722",  # sys-exit-alias OK in tests
+  "RUF002",   # ambiguous-unicode OK in tests
+  "RUF003",   # ambiguous-unicode OK in tests
+  "PLC0415",  # Lazy imports OK in tests
+  "SIM105",   # suppressible-exception OK in tests
+]
+
+"examples/**/*.py" = [
+  "T201",     # print statements are the point
+  "S101",     # assert OK in examples
+  "BLE001",   # Blind except OK in examples
+  "PLR2004",  # Magic values OK in examples
+  "DTZ001",   # datetime without tz OK in examples
+  "DTZ011",   # date.today() OK in examples
+  "S108",     # Hardcoded temp file OK in examples
+  "PLC0415",  # Lazy imports OK in examples
+]
+
+"notebooks/**/*.ipynb" = [
+  "T201",     # print expected in notebooks
+  "SIM102",   # Collapsible if OK in notebooks
+  "E402",     # imports not at top OK
+  "BLE001",   # Blind except OK in notebooks
+  "PLR2004",  # Magic values OK in notebooks
+  "ERA001",   # Commented code OK in notebooks (explanations)
+  "F841",     # Unused variables OK (demo purposes)
+  "DTZ001",   # datetime without tz OK in notebooks
+  "DTZ011",   # date.today() OK in notebooks
+  "B007",     # Unused loop variable OK in notebooks
 ]
 
 [tool.ruff.lint.isort]

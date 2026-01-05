@@ -24,21 +24,21 @@ from py_gdelt.exceptions import (
 __version__ = "0.1.0"
 
 __all__ = [
-    # Version
-    "__version__",
+    "APIError",
+    "APIUnavailableError",
+    "BigQueryError",
+    "ConfigurationError",
+    "DataError",
     # Main client
     "GDELTClient",
-    "GDELTSettings",
     # Exceptions
     "GDELTError",
-    "APIError",
-    "RateLimitError",
-    "APIUnavailableError",
-    "InvalidQueryError",
-    "DataError",
-    "ParseError",
-    "ValidationError",
+    "GDELTSettings",
     "InvalidCodeError",
-    "ConfigurationError",
-    "BigQueryError",
+    "InvalidQueryError",
+    "ParseError",
+    "RateLimitError",
+    "ValidationError",
+    # Version
+    "__version__",
 ]

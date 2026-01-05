@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import BaseModel, Field
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 __all__ = [
@@ -87,7 +90,7 @@ class FailedRequest:
 
 
 @dataclass
-class FetchResult(Generic[T]):
+class FetchResult[T]:
     """Result container with partial failure tracking."""
 
     data: list[T]

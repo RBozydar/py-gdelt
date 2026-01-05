@@ -184,14 +184,14 @@ class BaseEndpoint(ABC):
                             f"HTTP {response.status_code} from {url}: {response.text[:200]}",
                         )
 
-                    return response
-
                 except httpx.ConnectError as e:
                     raise APIUnavailableError(f"Connection failed to {url}: {e}") from e
                 except httpx.TimeoutException as e:
                     raise APIUnavailableError(f"Request timed out to {url}: {e}") from e
                 except httpx.HTTPStatusError as e:
                     raise APIError(f"HTTP error from {url}: {e}") from e
+                else:
+                    return response
 
         # This should never be reached due to reraise=True, but mypy needs it
         raise APIError(f"Request failed after retries: {url}")

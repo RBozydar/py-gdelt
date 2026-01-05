@@ -51,7 +51,6 @@ This project enforces strict code quality standards to ensure consistency and ma
 
 **Configuration:** `pyproject.toml` → `[tool.ruff]`
 
-
 **Commands:**
 ```bash
 # Format code (auto-fix)
@@ -63,6 +62,38 @@ make lint
 # Or directly with ruff
 uvx ruff check .
 uvx ruff format .
+```
+
+#### Linting Philosophy
+
+All ignored linting rules are categorized and documented in `pyproject.toml`:
+
+**Rule Categories:**
+
+1. **PERMANENT** (3 rules) - Justified by project architecture
+   - ARG002, S608, PLR0913
+   - These violations are intentional and correct for this codebase
+
+2. **MAJOR TECHNICAL DEBT** (3 rules, 992 violations) - Keep ignored
+   - PLR2004, TRY003, TRY400
+   - Would require massive refactoring with minimal benefit
+   - HTTP codes and logger.error patterns are self-documenting
+
+3. **INCREMENTAL DEBT** (3 rules, 224 violations) - Plan to fix
+   - PERF401 (181), EM101 (19), EM102 (24)
+   - Target: 20 fixes per week during active development
+   - Track progress: `./scripts/lint_progress.sh`
+
+**Process:**
+
+1. **Adding new ignores:** Requires PR approval, category assignment, and documentation
+2. **Weekly fixes:** Fix 20 incremental debt violations during active development
+3. **Quarterly review:** Re-evaluate all ignores every Q1/Q2/Q3/Q4
+
+**Monitoring:**
+```bash
+# Track incremental technical debt progress
+./scripts/lint_progress.sh
 ```
 
 

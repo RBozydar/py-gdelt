@@ -32,20 +32,28 @@ class HasDedupeFields(Protocol):
 
     Any object with these fields can be deduplicated, regardless of its type.
     This enables duck typing for Pydantic models, dataclasses, or custom objects.
+
+    Note: Using @property makes these covariant, so `str` matches `str | None`.
     """
 
-    source_url: str | None
-    sql_date: str | None
-    action_geo_fullname: str | None
-    actor1_code: str | None
-    actor2_code: str | None
-    event_root_code: str | None
+    @property
+    def source_url(self) -> str | None: ...
+    @property
+    def sql_date(self) -> str | None: ...
+    @property
+    def action_geo_fullname(self) -> str | None: ...
+    @property
+    def actor1_code(self) -> str | None: ...
+    @property
+    def actor2_code(self) -> str | None: ...
+    @property
+    def event_root_code(self) -> str | None: ...
 
 
 T = TypeVar("T", bound=HasDedupeFields)
 
 
-def get_dedup_key(record: HasDedupeFields, strategy: DedupeStrategy) -> tuple:
+def get_dedup_key(record: HasDedupeFields, strategy: DedupeStrategy) -> tuple[str, ...]:
     """Get the deduplication key for a record based on strategy.
 
     Args:
@@ -123,7 +131,7 @@ def deduplicate[T: HasDedupeFields](
         >>> for event in unique:
         ...     process(event)
     """
-    seen_keys: set[tuple] = set()
+    seen_keys: set[tuple[str, ...]] = set()
 
     for record in records:
         key = get_dedup_key(record, strategy)
@@ -159,7 +167,7 @@ async def deduplicate_async[T: HasDedupeFields](
         >>> async for event in deduplicate_async(fetch_events(...)):
         ...     await process(event)
     """
-    seen_keys: set[tuple] = set()
+    seen_keys: set[tuple[str, ...]] = set()
 
     async for record in records:
         key = get_dedup_key(record, strategy)

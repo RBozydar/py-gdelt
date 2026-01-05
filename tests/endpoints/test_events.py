@@ -421,7 +421,7 @@ class TestEventsEndpoint:
             "fetch_events",
             side_effect=mock_fetch_events,
         ):
-            events = endpoint.stream_sync(event_filter)
+            events = list(endpoint.stream_sync(event_filter))
 
         assert isinstance(events, list)
         assert len(events) == 1

@@ -227,8 +227,8 @@ class GKGEndpoint:
             try:
                 record = GKGRecord.from_raw(raw_gkg)
                 yield record
-            except Exception as e:
-                # Log conversion errors but continue processing
+            except Exception as e:  # noqa: BLE001
+                # Error boundary: log conversion errors but continue processing other records
                 logger.warning("Failed to convert raw GKG record to GKGRecord: %s", e)
                 continue
 

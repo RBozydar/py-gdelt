@@ -115,8 +115,8 @@ class GKGParser:
             v1 lacks many v2.1 fields (dates, GCAM, social embeds, etc.).
             These are set to empty strings to maintain consistent schema.
         """
-        for line_num, line in enumerate(lines, start=1):
-            line = line.strip()
+        for line_num, raw_line in enumerate(lines, start=1):
+            line = raw_line.strip()
             if not line:
                 continue
 
@@ -130,7 +130,7 @@ class GKGParser:
                 continue
 
             # Helper to convert empty strings to None
-            def field(idx: int) -> str | None:
+            def field(idx: int, parts: list[str] = parts) -> str | None:
                 val = parts[idx].strip()
                 return val if val else None
 
@@ -165,7 +165,8 @@ class GKGParser:
                     extras_xml=None,  # v1 has no extras XML
                     is_translated=is_translated,
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # Error boundary: log and skip malformed lines
                 logger.warning("Error parsing GKG v1 line %d: %s", line_num, e)
                 continue
 
@@ -185,8 +186,8 @@ class GKGParser:
             - V2EXTRASXML contains untrusted XML - must use defusedxml downstream
             - Complex fields (GCAM, quotations) use nested delimiters
         """
-        for line_num, line in enumerate(lines, start=1):
-            line = line.strip()
+        for line_num, raw_line in enumerate(lines, start=1):
+            line = raw_line.strip()
             if not line:
                 continue
 
@@ -200,7 +201,7 @@ class GKGParser:
                 continue
 
             # Helper to convert empty strings to None
-            def field(idx: int) -> str | None:
+            def field(idx: int, parts: list[str] = parts) -> str | None:
                 val = parts[idx].strip()
                 return val if val else None
 
@@ -239,6 +240,7 @@ class GKGParser:
                     extras_xml=field(26),
                     is_translated=detected_translated,
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # Error boundary: log and skip malformed lines
                 logger.warning("Error parsing GKG v2.1 line %d: %s", line_num, e)
                 continue

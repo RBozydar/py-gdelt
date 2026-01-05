@@ -7,6 +7,7 @@ the GDELT Global Knowledge Graph (GKG).
 
 import json
 from importlib.resources import files
+from typing import Any
 
 from py_gdelt.exceptions import InvalidCodeError
 from py_gdelt.lookups.models import GKGThemeEntry
@@ -29,10 +30,10 @@ class GKGThemes:
         """Initialize GKGThemes with lazy-loaded data."""
         self._themes: dict[str, GKGThemeEntry] | None = None
 
-    def _load_json(self, filename: str) -> dict[str, dict]:
+    def _load_json(self, filename: str) -> dict[str, dict[str, Any]]:
         """Load JSON data from package resources."""
         data_path = files("py_gdelt.lookups.data").joinpath(filename)
-        return json.loads(data_path.read_text())
+        return json.loads(data_path.read_text())  # type: ignore[no-any-return]
 
     @property
     def _themes_data(self) -> dict[str, GKGThemeEntry]:

@@ -11,7 +11,7 @@ This module tests:
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -30,6 +30,10 @@ from py_gdelt.endpoints import (
     TVEndpoint,
 )
 from py_gdelt.lookups import Lookups
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestGDELTClientInit:

@@ -7,7 +7,7 @@ across all GDELT data sources including Events, Mentions, GKG, DOC, GEO, and TV 
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator

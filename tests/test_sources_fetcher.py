@@ -5,7 +5,7 @@ and fallback behavior between file downloads and BigQuery.
 """
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import date, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -198,8 +198,8 @@ class TestDataFetcherFetchFromFiles:
 
         # Verify file source was called correctly
         mock_file_source.get_files_for_date_range.assert_called_once_with(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 2),
+            start_date=datetime(2024, 1, 1, 0, 0),
+            end_date=datetime(2024, 1, 2, 0, 0),
             file_type="export",
             include_translation=True,
         )
@@ -247,8 +247,8 @@ class TestDataFetcherFetchFromFiles:
 
         # Verify file source was called correctly
         mock_file_source.get_files_for_date_range.assert_called_once_with(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 2),
+            start_date=datetime(2024, 1, 1, 0, 0),
+            end_date=datetime(2024, 1, 2, 0, 0),
             file_type="gkg",
             include_translation=True,
         )
@@ -573,8 +573,8 @@ class TestDataFetcherConvenienceMethods:
 
         # Verify file source was called with ngrams file type
         mock_file_source.get_files_for_date_range.assert_called_once_with(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 2),
+            start_date=datetime(2024, 1, 1, 0, 0),
+            end_date=datetime(2024, 1, 2, 0, 0),
             file_type="ngrams",
             include_translation=False,
         )
@@ -589,7 +589,7 @@ class TestDataFetcherEdgeCases:
         mock_file_source: MagicMock,
         mock_parser: MagicMock,
     ) -> None:
-        """Test that unsupported filter types raise ValueError."""
+        """Test that unsupported filter types raise TypeError."""
 
         # Create a mock filter that's not EventFilter or GKGFilter
         class UnsupportedFilter:
@@ -600,8 +600,8 @@ class TestDataFetcherEdgeCases:
         # Create fetcher
         fetcher = DataFetcher(file_source=mock_file_source)
 
-        # Try to fetch - should raise ValueError
-        with pytest.raises(ValueError, match="Unsupported filter type"):
+        # Try to fetch - should raise TypeError
+        with pytest.raises(TypeError, match="Unsupported filter type"):
             async for _ in fetcher._fetch_from_files(unsupported_filter, mock_parser):  # type: ignore[arg-type]
                 pass
 

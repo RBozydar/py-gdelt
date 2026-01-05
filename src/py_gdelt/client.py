@@ -53,8 +53,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from functools import cached_property
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
@@ -72,6 +71,10 @@ from py_gdelt.endpoints import (
 )
 from py_gdelt.lookups import Lookups
 from py_gdelt.sources import BigQuerySource, FileSource
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 __all__ = ["GDELTClient"]
@@ -206,9 +209,9 @@ class GDELTClient:
                     e,
                 )
                 self._bigquery_source = None
-            except Exception as e:
-                # Catch remaining exceptions (Google SDK errors, etc.)
-                # We can't import Google exceptions without the optional dependency
+            except Exception as e:  # noqa: BLE001
+                # Catch all Google SDK errors without importing optional dependency
+                # This is an error boundary - BigQuery is optional, errors should not crash
                 logger.warning(
                     "Failed to initialize BigQuerySource (%s): %s. "
                     "BigQuery fallback will be unavailable.",

@@ -7,6 +7,7 @@ country codes used in GDELT data.
 
 import json
 from importlib.resources import files
+from typing import Any
 
 from py_gdelt.exceptions import InvalidCodeError
 from py_gdelt.lookups.models import CountryEntry
@@ -30,10 +31,10 @@ class Countries:
         self._countries: dict[str, CountryEntry] | None = None
         self._iso_to_fips_map: dict[str, str] | None = None
 
-    def _load_json(self, filename: str) -> dict[str, dict]:
+    def _load_json(self, filename: str) -> dict[str, dict[str, Any]]:
         """Load JSON data from package resources."""
         data_path = files("py_gdelt.lookups.data").joinpath(filename)
-        return json.loads(data_path.read_text())
+        return json.loads(data_path.read_text())  # type: ignore[no-any-return]
 
     @property
     def _countries_data(self) -> dict[str, CountryEntry]:

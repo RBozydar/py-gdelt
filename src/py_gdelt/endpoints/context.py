@@ -227,10 +227,7 @@ class ContextEndpoint(BaseEndpoint):
 
         # Parse related queries
         related = data.get("related_queries", [])
-        if isinstance(related, list):
-            related_queries = [str(q) for q in related]
-        else:
-            related_queries = []
+        related_queries = [str(q) for q in related] if isinstance(related, list) else []
 
         return ContextResult(
             query=query,

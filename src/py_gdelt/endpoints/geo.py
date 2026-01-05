@@ -92,27 +92,27 @@ class GeoEndpoint(BaseEndpoint):
         """
         return self.BASE_URL
 
-    def _build_params(self, filter: GeoFilter) -> dict[str, str]:
+    def _build_params(self, query_filter: GeoFilter) -> dict[str, str]:
         """Build query parameters from GeoFilter.
 
         Args:
-            filter: GeoFilter with query parameters
+            query_filter: GeoFilter with query parameters
 
         Returns:
             Dict of URL query parameters
         """
         params: dict[str, str] = {
-            "query": filter.query,
+            "query": query_filter.query,
             "format": "json",
-            "maxpoints": str(filter.max_results),
+            "maxpoints": str(query_filter.max_results),
         }
 
-        if filter.timespan:
-            params["timespan"] = filter.timespan
+        if query_filter.timespan:
+            params["timespan"] = query_filter.timespan
 
         # Add bounding box if provided (format: lon1,lat1,lon2,lat2)
-        if filter.bounding_box:
-            min_lat, min_lon, max_lat, max_lon = filter.bounding_box
+        if query_filter.bounding_box:
+            min_lat, min_lon, max_lat, max_lon = query_filter.bounding_box
             params["BBOX"] = f"{min_lon},{min_lat},{max_lon},{max_lat}"
 
         return params
@@ -145,19 +145,19 @@ class GeoEndpoint(BaseEndpoint):
                 )
                 print(f"Found {len(result.points)} locations")
         """
-        filter = GeoFilter(
+        query_filter = GeoFilter(
             query=query,
             timespan=timespan,
             max_results=min(max_points, 250),  # Cap at filter max
             bounding_box=bounding_box,
         )
-        return await self.query(filter)
+        return await self.query(query_filter)
 
-    async def query(self, filter: GeoFilter) -> GeoResult:
+    async def query(self, query_filter: GeoFilter) -> GeoResult:
         """Query the GEO API with a filter.
 
         Args:
-            filter: GeoFilter with query parameters
+            query_filter: GeoFilter with query parameters
 
         Returns:
             GeoResult containing geographic points
@@ -167,7 +167,7 @@ class GeoEndpoint(BaseEndpoint):
             RateLimitError: On rate limit
             APIUnavailableError: On server error
         """
-        params = self._build_params(filter)
+        params = self._build_params(query_filter)
         url = await self._build_url()
 
         data = await self._get_json(url, params=params)
@@ -225,13 +225,13 @@ class GeoEndpoint(BaseEndpoint):
                 # Pass directly to mapping library
                 folium.GeoJson(geojson).add_to(map)
         """
-        filter = GeoFilter(
+        query_filter = GeoFilter(
             query=query,
             timespan=timespan,
             max_results=min(max_points, 250),
         )
 
-        params = self._build_params(filter)
+        params = self._build_params(query_filter)
         params["format"] = "geojson"
         url = await self._build_url()
 

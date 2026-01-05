@@ -13,9 +13,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from py_gdelt.filters import EventFilter
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Mention
 
@@ -24,6 +23,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from py_gdelt.config import GDELTSettings
+    from py_gdelt.filters import EventFilter
     from py_gdelt.models._internal import _RawMention
     from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.fetcher import DataFetcher, ErrorPolicy
@@ -222,7 +222,7 @@ class MentionsEndpoint:
 
         # Use DataFetcher to query mentions
         # Note: fetch_mentions() returns AsyncIterator[_RawMention] (or dict from BigQuery)
-        raw_mentions: AsyncIterator[_RawMention] = self._fetcher.fetch_mentions(
+        raw_mentions: AsyncIterator[_RawMention | dict[str, Any]] = self._fetcher.fetch_mentions(
             global_event_id=global_event_id,
             filter_obj=filter_obj,
             use_bigquery=use_bigquery,
@@ -246,7 +246,7 @@ class MentionsEndpoint:
 
         logger.debug("Streamed %d mentions for event %s", mentions_count, global_event_id)
 
-    def _dict_to_mention(self, row: dict) -> Mention:
+    def _dict_to_mention(self, row: dict[str, Any]) -> Mention:
         """Convert BigQuery row dict to Mention model.
 
         This is a helper to bridge the gap between BigQuery result dicts and our Pydantic models.

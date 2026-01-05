@@ -72,7 +72,7 @@ class MentionsParser:
                 continue
 
             # Extract fields - convert empty strings to None
-            def field(idx: int) -> str | None:
+            def field(idx: int, parts: list[str] = parts) -> str | None:
                 """Extract field at index, returning None for empty strings."""
                 val = parts[idx].strip()
                 return val if val else None

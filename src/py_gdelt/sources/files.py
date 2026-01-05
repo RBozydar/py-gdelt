@@ -275,7 +275,6 @@ class FileSource:
             self.cache.set(url, content, file_date=file_date)
 
             logger.debug("Downloaded %d bytes from %s", len(content), url)
-            return content
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
@@ -289,6 +288,8 @@ class FileSource:
         except httpx.RequestError as e:
             logger.error("Request error downloading %s: %s", secure_url, e)
             raise APIError(f"Network error downloading file: {e}") from e
+        else:
+            return content
 
     async def download_and_extract(self, url: str) -> bytes:
         """Download and extract ZIP/GZ file, return decompressed content.
@@ -324,14 +325,14 @@ class FileSource:
                 url,
             )
 
-            return decompressed_data
-
         except (zipfile.BadZipFile, gzip.BadGzipFile) as e:
             logger.error("Invalid archive format for %s: %s", url, e)
             raise DataError(f"Invalid archive format: {e}") from e
         except Exception as e:
             logger.error("Unexpected error extracting %s: %s", url, e)
             raise DataError(f"Failed to extract file: {e}") from e
+        else:
+            return decompressed_data
 
     async def stream_files(
         self,
@@ -399,7 +400,6 @@ class FileSource:
         """
         try:
             data = await self.download_and_extract(url)
-            return url, data
         except APIError as e:
             # Expected errors (404, network issues) - log at debug level
             logger.debug("Failed to download %s: %s", url, e)
@@ -408,6 +408,8 @@ class FileSource:
             # Error boundary: catch unexpected errors, log and return None
             logger.error("Unexpected error downloading %s: %s", url, e)
             return None
+        else:
+            return url, data
 
     def _extract_zip(self, compressed_data: bytes) -> bytes:
         """Extract ZIP file.

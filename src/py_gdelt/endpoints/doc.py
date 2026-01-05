@@ -10,7 +10,7 @@ API Documentation: https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from py_gdelt.endpoints.base import BaseEndpoint
 from py_gdelt.filters import DocFilter
@@ -60,7 +60,7 @@ class DocEndpoint(BaseEndpoint):
 
     BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 
-    async def _build_url(self, **kwargs: Any) -> str:  # noqa: ARG002
+    async def _build_url(self, **kwargs: Any) -> str:
         """Build DOC API URL.
 
         The DOC API uses a fixed URL with all parameters passed as query strings.
@@ -73,7 +73,7 @@ class DocEndpoint(BaseEndpoint):
         """
         return self.BASE_URL
 
-    def _build_params(self, filter: DocFilter) -> dict[str, str]:
+    def _build_params(self, query_filter: DocFilter) -> dict[str, str]:
         """
         Build query parameters from DocFilter.
 
@@ -97,10 +97,10 @@ class DocEndpoint(BaseEndpoint):
             'rel'
         """
         params: dict[str, str] = {
-            "query": filter.query,
+            "query": query_filter.query,
             "format": "json",
-            "mode": filter.mode,
-            "maxrecords": str(filter.max_results),
+            "mode": query_filter.mode,
+            "maxrecords": str(query_filter.max_results),
         }
 
         # Map sort values to API parameter names
@@ -109,21 +109,21 @@ class DocEndpoint(BaseEndpoint):
             "relevance": "rel",
             "tone": "tonedesc",
         }
-        params["sort"] = sort_map[filter.sort_by]
+        params["sort"] = sort_map[query_filter.sort_by]
 
         # Time constraints - timespan takes precedence over datetime range
-        if filter.timespan:
-            params["timespan"] = filter.timespan
-        elif filter.start_datetime:
-            params["startdatetime"] = filter.start_datetime.strftime("%Y%m%d%H%M%S")
-            if filter.end_datetime:
-                params["enddatetime"] = filter.end_datetime.strftime("%Y%m%d%H%M%S")
+        if query_filter.timespan:
+            params["timespan"] = query_filter.timespan
+        elif query_filter.start_datetime:
+            params["startdatetime"] = query_filter.start_datetime.strftime("%Y%m%d%H%M%S")
+            if query_filter.end_datetime:
+                params["enddatetime"] = query_filter.end_datetime.strftime("%Y%m%d%H%M%S")
 
         # Source filters
-        if filter.source_language:
-            params["sourcelang"] = filter.source_language
-        if filter.source_country:
-            params["sourcecountry"] = filter.source_country
+        if query_filter.source_language:
+            params["sourcelang"] = query_filter.source_language
+        if query_filter.source_country:
+            params["sourcecountry"] = query_filter.source_country
 
         return params
 
@@ -133,7 +133,7 @@ class DocEndpoint(BaseEndpoint):
         *,
         timespan: str | None = None,
         max_results: int = 250,
-        sort_by: str = "date",
+        sort_by: Literal["date", "relevance", "tone"] = "date",
         source_language: str | None = None,
         source_country: str | None = None,
     ) -> list[Article]:
@@ -175,7 +175,7 @@ class DocEndpoint(BaseEndpoint):
             ...         timespan="24h"
             ...     )
         """
-        filter = DocFilter(
+        query_filter = DocFilter(
             query=query,
             timespan=timespan,
             max_results=max_results,
@@ -183,9 +183,9 @@ class DocEndpoint(BaseEndpoint):
             source_language=source_language,
             source_country=source_country,
         )
-        return await self.query(filter)
+        return await self.query(query_filter)
 
-    async def query(self, filter: DocFilter) -> list[Article]:
+    async def query(self, query_filter: DocFilter) -> list[Article]:
         """
         Query the DOC API with a filter.
 
@@ -193,7 +193,7 @@ class DocEndpoint(BaseEndpoint):
         full control over all query parameters.
 
         Args:
-            filter: DocFilter with query parameters and constraints.
+            query_filter: DocFilter with query parameters and constraints.
 
         Returns:
             List of Article objects matching the filter criteria.
@@ -208,7 +208,7 @@ class DocEndpoint(BaseEndpoint):
             >>> from datetime import datetime
             >>> async with DocEndpoint() as doc:
             ...     # Complex query with datetime range
-            ...     filter = DocFilter(
+            ...     doc_filter = DocFilter(
             ...         query='"machine learning" AND python',
             ...         start_datetime=datetime(2024, 1, 1),
             ...         end_datetime=datetime(2024, 1, 31),
@@ -216,11 +216,11 @@ class DocEndpoint(BaseEndpoint):
             ...         max_results=100,
             ...         sort_by="relevance"
             ...     )
-            ...     articles = await doc.query(filter)
+            ...     articles = await doc.query(doc_filter)
         """
         from py_gdelt.models.articles import Article
 
-        params = self._build_params(filter)
+        params = self._build_params(query_filter)
         url = await self._build_url()
 
         data = await self._get_json(url, params=params)
@@ -267,13 +267,13 @@ class DocEndpoint(BaseEndpoint):
         """
         from py_gdelt.models.articles import Timeline
 
-        filter = DocFilter(
+        query_filter = DocFilter(
             query=query,
             timespan=timespan,
             mode="timeline",
         )
 
-        params = self._build_params(filter)
+        params = self._build_params(query_filter)
         url = await self._build_url()
 
         data = await self._get_json(url, params=params)

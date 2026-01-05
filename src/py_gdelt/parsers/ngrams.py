@@ -77,9 +77,9 @@ class NGramsParser:
             return
 
         # Process each line
-        for line_num, line in enumerate(text.splitlines(), start=1):
+        for line_num, raw_line in enumerate(text.splitlines(), start=1):
             # Skip empty lines
-            line = line.strip()
+            line = raw_line.strip()
             if not line:
                 continue
 
@@ -107,7 +107,8 @@ class NGramsParser:
                     url=str(obj.get("url", "")),
                 )
                 yield raw_ngram
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # Error boundary: log and skip malformed records
                 logger.warning(
                     "Failed to create _RawNGram from line %d: %s - Data: %s",
                     line_num,

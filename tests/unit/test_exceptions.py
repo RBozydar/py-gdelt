@@ -17,6 +17,7 @@ from py_gdelt.exceptions import (
     InvalidQueryError,
     ParseError,
     RateLimitError,
+    SecurityError,
     ValidationError,
 )
 
@@ -265,6 +266,19 @@ class TestBigQueryError:
         assert str(error) == "Query execution failed"
 
 
+class TestSecurityError:
+    """Tests for SecurityError."""
+
+    def test_inheritance(self):
+        """SecurityError should inherit from GDELTError."""
+        assert issubclass(SecurityError, GDELTError)
+
+    def test_basic_initialization(self):
+        """SecurityError should accept a message."""
+        error = SecurityError("Path traversal detected")
+        assert str(error) == "Path traversal detected"
+
+
 class TestExceptionHierarchy:
     """Tests for overall exception hierarchy relationships."""
 
@@ -281,6 +295,7 @@ class TestExceptionHierarchy:
             InvalidCodeError,
             ConfigurationError,
             BigQueryError,
+            SecurityError,
         ]
         for exc_class in all_exceptions:
             assert issubclass(exc_class, GDELTError)

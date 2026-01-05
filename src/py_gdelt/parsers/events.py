@@ -22,6 +22,7 @@ import csv
 import io
 import logging
 from collections.abc import Iterator
+from typing import ClassVar
 
 from py_gdelt.exceptions import ParseError
 from py_gdelt.models._internal import _RawEvent
@@ -48,7 +49,7 @@ class EventsParser:
     """
 
     # Column indices for v2 (61 columns) - the canonical format
-    V2_COLUMNS = {
+    V2_COLUMNS: ClassVar[dict[str, int]] = {
         "GLOBALEVENTID": 0,
         "SQLDATE": 1,
         "MonthYear": 2,
@@ -114,7 +115,7 @@ class EventsParser:
         "ActionGeo_Lat": 56,
         "ActionGeo_Long": 57,
         "ActionGeo_FeatureID": 58,
-        # Metadata (59-60)
+        # Metadata columns start at 59
         "DATEADDED": 59,
         "SOURCEURL": 60,
     }
@@ -127,7 +128,7 @@ class EventsParser:
     # - v1 also lacks FeatureID fields for all three Geo sections (3 fields)
     # - That accounts for 3 columns, but we need 4... checking actual format
     # - For now, implementing based on specification: 57 vs 61 columns
-    V1_COLUMNS = {
+    V1_COLUMNS: ClassVar[dict[str, int]] = {
         "GLOBALEVENTID": 0,
         "SQLDATE": 1,
         "MonthYear": 2,
@@ -277,8 +278,8 @@ class EventsParser:
             try:
                 event = self._parse_row(row, column_map, is_translated, version)
                 yield event
-            except Exception as e:
-                # Log and skip malformed lines
+            except Exception as e:  # noqa: BLE001
+                # Error boundary: log and skip malformed lines, continue processing
                 logger.warning(
                     "Skipping malformed line %d: %s",
                     line_num,
@@ -395,7 +396,7 @@ class EventsParser:
             action_geo_lat=get("ActionGeo_Lat"),
             action_geo_lon=get("ActionGeo_Long"),
             action_geo_feature_id=get("ActionGeo_FeatureID"),
-            # Metadata (required)
+            # Metadata fields
             date_added=get_required("DATEADDED"),
             source_url=get("SOURCEURL") if version == 2 else None,
             is_translated=is_translated,

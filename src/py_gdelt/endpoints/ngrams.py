@@ -31,7 +31,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from py_gdelt.config import GDELTSettings
-from py_gdelt.filters import NGramsFilter
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.ngrams import NGramRecord
 from py_gdelt.parsers.ngrams import NGramsParser
@@ -41,6 +40,8 @@ from py_gdelt.sources.files import FileSource
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+
+    from py_gdelt.filters import NGramsFilter
 
 __all__ = ["NGramsEndpoint"]
 
@@ -226,7 +227,7 @@ class NGramsEndpoint:
             # Convert _RawNGram to NGramRecord (type conversion happens here)
             try:
                 record = NGramRecord.from_raw(raw_record)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(
                     "Failed to convert raw ngram to NGramRecord: %s - Skipping",
                     e,
@@ -253,25 +254,20 @@ class NGramsEndpoint:
             True if record matches all filter criteria, False otherwise
         """
         # Filter by ngram text (case-insensitive substring match)
-        if filter_obj.ngram is not None:
-            if filter_obj.ngram.lower() not in record.ngram.lower():
-                return False
+        if filter_obj.ngram is not None and filter_obj.ngram.lower() not in record.ngram.lower():
+            return False
 
         # Filter by language (exact match)
-        if filter_obj.language is not None:
-            if record.language != filter_obj.language:
-                return False
+        if filter_obj.language is not None and record.language != filter_obj.language:
+            return False
 
         # Filter by position (article decile)
-        if filter_obj.min_position is not None:
-            if record.position < filter_obj.min_position:
-                return False
+        if filter_obj.min_position is not None and record.position < filter_obj.min_position:
+            return False
 
-        if filter_obj.max_position is not None:
-            if record.position > filter_obj.max_position:
-                return False
-
-        return True
+        return not (
+            filter_obj.max_position is not None and record.position > filter_obj.max_position
+        )
 
     def query_sync(self, filter_obj: NGramsFilter) -> FetchResult[NGramRecord]:
         """Synchronous wrapper for query().

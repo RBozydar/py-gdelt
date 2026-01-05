@@ -29,7 +29,7 @@ Example:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel
@@ -165,7 +165,7 @@ class TVEndpoint(BaseEndpoint):
         """
         return self.BASE_URL
 
-    def _build_params(self, filter: TVFilter) -> dict[str, str]:
+    def _build_params(self, query_filter: TVFilter) -> dict[str, str]:
         """Build query parameters from TVFilter.
 
         Constructs query parameters for the TV API from a TVFilter object.
@@ -173,29 +173,29 @@ class TVEndpoint(BaseEndpoint):
         filtering, and output mode selection.
 
         Args:
-            filter: Validated TV filter object
+            query_filter: Validated TV filter object
 
         Returns:
             Dictionary of query parameters ready for HTTP request
         """
         params: dict[str, str] = {
-            "query": filter.query,
+            "query": query_filter.query,
             "format": "json",
-            "mode": filter.mode,
-            "maxrecords": str(filter.max_results),
+            "mode": query_filter.mode,
+            "maxrecords": str(query_filter.max_results),
         }
 
-        if filter.timespan:
-            params["timespan"] = filter.timespan
-        elif filter.start_datetime:
-            params["startdatetime"] = filter.start_datetime.strftime("%Y%m%d%H%M%S")
-            if filter.end_datetime:
-                params["enddatetime"] = filter.end_datetime.strftime("%Y%m%d%H%M%S")
+        if query_filter.timespan:
+            params["timespan"] = query_filter.timespan
+        elif query_filter.start_datetime:
+            params["startdatetime"] = query_filter.start_datetime.strftime("%Y%m%d%H%M%S")
+            if query_filter.end_datetime:
+                params["enddatetime"] = query_filter.end_datetime.strftime("%Y%m%d%H%M%S")
 
-        if filter.station:
-            params["station"] = filter.station
-        if filter.market:
-            params["market"] = filter.market
+        if query_filter.station:
+            params["station"] = query_filter.station
+        if query_filter.market:
+            params["market"] = query_filter.market
 
         return params
 
@@ -231,7 +231,7 @@ class TVEndpoint(BaseEndpoint):
         Example:
             clips = await tv.search("climate change", station="CNN", timespan="7d")
         """
-        filter = TVFilter(
+        query_filter = TVFilter(
             query=query,
             timespan=timespan,
             station=station,
@@ -239,16 +239,16 @@ class TVEndpoint(BaseEndpoint):
             max_results=max_results,
             mode="clipgallery",
         )
-        return await self.query_clips(filter)
+        return await self.query_clips(query_filter)
 
-    async def query_clips(self, filter: TVFilter) -> list[TVClip]:
+    async def query_clips(self, query_filter: TVFilter) -> list[TVClip]:
         """Query for TV clips with a filter.
 
         Lower-level method that accepts a TVFilter object for more control
         over query parameters.
 
         Args:
-            filter: TVFilter object with query parameters
+            query_filter: TVFilter object with query parameters
 
         Returns:
             List of TVClip objects
@@ -258,7 +258,7 @@ class TVEndpoint(BaseEndpoint):
             RateLimitError: If rate limit is exceeded
             APIUnavailableError: If the API is unavailable
         """
-        params = self._build_params(filter)
+        params = self._build_params(query_filter)
         params["mode"] = "clipgallery"
         url = await self._build_url()
 
@@ -311,14 +311,14 @@ class TVEndpoint(BaseEndpoint):
             for point in timeline.points:
                 print(f"{point.date}: {point.count} mentions")
         """
-        filter = TVFilter(
+        query_filter = TVFilter(
             query=query,
             timespan=timespan,
             station=station,
             mode="timeline",
         )
 
-        params = self._build_params(filter)
+        params = self._build_params(query_filter)
         url = await self._build_url()
 
         data = await self._get_json(url, params=params)
@@ -364,13 +364,13 @@ class TVEndpoint(BaseEndpoint):
             for station in chart.stations:
                 print(f"{station.station}: {station.percentage}%")
         """
-        filter = TVFilter(
+        query_filter = TVFilter(
             query=query,
             timespan=timespan,
             mode="stationchart",
         )
 
-        params = self._build_params(filter)
+        params = self._build_params(query_filter)
         url = await self._build_url()
 
         data = await self._get_json(url, params=params)
@@ -502,8 +502,9 @@ def _parse_date(date_str: str | None) -> datetime | None:
     try:
         # Try YYYYMMDDHHMMSS format
         if len(date_str) == 14:
-            return datetime.strptime(date_str, "%Y%m%d%H%M%S")
-        # Try ISO format
-        return datetime.fromisoformat(date_str)
+            return datetime.strptime(date_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+        # Try ISO format - add UTC if naive
+        result = datetime.fromisoformat(date_str)
+        return result if result.tzinfo else result.replace(tzinfo=UTC)
     except ValueError:
         return None

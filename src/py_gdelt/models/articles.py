@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
@@ -50,7 +50,7 @@ class Article(BaseModel):
         if not self.seendate:
             return None
         try:
-            return datetime.strptime(self.seendate, "%Y%m%d%H%M%S")
+            return datetime.strptime(self.seendate, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
         except ValueError:
             return None
 
@@ -86,11 +86,12 @@ class TimelinePoint(BaseModel):
             # Try various formats
             for fmt in ("%Y-%m-%d", "%Y%m%d", "%Y-%m-%dT%H:%M:%S"):
                 try:
-                    return datetime.strptime(self.date, fmt)
+                    return datetime.strptime(self.date, fmt).replace(tzinfo=UTC)
                 except ValueError:
                     continue
+        except Exception:  # noqa: BLE001
             return None
-        except Exception:
+        else:
             return None
 
 

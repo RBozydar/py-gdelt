@@ -7,7 +7,7 @@ Event Observations (CAMEO) event codes used throughout GDELT data.
 
 import json
 from importlib.resources import files
-from typing import Final
+from typing import Any, Final
 
 from py_gdelt.exceptions import InvalidCodeError
 from py_gdelt.lookups.models import CAMEOCodeEntry, GoldsteinEntry
@@ -43,10 +43,10 @@ class CAMEOCodes:
         self._codes: dict[str, CAMEOCodeEntry] | None = None
         self._goldstein: dict[str, GoldsteinEntry] | None = None
 
-    def _load_json(self, filename: str) -> dict[str, dict]:
+    def _load_json(self, filename: str) -> dict[str, dict[str, Any]]:
         """Load JSON data from package resources."""
         data_path = files("py_gdelt.lookups.data").joinpath(filename)
-        return json.loads(data_path.read_text())
+        return json.loads(data_path.read_text())  # type: ignore[no-any-return]
 
     @property
     def _codes_data(self) -> dict[str, CAMEOCodeEntry]:
