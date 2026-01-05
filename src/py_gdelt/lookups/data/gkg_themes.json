@@ -1,0 +1,42 @@
+{
+  "ENV_CLIMATECHANGE": {
+    "category": "Environment",
+    "description": "Climate change and global warming"
+  },
+  "ENV_DEFORESTATION": {
+    "category": "Environment",
+    "description": "Deforestation and forest loss"
+  },
+  "ENV_POLLUTION": {
+    "category": "Environment",
+    "description": "Pollution and environmental contamination"
+  },
+  "HEALTH_PANDEMIC": {
+    "category": "Health",
+    "description": "Pandemic and epidemic diseases"
+  },
+  "HEALTH_COVID19": {
+    "category": "Health",
+    "description": "COVID-19 pandemic"
+  },
+  "HEALTH_VACCINATION": {
+    "category": "Health",
+    "description": "Vaccination programs and immunization"
+  },
+  "ECON_INFLATION": {
+    "category": "Economy",
+    "description": "Inflation and rising prices"
+  },
+  "ECON_STOCKMARKET": {
+    "category": "Economy",
+    "description": "Stock market activity"
+  },
+  "WB_2263_POLITICAL_STABILITY_NO_VIOLENCE": {
+    "category": "Governance",
+    "description": "Political stability and absence of violence"
+  },
+  "TERROR": {
+    "category": "Security",
+    "description": "Terrorism and terrorist activities"
+  }
+}
