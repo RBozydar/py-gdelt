@@ -161,7 +161,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run tests with coverage
-        run: uv run pytest -m "not integration" --cov=py_gdelt --cov-report=xml --cov-report=term tests/
+        run: uv run pytest -m "not integration" --cov=src/py_gdelt --cov-report=xml --cov-report=term tests/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -176,6 +176,9 @@ jobs:
       - name: Check coverage threshold
         run: |
           uv run coverage report --fail-under=80
+
+      - name: Security audit
+        run: uv run pip-audit
 
   # Summary job that depends on all checks
   ci-success:
