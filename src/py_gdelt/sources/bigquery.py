@@ -29,9 +29,8 @@ from google.cloud import bigquery
 from google.cloud.exceptions import GoogleCloudError
 from google.oauth2 import service_account
 
-from py_gdelt._security import SecurityError
 from py_gdelt.config import GDELTSettings
-from py_gdelt.exceptions import BigQueryError, ConfigurationError
+from py_gdelt.exceptions import BigQueryError, ConfigurationError, SecurityError
 from py_gdelt.filters import DateRange, EventFilter, GKGFilter
 
 

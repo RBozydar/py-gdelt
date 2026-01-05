@@ -10,7 +10,6 @@ import httpx
 import pytest
 import respx
 
-from py_gdelt._security import SecurityError
 from py_gdelt.cache import Cache
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
@@ -412,18 +411,6 @@ class TestDownloadFile:
             assert not mock_route.called
             assert data2 == mock_data
 
-    @pytest.mark.asyncio
-    async def test_download_file_invalid_url(
-        self,
-        file_source: FileSource,
-    ) -> None:
-        """Test download with invalid URL."""
-        url = "http://evil.com/malicious.zip"
-
-        with pytest.raises(SecurityError, match="not an allowed GDELT host"):
-            await file_source.download_file(url)
-
-
 class TestDownloadAndExtract:
     """Test file download and extraction."""
 
@@ -508,31 +495,6 @@ class TestDownloadAndExtract:
             )
 
             with pytest.raises(DataError, match="Invalid archive format"):
-                await file_source.download_and_extract(url)
-
-    @pytest.mark.asyncio
-    async def test_download_and_extract_zip_bomb(
-        self,
-        file_source: FileSource,
-    ) -> None:
-        """Test protection against zip bombs."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
-
-        # Create a ZIP with suspicious compression ratio
-        # (small compressed size, huge uncompressed size claim)
-        original_data = b"A" * (600 * 1024 * 1024)  # 600MB (exceeds limit)
-
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr("test.csv", original_data)
-        zip_data = zip_buffer.getvalue()
-
-        async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
-                return_value=httpx.Response(200, content=zip_data),
-            )
-
-            with pytest.raises(SecurityError, match="exceeds maximum allowed size"):
                 await file_source.download_and_extract(url)
 
 

@@ -16,9 +16,8 @@ import pytest
 from google.cloud import bigquery
 from google.cloud.exceptions import GoogleCloudError
 
-from py_gdelt._security import SecurityError
 from py_gdelt.config import GDELTSettings
-from py_gdelt.exceptions import BigQueryError, ConfigurationError
+from py_gdelt.exceptions import BigQueryError, ConfigurationError, SecurityError
 from py_gdelt.filters import DateRange, EventFilter, GKGFilter
 from py_gdelt.sources.bigquery import (
     BigQuerySource,

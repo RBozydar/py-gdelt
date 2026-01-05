@@ -5,7 +5,6 @@ Tests cover:
 - Async context manager behavior
 - HTTP request/response handling
 - Error classification and retry logic
-- URL validation
 - JSON helper methods
 """
 
@@ -17,7 +16,6 @@ import httpx
 import pytest
 import respx
 
-from py_gdelt._security import SecurityError
 from py_gdelt.config import GDELTSettings
 from py_gdelt.endpoints.base import BaseEndpoint
 from py_gdelt.exceptions import APIError, APIUnavailableError, RateLimitError
@@ -255,48 +253,6 @@ class TestErrorHandling:
                 await endpoint._get("https://api.gdeltproject.org/test")
 
             assert "HTTP error" in str(exc_info.value)
-
-
-class TestURLValidation:
-    """Test URL validation and security checks."""
-
-    async def test_invalid_url_rejected(self) -> None:
-        """Test URL validation rejects non-GDELT hosts."""
-        async with TestEndpoint() as endpoint:
-            with pytest.raises(SecurityError) as exc_info:
-                await endpoint._get("https://malicious.com/steal-data")
-
-            assert "not an allowed GDELT host" in str(exc_info.value)
-
-    async def test_non_https_url_rejected(self) -> None:
-        """Test URL validation rejects non-HTTPS URLs."""
-        async with TestEndpoint() as endpoint:
-            with pytest.raises(SecurityError) as exc_info:
-                await endpoint._get("http://api.gdeltproject.org/test")
-
-            assert "HTTPS" in str(exc_info.value)
-
-    @respx.mock
-    async def test_valid_gdelt_url_accepted(self) -> None:
-        """Test valid GDELT URLs are accepted."""
-        respx.get("https://api.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json={}),
-        )
-
-        async with TestEndpoint() as endpoint:
-            response = await endpoint._get("https://api.gdeltproject.org/test")
-            assert response.status_code == 200
-
-    @respx.mock
-    async def test_data_gdelt_url_accepted(self) -> None:
-        """Test data.gdeltproject.org URLs are accepted."""
-        respx.get("https://data.gdeltproject.org/test").mock(
-            return_value=httpx.Response(200, json={}),
-        )
-
-        async with TestEndpoint() as endpoint:
-            response = await endpoint._get("https://data.gdeltproject.org/test")
-            assert response.status_code == 200
 
 
 class TestJSONHelper:

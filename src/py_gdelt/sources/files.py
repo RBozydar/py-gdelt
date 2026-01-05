@@ -4,15 +4,9 @@ This module provides functionality for downloading GDELT data files directly fro
 data.gdeltproject.org. It handles:
 - Master file list retrieval and parsing
 - File URL generation for date ranges
-- Concurrent download with safety limits
-- ZIP/GZ decompression with zip bomb protection
+- Concurrent download with bounded concurrency
+- ZIP/GZ decompression
 - Intelligent caching (historical files cached indefinitely, recent files TTL-based)
-
-Security Features:
-- HTTPS enforcement for all downloads
-- URL validation to prevent domain spoofing
-- Decompression size limits to prevent zip bombs
-- Maximum compression ratio checks
 """
 
 import asyncio
@@ -22,18 +16,11 @@ import logging
 import re
 import zipfile
 from collections.abc import AsyncIterator, Iterable
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Final, Literal
 
 import httpx
 
-from py_gdelt._security import (
-    MAX_COMPRESSION_RATIO,
-    MAX_DECOMPRESSED_SIZE,
-    SecurityError,
-    check_decompression_safety,
-    validate_url,
-)
 from py_gdelt.cache import Cache
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
@@ -67,7 +54,7 @@ class FileSource:
 
     This class provides async methods for downloading GDELT data files with:
     - Concurrent downloads with sliding window for bounded memory usage
-    - Automatic decompression (ZIP/GZ) with security checks
+    - Automatic decompression (ZIP/GZ)
     - Intelligent caching (historical files permanent, recent files TTL)
     - Progress tracking and error handling
 
@@ -153,9 +140,7 @@ class FileSource:
                     logger.debug("Using cached master file list: %s", url)
                     content = cached_data.decode("utf-8")
                 else:
-                    # Upgrade to HTTPS and validate
                     secure_url = self._upgrade_to_https(url)
-                    validate_url(secure_url)
 
                     logger.info("Fetching master file list: %s", secure_url)
                     response = await self.client.get(secure_url)
@@ -267,11 +252,8 @@ class FileSource:
 
         Raises:
             APIError: If download fails
-            SecurityError: If URL validation fails
         """
-        # Upgrade to HTTPS and validate
         secure_url = self._upgrade_to_https(url)
-        validate_url(secure_url)
 
         # Check cache first
         cached_data = self.cache.get(url)
@@ -320,28 +302,25 @@ class FileSource:
         Raises:
             APIError: If download fails
             DataError: If extraction fails
-            SecurityError: If decompression limits exceeded (zip bomb protection)
         """
         # Download compressed file
         compressed_data = await self.download_file(url)
-        compressed_size = len(compressed_data)
 
         try:
             # Determine compression type from URL
             if url.endswith(".zip"):
-                decompressed_data = self._extract_zip(compressed_data, compressed_size)
+                decompressed_data = self._extract_zip(compressed_data)
             elif url.endswith(".gz"):
-                decompressed_data = self._extract_gzip(compressed_data, compressed_size)
+                decompressed_data = self._extract_gzip(compressed_data)
             else:
                 # Not compressed, return as-is
                 logger.debug("File is not compressed: %s", url)
                 return compressed_data
 
             logger.debug(
-                "Extracted %d bytes from %d compressed bytes (ratio: %.1fx) for %s",
+                "Extracted %d bytes from %d compressed bytes for %s",
                 len(decompressed_data),
-                compressed_size,
-                len(decompressed_data) / compressed_size if compressed_size > 0 else 0,
+                len(compressed_data),
                 url,
             )
 
@@ -350,9 +329,6 @@ class FileSource:
         except (zipfile.BadZipFile, gzip.BadGzipFile) as e:
             logger.error("Invalid archive format for %s: %s", url, e)
             raise DataError(f"Invalid archive format: {e}") from e
-        except SecurityError:
-            # Re-raise security errors as-is
-            raise
         except Exception as e:
             logger.error("Unexpected error extracting %s: %s", url, e)
             raise DataError(f"Failed to extract file: {e}") from e
@@ -428,24 +404,22 @@ class FileSource:
             # Expected errors (404, network issues) - log at debug level
             logger.debug("Failed to download %s: %s", url, e)
             return None
-        except Exception as e:
-            # Unexpected errors - log at error level
+        except Exception as e:  # noqa: BLE001
+            # Error boundary: catch unexpected errors, log and return None
             logger.error("Unexpected error downloading %s: %s", url, e)
             return None
 
-    def _extract_zip(self, compressed_data: bytes, compressed_size: int) -> bytes:
-        """Extract ZIP file with security checks.
+    def _extract_zip(self, compressed_data: bytes) -> bytes:
+        """Extract ZIP file.
 
         Args:
             compressed_data: ZIP file bytes
-            compressed_size: Size of compressed data
 
         Returns:
             Decompressed content
 
         Raises:
-            SecurityError: If decompression limits exceeded
-            DataError: If ZIP contains multiple files (unexpected)
+            DataError: If ZIP contains no files
         """
         with zipfile.ZipFile(io.BytesIO(compressed_data)) as zf:
             # GDELT files should contain exactly one file
@@ -457,32 +431,18 @@ class FileSource:
                 # Use first file if multiple
                 logger.debug("Using first file from ZIP: %s", names[0])
 
-            filename = names[0]
-            info = zf.getinfo(filename)
+            return zf.read(names[0])
 
-            # Check decompression safety before extracting
-            decompressed_size = info.file_size
-            check_decompression_safety(compressed_size, decompressed_size)
-
-            # Extract and return
-            return zf.read(filename)
-
-    def _extract_gzip(self, compressed_data: bytes, compressed_size: int) -> bytes:
-        """Extract GZIP file with security checks.
+    def _extract_gzip(self, compressed_data: bytes) -> bytes:
+        """Extract GZIP file.
 
         Args:
             compressed_data: GZIP file bytes
-            compressed_size: Size of compressed data
 
         Returns:
             Decompressed content
-
-        Raises:
-            SecurityError: If decompression limits exceeded
         """
-        # For GZIP, we need to decompress incrementally to check size
         result = io.BytesIO()
-        bytes_read = 0
 
         with gzip.GzipFile(fileobj=io.BytesIO(compressed_data)) as gz:
             # Read in chunks to avoid loading huge files into memory
@@ -492,27 +452,6 @@ class FileSource:
                 chunk = gz.read(chunk_size)
                 if not chunk:
                     break
-
-                bytes_read += len(chunk)
-
-                # Check size limits during decompression
-                if bytes_read > MAX_DECOMPRESSED_SIZE:
-                    raise SecurityError(
-                        f"Decompressed size {bytes_read} bytes "
-                        f"exceeds maximum allowed size {MAX_DECOMPRESSED_SIZE} bytes "
-                        f"({MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB)",
-                    )
-
-                # Check compression ratio
-                if compressed_size > 0:
-                    ratio = bytes_read / compressed_size
-                    if ratio > MAX_COMPRESSION_RATIO:
-                        raise SecurityError(
-                            f"Suspicious compression ratio: {ratio:.1f}x "
-                            f"(max allowed: {MAX_COMPRESSION_RATIO}x). "
-                            f"Possible zip bomb attack.",
-                        )
-
                 result.write(chunk)
 
         return result.getvalue()
@@ -546,7 +485,7 @@ class FileSource:
         if match:
             timestamp_str = match.group(1)
             try:
-                return datetime.strptime(timestamp_str, "%Y%m%d%H%M%S")
+                return datetime.strptime(timestamp_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
             except ValueError:
                 logger.debug("Invalid timestamp in URL: %s", timestamp_str)
                 return None

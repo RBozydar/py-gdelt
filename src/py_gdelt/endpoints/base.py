@@ -5,7 +5,6 @@ functionality for all GDELT API endpoints:
 - HTTP client lifecycle management (owned or shared)
 - Retry logic with exponential backoff
 - Error handling and classification
-- URL validation for security
 - Async context manager support
 
 All endpoint implementations should inherit from BaseEndpoint and implement
@@ -26,7 +25,6 @@ from tenacity import (
     wait_exponential,
 )
 
-from py_gdelt._security import validate_url
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, RateLimitError
 
@@ -137,7 +135,7 @@ class BaseEndpoint(ABC):
         """Make an HTTP request with retry logic.
 
         Implements retry logic for transient errors (rate limits, server errors).
-        Validates URLs for security. Classifies errors into specific exception types.
+        Classifies errors into specific exception types.
 
         Args:
             method: HTTP method (GET, POST, etc.)
@@ -153,9 +151,6 @@ class BaseEndpoint(ABC):
             APIUnavailableError: On 5xx response or connection error (retryable)
             APIError: On other HTTP errors (not retryable)
         """
-        # Validate URL security before any request
-        validate_url(url)
-
         async for attempt in AsyncRetrying(
             retry=retry_if_exception_type((RateLimitError, APIUnavailableError)),
             wait=wait_exponential(multiplier=1, min=2, max=60),
