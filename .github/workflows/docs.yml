@@ -35,7 +35,7 @@ jobs:
             mkdocs-material-
 
       - name: Install dependencies
-        run: uv pip install --system mkdocs-material mkdocstrings[python]
+        run: uv venv && uv pip install mkdocs-material mkdocstrings[python]
 
       - name: Deploy docs
-        run: mkdocs gh-deploy --force
+        run: uv run mkdocs gh-deploy --force
