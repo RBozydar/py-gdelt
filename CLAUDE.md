@@ -101,7 +101,7 @@ All ignored linting rules are categorized and documented in `pyproject.toml`:
 make typecheck
 
 # Or directly with mypy
-uv run mypy deep_research
+uv run mypy src/py_gdelt
 ```
 
 
