@@ -87,6 +87,8 @@ jobs:
   doc-coverage:
     name: Documentation Coverage
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.interrogate.outputs.coverage }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -113,7 +115,13 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run interrogate
-        run: uv run interrogate -vv src/py_gdelt
+        id: interrogate
+        run: |
+          OUTPUT=$(uv run interrogate src/py_gdelt 2>&1)
+          echo "$OUTPUT"
+          COVERAGE=$(echo "$OUTPUT" | grep "RESULT:" | grep -oP 'actual: \K[0-9.]+')
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "### 📝 Docstring Coverage: ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
 
       - name: Run pydoclint
         run: uv run pydoclint --style=google src/py_gdelt
@@ -124,7 +132,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - name: Checkout code
@@ -170,7 +178,7 @@ jobs:
           uv run coverage report --fail-under=80
 
       - name: Security audit
-        run: uv run pip-audit
+        run: uv run pip-audit --skip-editable --ignore-vuln PYSEC-2022-42969  # disputed/withdrawn CVE in py (interrogate dep)
 
   # Summary job that depends on all checks
   ci-success:
@@ -196,5 +204,5 @@ jobs:
           echo "All checks passed:" >> $GITHUB_STEP_SUMMARY
           echo "- Linting (Ruff): ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Type Checking (MyPy): ${{ needs.typecheck.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Documentation Coverage: ${{ needs.doc-coverage.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation Coverage: ${{ needs.doc-coverage.result }} (${{ needs.doc-coverage.outputs.coverage }}%)" >> $GITHUB_STEP_SUMMARY
           echo "- Tests (Multiple Python versions): ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
