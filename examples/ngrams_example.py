@@ -12,6 +12,7 @@ from datetime import date
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.endpoints import NGramsEndpoint
+from py_gdelt.exceptions import APIError, DataError, RateLimitError
 from py_gdelt.filters import DateRange, NGramsFilter
 
 
@@ -51,19 +52,30 @@ async def query_climate_mentions() -> None:
         )
 
         # Query and collect all results
-        result = await endpoint.query(filter_obj)
+        try:
+            result = await endpoint.query(filter_obj)
 
-        logger.info("Found %d climate mentions in article headlines", len(result))
+            logger.info("Found %d climate mentions in article headlines", len(result))
 
-        # Display top 5 mentions
-        for i, record in enumerate(result.data[:5], 1):
-            logger.info(
-                "Record %d: '%s' at position %d",
-                i,
-                record.context[:80],  # First 80 chars of context
-                record.position,
-            )
-            logger.info("  URL: %s", record.url)
+            # Display top 5 mentions
+            for i, record in enumerate(result.data[:5], 1):
+                logger.info(
+                    "Record %d: '%s' at position %d",
+                    i,
+                    record.context[:80],  # First 80 chars of context
+                    record.position,
+                )
+                logger.info("  URL: %s", record.url)
+        except RateLimitError as e:
+            logger.exception("Rate limit exceeded")
+            if e.retry_after:
+                logger.info("Retry after %s seconds", e.retry_after)
+        except DataError:
+            logger.exception("Data error")
+        except APIError:
+            logger.exception("API error")
+        except Exception:
+            logger.exception("Unexpected error")
 
 
 async def stream_language_diversity() -> None:
@@ -86,20 +98,33 @@ async def stream_language_diversity() -> None:
         total_records = 0
 
         # Stream records for memory efficiency
-        async for record in endpoint.stream(filter_obj):
-            total_records += 1
-            language_counts[record.language] = language_counts.get(record.language, 0) + 1
+        try:
+            async for record in endpoint.stream(filter_obj):
+                total_records += 1
+                language_counts[record.language] = language_counts.get(record.language, 0) + 1
 
-            # Limit to first 1000 records for this example
-            if total_records >= 1000:
-                break
+                # Limit to first 1000 records for this example
+                if total_records >= 1000:
+                    break
 
-        logger.info("Processed %d records across %d languages", total_records, len(language_counts))
+            logger.info(
+                "Processed %d records across %d languages", total_records, len(language_counts)
+            )
 
-        # Display top languages
-        sorted_languages = sorted(language_counts.items(), key=lambda x: x[1], reverse=True)
-        for lang, count in sorted_languages[:5]:
-            logger.info("  %s: %d mentions (%.1f%%)", lang, count, 100 * count / total_records)
+            # Display top languages
+            sorted_languages = sorted(language_counts.items(), key=lambda x: x[1], reverse=True)
+            for lang, count in sorted_languages[:5]:
+                logger.info("  %s: %d mentions (%.1f%%)", lang, count, 100 * count / total_records)
+        except RateLimitError as e:
+            logger.exception("Rate limit exceeded")
+            if e.retry_after:
+                logger.info("Retry after %s seconds", e.retry_after)
+        except DataError:
+            logger.exception("Data error")
+        except APIError:
+            logger.exception("API error")
+        except Exception:
+            logger.exception("Unexpected error")
 
 
 async def analyze_position_distribution() -> None:
@@ -123,24 +148,35 @@ async def analyze_position_distribution() -> None:
         late_count = 0  # Position 70-90 (last 30%)
         total = 0
 
-        async for record in endpoint.stream(filter_obj):
-            total += 1
+        try:
+            async for record in endpoint.stream(filter_obj):
+                total += 1
 
-            if record.is_early_in_article:
-                early_count += 1
-            elif record.is_late_in_article:
-                late_count += 1
-            else:
-                middle_count += 1
+                if record.is_early_in_article:
+                    early_count += 1
+                elif record.is_late_in_article:
+                    late_count += 1
+                else:
+                    middle_count += 1
 
-            # Limit for example
-            if total >= 500:
-                break
+                # Limit for example
+                if total >= 500:
+                    break
 
-        logger.info("Position distribution across %d records:", total)
-        logger.info("  Early (0-30): %d (%.1f%%)", early_count, 100 * early_count / total)
-        logger.info("  Middle (30-70): %d (%.1f%%)", middle_count, 100 * middle_count / total)
-        logger.info("  Late (70-90): %d (%.1f%%)", late_count, 100 * late_count / total)
+            logger.info("Position distribution across %d records:", total)
+            logger.info("  Early (0-30): %d (%.1f%%)", early_count, 100 * early_count / total)
+            logger.info("  Middle (30-70): %d (%.1f%%)", middle_count, 100 * middle_count / total)
+            logger.info("  Late (70-90): %d (%.1f%%)", late_count, 100 * late_count / total)
+        except RateLimitError as e:
+            logger.exception("Rate limit exceeded")
+            if e.retry_after:
+                logger.info("Retry after %s seconds", e.retry_after)
+        except DataError:
+            logger.exception("Data error")
+        except APIError:
+            logger.exception("API error")
+        except Exception:
+            logger.exception("Unexpected error")
 
 
 async def sync_example() -> None:
@@ -161,13 +197,24 @@ async def sync_example() -> None:
     )
 
     # Use sync wrapper
-    result = endpoint.query_sync(filter_obj)
+    try:
+        result = endpoint.query_sync(filter_obj)
 
-    logger.info("Found %d technology mentions in headlines", len(result))
+        logger.info("Found %d technology mentions in headlines", len(result))
 
-    # Display first few
-    for record in result.data[:3]:
-        logger.info("  '%s' in %s", record.ngram, record.url)
+        # Display first few
+        for record in result.data[:3]:
+            logger.info("  '%s' in %s", record.ngram, record.url)
+    except RateLimitError as e:
+        logger.exception("Rate limit exceeded")
+        if e.retry_after:
+            logger.info("Retry after %s seconds", e.retry_after)
+    except DataError:
+        logger.exception("Data error")
+    except APIError:
+        logger.exception("API error")
+    except Exception:
+        logger.exception("Unexpected error")
 
     # Clean up
     asyncio.run(endpoint.close())
