@@ -570,10 +570,15 @@ class TestStreamFiles:
             async for url, data in file_source.stream_files(urls):
                 results.append((url, data))
 
-            # Should only get 2 successful results
+            # Should only get 2 successful results (order is non-deterministic)
             assert len(results) == 2
-            assert results[0][0] == urls[0]
-            assert results[1][0] == urls[2]
+            result_urls = {r[0] for r in results}
+            assert urls[0] in result_urls  # First URL succeeded
+            assert urls[1] not in result_urls  # Second URL failed (404)
+            assert urls[2] in result_urls  # Third URL succeeded
+            # Verify data integrity
+            for url, data in results:
+                assert data == original_data
 
     @pytest.mark.asyncio
     async def test_stream_files_custom_concurrency(

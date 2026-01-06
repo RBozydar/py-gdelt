@@ -80,12 +80,12 @@ async def download_recent_events() -> None:
                 total_bytes / (1024 * 1024),
             )
 
-        except APIError as e:
-            logger.error("API error: %s", e)
-        except DataError as e:
-            logger.error("Data error: %s", e)
-        except SecurityError as e:
-            logger.error("Security error: %s", e)
+        except APIError:
+            logger.exception("API error")
+        except DataError:
+            logger.exception("Data error")
+        except SecurityError:
+            logger.exception("Security error")
 
 
 async def download_specific_file() -> None:
@@ -110,8 +110,8 @@ async def download_specific_file() -> None:
                 first_event = lines[0].split("\t")
                 logger.info("First event has %d fields", len(first_event))
 
-        except APIError as e:
-            logger.error("Download failed: %s", e)
+        except APIError:
+            logger.exception("Download failed")
 
 
 async def list_available_files() -> None:
@@ -132,8 +132,8 @@ async def list_available_files() -> None:
                 filename = url.split("/")[-1]
                 logger.info("  %s", filename)
 
-        except APIError as e:
-            logger.error("Failed to fetch master file list: %s", e)
+        except APIError:
+            logger.exception("Failed to fetch master file list")
 
 
 async def download_with_custom_concurrency() -> None:

@@ -1,69 +1,54 @@
 #!/bin/bash
-# Audit linting technical debt progress
-# Run this weekly during active development to track improvements
+# Audit linting status
+# Run this to verify lint ignore rules are still appropriate
 
-echo "=== Linting Technical Debt Progress ==="
+echo "=== Linting Status Report ==="
 echo "Date: $(date)"
 echo ""
 
-echo "=== INCREMENTAL TECHNICAL DEBT (Goal: Fix 20/week) ==="
+echo "=== CHECKING FOR REGRESSIONS ==="
 echo ""
 
-# PERF401 - List comprehensions
-PERF401_COUNT=$(uvx ruff check --select PERF401 src/ 2>/dev/null | grep -c "^src/" || echo "0")
-echo "PERF401 (manual-list-comprehension): $PERF401_COUNT violations"
-if [ "$PERF401_COUNT" -eq 0 ]; then
-    echo "  ✅ COMPLETE - Remove from ignore list!"
-elif [ "$PERF401_COUNT" -lt 20 ]; then
-    echo "  🎯 Almost done - fix remaining violations this week"
-else
-    echo "  📋 In progress - target: 20 fixes this week"
-fi
-echo ""
+# Rules that SHOULD have 0 violations (we fixed them)
+FIXED_RULES=("PERF401" "EM101" "EM102" "TRY400")
+REGRESSION_FOUND=false
 
-# EM101 - Raw strings in exceptions
-EM101_COUNT=$(uvx ruff check --select EM101 src/ 2>/dev/null | grep -c "^src/" || echo "0")
-echo "EM101 (raw-string-in-exception): $EM101_COUNT violations"
-if [ "$EM101_COUNT" -eq 0 ]; then
-    echo "  ✅ COMPLETE - Remove from ignore list!"
-elif [ "$EM101_COUNT" -lt 20 ]; then
-    echo "  🎯 Fix all remaining violations"
-else
-    echo "  📋 In progress"
-fi
-echo ""
+for rule in "${FIXED_RULES[@]}"; do
+    COUNT=$(uvx ruff check --select "$rule" src/ 2>&1 | grep -E "^Found [0-9]+ error" | grep -oE "[0-9]+" || echo "0")
+    if [ "$COUNT" != "0" ] && [ -n "$COUNT" ]; then
+        echo "❌ $rule: $COUNT violations (REGRESSION!)"
+        REGRESSION_FOUND=true
+    else
+        echo "✅ $rule: 0 violations"
+    fi
+done
 
-# EM102 - F-strings in exceptions
-EM102_COUNT=$(uvx ruff check --select EM102 src/ 2>/dev/null | grep -c "^src/" || echo "0")
-echo "EM102 (f-string-in-exception): $EM102_COUNT violations"
-if [ "$EM102_COUNT" -eq 0 ]; then
-    echo "  ✅ COMPLETE - Remove from ignore list!"
-elif [ "$EM102_COUNT" -lt 20 ]; then
-    echo "  🎯 Fix all remaining violations"
-else
-    echo "  📋 In progress"
-fi
 echo ""
-
-# Calculate total
-TOTAL=$((PERF401_COUNT + EM101_COUNT + EM102_COUNT))
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "TOTAL INCREMENTAL DEBT: $TOTAL violations"
+
+if [ "$REGRESSION_FOUND" = true ]; then
+    echo "⚠️  REGRESSIONS DETECTED - Fix before committing!"
+    exit 1
+else
+    echo "✅ All previously fixed rules still clean"
+fi
+
+echo ""
+echo "=== INTENTIONAL STYLE IGNORES (current counts) ==="
 echo ""
 
-if [ "$TOTAL" -eq 0 ]; then
-    echo "🎉 ALL INCREMENTAL DEBT RESOLVED!"
-    echo "Next steps:"
-    echo "  1. Remove PERF401, EM101, EM102 from pyproject.toml ignore list"
-    echo "  2. Run 'make ci' to verify"
-    echo "  3. Commit changes"
-else
-    WEEKS_REMAINING=$((TOTAL / 20 + 1))
-    echo "Target completion: ~$WEEKS_REMAINING weeks at 20 fixes/week"
-    echo ""
-    echo "To fix violations this week:"
-    echo "  1. Run: uvx ruff check --select PERF401,EM101,EM102 src/"
-    echo "  2. Fix 20 violations (start with auto-fixable PERF401)"
-    echo "  3. Run: make ci"
-    echo "  4. Commit with message: 'refactor: reduce linting debt (20 violations fixed)'"
-fi
+# PLR2004 - Magic values (intentionally ignored)
+PLR2004_COUNT=$(uvx ruff check --select PLR2004 src/ 2>&1 | grep -E "^Found [0-9]+ error" | grep -oE "[0-9]+" || echo "0")
+echo "PLR2004 (magic-value-comparison): $PLR2004_COUNT violations"
+echo "  Status: Intentionally ignored - HTTP codes, column counts are self-documenting"
+
+echo ""
+
+# TRY003 - Verbose exception messages (intentionally ignored)
+TRY003_COUNT=$(uvx ruff check --select TRY003 src/ 2>&1 | grep -E "^Found [0-9]+ error" | grep -oE "[0-9]+" || echo "0")
+echo "TRY003 (raise-vanilla-args): $TRY003_COUNT violations"
+echo "  Status: Intentionally ignored - Descriptive messages preferred"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "For full lint check: make lint"

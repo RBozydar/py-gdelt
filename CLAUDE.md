@@ -75,27 +75,14 @@ All ignored linting rules are categorized and documented in `pyproject.toml`:
    - UP046/UP047 ignored for Python 3.11 compatibility (no PEP 695 syntax)
    - These violations are intentional and correct for this codebase
 
-2. **MAJOR TECHNICAL DEBT** (3 rules, 992 violations) - Keep ignored
-   - PLR2004, TRY003, TRY400
-   - Would require massive refactoring with minimal benefit
-   - HTTP codes and logger.error patterns are self-documenting
-
-3. **INCREMENTAL DEBT** (3 rules, 224 violations) - Plan to fix
-   - PERF401 (181), EM101 (19), EM102 (24)
-   - Target: 20 fixes per week during active development
-   - Track progress: `./scripts/lint_progress.sh`
+2. **INTENTIONAL STYLE** (2 rules) - Keep ignored
+   - PLR2004 (38 violations) - HTTP codes, column counts are self-documenting
+   - TRY003 (35 violations) - Descriptive exception messages preferred
 
 **Process:**
 
 1. **Adding new ignores:** Requires PR approval, category assignment, and documentation
-2. **Weekly fixes:** Fix 20 incremental debt violations during active development
-3. **Quarterly review:** Re-evaluate all ignores every Q1/Q2/Q3/Q4
-
-**Monitoring:**
-```bash
-# Track incremental technical debt progress
-./scripts/lint_progress.sh
-```
+2. **Quarterly review:** Re-evaluate all ignores every Q1/Q2/Q3/Q4
 
 
 ### MyPy (Type Checking)

@@ -72,8 +72,8 @@ class NGramsParser:
         # Decode bytes to string
         try:
             text = data.decode("utf-8")
-        except UnicodeDecodeError as e:
-            logger.error("Failed to decode NGrams data as UTF-8: %s", e)
+        except UnicodeDecodeError:
+            logger.exception("Failed to decode NGrams data as UTF-8")
             return
 
         # Process each line

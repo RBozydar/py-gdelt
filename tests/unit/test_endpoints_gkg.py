@@ -625,7 +625,8 @@ class TestGKGEndpointErrorHandling:
             *,
             use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
-            raise RateLimitError("Rate limited", retry_after=60)
+            msg = "Rate limited"
+            raise RateLimitError(msg, retry_after=60)
             if False:  # type: ignore[unreachable]
                 yield
 
@@ -649,7 +650,8 @@ class TestGKGEndpointErrorHandling:
             *,
             use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
-            raise APIError("API failed")
+            msg = "API failed"
+            raise APIError(msg)
             if False:  # type: ignore[unreachable]
                 yield
 
@@ -673,7 +675,8 @@ class TestGKGEndpointErrorHandling:
             *,
             use_bigquery: bool = False,
         ) -> AsyncIterator[_RawGKG]:
-            raise ConfigurationError("BigQuery not configured")
+            msg = "BigQuery not configured"
+            raise ConfigurationError(msg)
             if False:  # type: ignore[unreachable]
                 yield
 

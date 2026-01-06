@@ -55,8 +55,8 @@ class GKGParser:
         """
         line = header.decode("utf-8", errors="replace").strip()
         if not line:
-            msg = "Empty header line, cannot detect GKG version"
-            raise ValueError(msg)
+            err_msg = "Empty header line, cannot detect GKG version"
+            raise ValueError(err_msg)
 
         column_count = len(line.split("\t"))
 

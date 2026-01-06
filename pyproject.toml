@@ -151,16 +151,9 @@ ignore = [
     "UP046",    # non-pep695-generic-class (Python 3.11 compatibility)
     "UP047",    # non-pep695-generic-function (Python 3.11 compatibility)
 
-    # === MAJOR TECHNICAL DEBT - Keep Ignored (3 rules, 992 violations) ===
-    "PLR2004",  # magic-value-comparison (398 violations - HTTP codes are self-documenting)
-    "TRY003",   # raise-vanilla-args (374 violations - would require exception class refactor)
-    "TRY400",   # error-instead-of-exception (220 violations - logger.error is our style)
-
-    # === INCREMENTAL TECHNICAL DEBT - Plan to Fix (3 rules, 224 violations) ===
-    # TODO(Q1-2026): Fix incrementally - 20 violations per week
-    "PERF401",  # manual-list-comprehension (181 violations in src/)
-    "EM101",    # raw-string-in-exception (19 violations)
-    "EM102",    # f-string-in-exception (24 violations)
+    # === INTENTIONAL STYLE - Keep Ignored (2 rules) ===
+    "PLR2004",  # magic-value-comparison (38 violations - HTTP codes, column counts are self-documenting)
+    "TRY003",   # raise-vanilla-args (35 violations - descriptive messages preferred over exception classes)
 
     # === CONFIGURATION ===
     "E501",     # line-too-long (handled by formatter)

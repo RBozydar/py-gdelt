@@ -200,7 +200,7 @@ class DataFetcher:
                     yield record
             else:
                 # No fallback available
-                logger.error("Rate limited and fallback not enabled")
+                logger.exception("Rate limited and fallback not enabled")
                 self._handle_error(e)
 
         except (APIError, APIUnavailableError) as e:
@@ -215,7 +215,7 @@ class DataFetcher:
                     yield record
             else:
                 # No fallback available
-                logger.error("File source failed and fallback not enabled: %s", e)
+                logger.exception("File source failed and fallback not enabled")
                 self._handle_error(e)
 
     async def _fetch_from_files(
@@ -292,9 +292,9 @@ class DataFetcher:
                         yield record
                         records_yielded += 1
 
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # Error boundary: handle parsing errors according to error policy
-                logger.error("Failed to parse file %s: %s", url, e)
+                logger.exception("Failed to parse file %s", url)
                 self._handle_error(e)
 
         logger.info("Fetched %d records from file source", records_yielded)
@@ -561,9 +561,9 @@ class DataFetcher:
                     yield record
                     records_yielded += 1
 
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # Error boundary: handle parsing errors according to error policy
-                logger.error("Failed to parse ngrams file %s: %s", url, e)
+                logger.exception("Failed to parse ngrams file %s", url)
                 self._handle_error(e)
 
         logger.info("Fetched %d ngrams records from file source", records_yielded)

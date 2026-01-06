@@ -106,8 +106,8 @@ class FileSource:
     def client(self) -> httpx.AsyncClient:
         """Get the HTTP client, raising if not initialized."""
         if self._client is None:
-            msg = "FileSource not initialized. Use 'async with FileSource() as source:'"
-            raise RuntimeError(msg)
+            err_msg = "FileSource not initialized. Use 'async with FileSource() as source:'"
+            raise RuntimeError(err_msg)
         return self._client
 
     async def get_master_file_list(
@@ -162,14 +162,17 @@ class FileSource:
                 logger.debug("Found %d URLs in %s", len(file_urls), url)
 
             except httpx.HTTPStatusError as e:
-                logger.error("HTTP error fetching master file list %s: %s", url, e)
-                raise APIUnavailableError(f"Failed to fetch master file list: {e}") from e
+                logger.error("HTTP error fetching master file list %s: %s", url, e)  # noqa: TRY400
+                msg = f"Failed to fetch master file list: {e}"
+                raise APIUnavailableError(msg) from e
             except httpx.RequestError as e:
-                logger.error("Request error fetching master file list %s: %s", url, e)
-                raise APIError(f"Network error fetching master file list: {e}") from e
+                logger.error("Request error fetching master file list %s: %s", url, e)  # noqa: TRY400
+                msg = f"Network error fetching master file list: {e}"
+                raise APIError(msg) from e
             except UnicodeDecodeError as e:
-                logger.error("Invalid encoding in master file list %s: %s", url, e)
-                raise DataError(f"Invalid encoding in master file list: {e}") from e
+                logger.error("Invalid encoding in master file list %s: %s", url, e)  # noqa: TRY400
+                msg = f"Invalid encoding in master file list: {e}"
+                raise DataError(msg) from e
 
         return all_urls
 
@@ -198,13 +201,13 @@ class FileSource:
             ValueError: If date range is invalid or file_type unknown
         """
         if start_date > end_date:
-            msg = f"start_date ({start_date}) must be <= end_date ({end_date})"
-            raise ValueError(msg)
+            err_msg = f"start_date ({start_date}) must be <= end_date ({end_date})"
+            raise ValueError(err_msg)
 
         if file_type not in FILE_TYPE_PATTERNS:
             valid_types = ", ".join(FILE_TYPE_PATTERNS.keys())
-            msg = f"Unknown file_type '{file_type}'. Valid types: {valid_types}"
-            raise ValueError(msg)
+            err_msg = f"Unknown file_type '{file_type}'. Valid types: {valid_types}"
+            raise ValueError(err_msg)
 
         pattern = FILE_TYPE_PATTERNS[file_type]
         urls: list[str] = []
@@ -280,14 +283,17 @@ class FileSource:
             if e.response.status_code == 404:
                 # Missing files are normal (not all 15-min slots exist)
                 logger.debug("File not found (404): %s", secure_url)
-                raise APIError(f"File not found: {url}") from e
+                msg = f"File not found: {url}"
+                raise APIError(msg) from e
 
-            logger.error("HTTP error downloading %s: %s", secure_url, e)
-            raise APIUnavailableError(f"Failed to download file: {e}") from e
+            logger.error("HTTP error downloading %s: %s", secure_url, e)  # noqa: TRY400
+            msg = f"Failed to download file: {e}"
+            raise APIUnavailableError(msg) from e
 
         except httpx.RequestError as e:
-            logger.error("Request error downloading %s: %s", secure_url, e)
-            raise APIError(f"Network error downloading file: {e}") from e
+            logger.error("Request error downloading %s: %s", secure_url, e)  # noqa: TRY400
+            msg = f"Network error downloading file: {e}"
+            raise APIError(msg) from e
         else:
             return content
 
@@ -326,11 +332,13 @@ class FileSource:
             )
 
         except (zipfile.BadZipFile, gzip.BadGzipFile) as e:
-            logger.error("Invalid archive format for %s: %s", url, e)
-            raise DataError(f"Invalid archive format: {e}") from e
+            logger.error("Invalid archive format for %s: %s", url, e)  # noqa: TRY400
+            msg = f"Invalid archive format: {e}"
+            raise DataError(msg) from e
         except Exception as e:
-            logger.error("Unexpected error extracting %s: %s", url, e)
-            raise DataError(f"Failed to extract file: {e}") from e
+            logger.error("Unexpected error extracting %s: %s", url, e)  # noqa: TRY400
+            msg = f"Failed to extract file: {e}"
+            raise DataError(msg) from e
         else:
             return decompressed_data
 
@@ -404,9 +412,9 @@ class FileSource:
             # Expected errors (404, network issues) - log at debug level
             logger.debug("Failed to download %s: %s", url, e)
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception:
             # Error boundary: catch unexpected errors, log and return None
-            logger.error("Unexpected error downloading %s: %s", url, e)
+            logger.exception("Unexpected error downloading %s", url)
             return None
         else:
             return url, data
@@ -429,7 +437,8 @@ class FileSource:
             if len(names) != 1:
                 logger.warning("ZIP file contains %d files (expected 1): %s", len(names), names)
                 if len(names) == 0:
-                    raise DataError("ZIP file is empty")
+                    msg = "ZIP file is empty"
+                    raise DataError(msg)
                 # Use first file if multiple
                 logger.debug("Using first file from ZIP: %s", names[0])
 

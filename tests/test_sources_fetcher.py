@@ -609,7 +609,8 @@ class TestDataFetcherEdgeCases:
 
         # Mock parser to raise error
         def mock_parse(data: bytes, is_translated: bool = False) -> Iterator[dict]:  # type: ignore[type-arg]
-            raise ValueError("Parse error")
+            msg = "Parse error"
+            raise ValueError(msg)
 
         mock_parser.parse = mock_parse
 

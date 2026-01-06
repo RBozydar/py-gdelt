@@ -70,9 +70,8 @@ class BaseEndpoint(ABC):
         """
         # Validate that subclass defines BASE_URL
         if not hasattr(self.__class__, "BASE_URL") or not self.__class__.BASE_URL:
-            raise NotImplementedError(
-                f"{self.__class__.__name__} must define a non-empty BASE_URL class attribute",
-            )
+            msg = f"{self.__class__.__name__} must define a non-empty BASE_URL class attribute"
+            raise NotImplementedError(msg)
 
         self.settings = settings or GDELTSettings()
 
@@ -169,32 +168,37 @@ class BaseEndpoint(ABC):
                     # Handle rate limiting
                     if response.status_code == 429:
                         retry_after = response.headers.get("Retry-After")
+                        msg = f"Rate limited by {url}"
                         raise RateLimitError(
-                            f"Rate limited by {url}",
+                            msg,
                             retry_after=int(retry_after) if retry_after else None,
                         )
 
                     # Handle server errors
                     if 500 <= response.status_code < 600:
-                        raise APIUnavailableError(f"Server error {response.status_code} from {url}")
+                        msg = f"Server error {response.status_code} from {url}"
+                        raise APIUnavailableError(msg)
 
                     # Handle client errors
                     if 400 <= response.status_code < 500:
-                        raise APIError(
-                            f"HTTP {response.status_code} from {url}: {response.text[:200]}",
-                        )
+                        msg = f"HTTP {response.status_code} from {url}: {response.text[:200]}"
+                        raise APIError(msg)
 
                 except httpx.ConnectError as e:
-                    raise APIUnavailableError(f"Connection failed to {url}: {e}") from e
+                    msg = f"Connection failed to {url}: {e}"
+                    raise APIUnavailableError(msg) from e
                 except httpx.TimeoutException as e:
-                    raise APIUnavailableError(f"Request timed out to {url}: {e}") from e
+                    msg = f"Request timed out to {url}: {e}"
+                    raise APIUnavailableError(msg) from e
                 except httpx.HTTPStatusError as e:
-                    raise APIError(f"HTTP error from {url}: {e}") from e
+                    msg = f"HTTP error from {url}: {e}"
+                    raise APIError(msg) from e
                 else:
                     return response
 
         # This should never be reached due to reraise=True, but mypy needs it
-        raise APIError(f"Request failed after retries: {url}")
+        msg = f"Request failed after retries: {url}"
+        raise APIError(msg)
 
     async def _get(
         self,

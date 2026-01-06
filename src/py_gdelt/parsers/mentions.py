@@ -51,8 +51,8 @@ class MentionsParser:
         """
         try:
             text = data.decode("utf-8")
-        except UnicodeDecodeError as e:
-            logger.error("Failed to decode mentions data as UTF-8: %s", e)
+        except UnicodeDecodeError:
+            logger.exception("Failed to decode mentions data as UTF-8")
             return
 
         for line_num, line in enumerate(text.splitlines(), start=1):

@@ -66,7 +66,8 @@ class ResultStream(Generic[T]):
             RuntimeError: If stream has already been partially consumed.
         """
         if self._exhausted:
-            raise RuntimeError("Stream has been exhausted")
+            msg = "Stream has been exhausted"
+            raise RuntimeError(msg)
 
         items: list[T] = [item async for item in self]
         return items
@@ -91,9 +92,8 @@ class ResultStream(Generic[T]):
         try:
             import pandas as pd
         except ImportError:
-            raise ImportError(
-                "pandas is required for to_dataframe(). Install with: pip install pandas",
-            ) from None
+            msg = "pandas is required for to_dataframe(). Install with: pip install pandas"
+            raise ImportError(msg) from None
 
         items = await self.to_list()
         if not items:
@@ -112,10 +112,11 @@ class ResultStream(Generic[T]):
         elif isinstance(first, dict):
             records = items
         else:
-            raise TypeError(
+            msg = (
                 f"Cannot convert {type(first).__name__} to DataFrame. "
-                "Items must be Pydantic models, dataclasses, or dicts.",
+                "Items must be Pydantic models, dataclasses, or dicts."
             )
+            raise TypeError(msg)
 
         return pd.DataFrame(records, **kwargs)
 

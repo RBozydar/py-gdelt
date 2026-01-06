@@ -143,7 +143,7 @@ class Cache:
             logger.debug("Cached key '%s' (expires: %s)", key, expires_at)
 
         except OSError as e:
-            logger.error("Failed to cache key '%s': %s", key, e)
+            logger.error("Failed to cache key '%s': %s", key, e)  # noqa: TRY400
             raise
 
     def is_valid(self, key: str) -> bool:
@@ -217,8 +217,8 @@ class Cache:
                     except OSError as e:
                         logger.warning("Failed to delete cache entry: %s", e)
 
-        except OSError as e:
-            logger.error("Error during cache clear: %s", e)
+        except OSError:
+            logger.exception("Error during cache clear")
 
         logger.info("Cleared %d cache entries", cleared)
         return cleared

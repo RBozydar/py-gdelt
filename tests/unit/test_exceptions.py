@@ -36,8 +36,9 @@ class TestGDELTError:
 
     def test_raise_and_catch(self):
         """GDELTError should be raiseable and catchable."""
+        msg = "Test error"
         with pytest.raises(GDELTError, match="Test error"):
-            raise GDELTError("Test error")
+            raise GDELTError(msg)
 
 
 class TestAPIError:
@@ -54,8 +55,9 @@ class TestAPIError:
 
     def test_catch_as_base_class(self):
         """APIError should be catchable as GDELTError."""
+        msg = "API error"
         with pytest.raises(GDELTError):
-            raise APIError("API error")
+            raise APIError(msg)
 
 
 class TestRateLimitError:
@@ -314,21 +316,22 @@ class TestExceptionHierarchy:
 
     def test_catch_patterns(self):
         """Test common exception catching patterns."""
+        msg = "Test"
         # Catch all GDELT errors
         with pytest.raises(GDELTError):
-            raise InvalidCodeError("Test", code="X", code_type="test")
+            raise InvalidCodeError(msg, code="X", code_type="test")
 
         # Catch all API errors
         with pytest.raises(APIError):
-            raise RateLimitError("Test", retry_after=60)
+            raise RateLimitError(msg, retry_after=60)
 
         # Catch all data errors
         with pytest.raises(DataError):
-            raise ParseError("Test", raw_data="bad data")
+            raise ParseError(msg, raw_data="bad data")
 
         # Catch validation errors
         with pytest.raises(ValidationError):
-            raise InvalidCodeError("Test", code="X", code_type="test")
+            raise InvalidCodeError(msg, code="X", code_type="test")
 
 
 class TestExceptionExports:

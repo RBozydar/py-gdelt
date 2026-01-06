@@ -190,24 +190,28 @@ def _validate_credential_path(path: str) -> Path:
     # Check for null bytes
     if "\x00" in path:
         logger.error("Null byte detected in credential path")
-        raise SecurityError("Invalid credential path: null byte detected")
+        msg = "Invalid credential path: null byte detected"
+        raise SecurityError(msg)
 
     # Convert to Path and resolve
     try:
         cred_path = Path(path).expanduser().resolve()
     except (OSError, RuntimeError) as e:
-        logger.error("Failed to resolve credential path %s: %s", path, e)
-        raise SecurityError(f"Invalid credential path: {e}") from e
+        logger.error("Failed to resolve credential path %s: %s", path, e)  # noqa: TRY400
+        msg = f"Invalid credential path: {e}"
+        raise SecurityError(msg) from e
 
     # Verify file exists
     if not cred_path.exists():
         logger.error("Credential file not found: %s", cred_path)
-        raise ConfigurationError(f"Credential file not found: {cred_path}")
+        msg = f"Credential file not found: {cred_path}"
+        raise ConfigurationError(msg)
 
     # Verify it's a file, not a directory or special file
     if not cred_path.is_file():
         logger.error("Credential path is not a regular file: %s", cred_path)
-        raise ConfigurationError(f"Credential path is not a regular file: {cred_path}")
+        msg = f"Credential path is not a regular file: {cred_path}"
+        raise ConfigurationError(msg)
 
     return cred_path
 
@@ -232,10 +236,11 @@ def _validate_columns(columns: list[str], table_type: TableType) -> None:
             invalid_columns,
             sorted(allowed),
         )
-        raise BigQueryError(
+        msg = (
             f"Invalid columns for table '{table_type}': {invalid_columns}. "
-            f"Allowed columns: {sorted(allowed)}",
+            f"Allowed columns: {sorted(allowed)}"
         )
+        raise BigQueryError(msg)
 
 
 def _build_where_clause_for_events(
@@ -502,9 +507,8 @@ class BigQuerySource:
                 # Get project from settings or credentials
                 project = self.settings.bigquery_project or credentials.project_id
                 if project is None:
-                    raise ConfigurationError(
-                        "BigQuery project not specified in settings or credentials",
-                    )
+                    msg = "BigQuery project not specified in settings or credentials"
+                    raise ConfigurationError(msg)
 
                 self._client = bigquery.Client(credentials=credentials, project=project)
                 logger.info("BigQuery client initialized with explicit credentials")
@@ -513,16 +517,16 @@ class BigQuerySource:
                 # Use Application Default Credentials (ADC)
                 project = self.settings.bigquery_project
                 if project is None:
-                    raise ConfigurationError(
-                        "BigQuery project must be specified when using Application Default Credentials",
-                    )
+                    msg = "BigQuery project must be specified when using Application Default Credentials"
+                    raise ConfigurationError(msg)
 
                 self._client = bigquery.Client(project=project)
                 logger.info("BigQuery client initialized with Application Default Credentials")
 
         except GoogleCloudError as e:
-            logger.error("Failed to create BigQuery client: %s", e)
-            raise BigQueryError(f"Failed to create BigQuery client: {e}") from e
+            logger.error("Failed to create BigQuery client: %s", e)  # noqa: TRY400
+            msg = f"Failed to create BigQuery client: {e}"
+            raise BigQueryError(msg) from e
         else:
             return self._client
 
@@ -538,12 +542,13 @@ class BigQuerySource:
 
         if not has_explicit_creds and not has_project:
             logger.error("BigQuery credentials not configured")
-            raise ConfigurationError(
+            msg = (
                 "BigQuery credentials not configured. Set either:\n"
                 "  1. GDELT_BIGQUERY_CREDENTIALS (path to credentials JSON) + GDELT_BIGQUERY_PROJECT, or\n"
                 "  2. GDELT_BIGQUERY_PROJECT (uses Application Default Credentials)\n"
-                "See: https://cloud.google.com/docs/authentication/application-default-credentials",
+                "See: https://cloud.google.com/docs/authentication/application-default-credentials"
             )
+            raise ConfigurationError(msg)
 
         if has_explicit_creds:
             # Validate credential file path
@@ -809,8 +814,10 @@ class BigQuerySource:
             logger.debug("Yielded %d rows from query result", rows_yielded)
 
         except GoogleCloudError as e:
-            logger.error("BigQuery query failed: %s", e)
-            raise BigQueryError(f"BigQuery query failed: {e}") from e
+            logger.error("BigQuery query failed: %s", e)  # noqa: TRY400
+            msg = f"BigQuery query failed: {e}"
+            raise BigQueryError(msg) from e
         except Exception as e:
-            logger.error("Unexpected error executing BigQuery query: %s", e)
-            raise BigQueryError(f"Unexpected error executing query: {e}") from e
+            logger.error("Unexpected error executing BigQuery query: %s", e)  # noqa: TRY400
+            msg = f"Unexpected error executing query: {e}"
+            raise BigQueryError(msg) from e

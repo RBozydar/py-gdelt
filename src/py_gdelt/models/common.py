@@ -39,7 +39,8 @@ class Location(BaseModel):
     def as_tuple(self) -> tuple[float, float]:
         """Return (lat, lon) tuple. Raises ValueError if either is None."""
         if self.lat is None or self.lon is None:
-            raise ValueError("Cannot create tuple: lat or lon is None")
+            msg = "Cannot create tuple: lat or lon is None"
+            raise ValueError(msg)
         return (self.lat, self.lon)
 
     def as_wkt(self) -> str:
@@ -49,7 +50,8 @@ class Location(BaseModel):
             ValueError: If lat or lon is None.
         """
         if self.lat is None or self.lon is None:
-            raise ValueError("Cannot create WKT: lat or lon is None")
+            msg = "Cannot create WKT: lat or lon is None"
+            raise ValueError(msg)
         return f"POINT({self.lon} {self.lat})"
 
     @property

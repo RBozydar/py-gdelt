@@ -226,8 +226,8 @@ class EventsParser:
             raise ParseError(msg, raw_data=line[:200])
 
         except UnicodeDecodeError as e:
-            msg = f"Failed to decode header as UTF-8: {e}"
-            raise ParseError(msg) from e
+            err_msg = f"Failed to decode header as UTF-8: {e}"
+            raise ParseError(err_msg) from e
 
     def parse(self, data: bytes, is_translated: bool = False) -> Iterator[_RawEvent]:
         """
@@ -254,8 +254,8 @@ class EventsParser:
             # Decode to string
             text = data.decode("utf-8")
         except UnicodeDecodeError as e:
-            msg = f"Failed to decode data as UTF-8: {e}"
-            raise ParseError(msg) from e
+            err_msg = f"Failed to decode data as UTF-8: {e}"
+            raise ParseError(err_msg) from e
 
         # Detect version from first line
         lines = text.split("\n", 1)
