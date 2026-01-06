@@ -30,6 +30,11 @@ class Cache:
 
     The cache stores data files alongside .meta JSON files containing
     expiry timestamps and creation metadata.
+
+    Args:
+        cache_dir: Directory for cache storage
+        default_ttl: Default TTL in seconds for recent files
+        master_list_ttl: TTL in seconds for master file lists
     """
 
     def __init__(
@@ -38,13 +43,6 @@ class Cache:
         default_ttl: int = 3600,  # 1 hour in seconds
         master_list_ttl: int = 300,  # 5 minutes
     ) -> None:
-        """Initialize cache.
-
-        Args:
-            cache_dir: Directory for cache storage
-            default_ttl: Default TTL in seconds for recent files
-            master_list_ttl: TTL in seconds for master file lists
-        """
         self.cache_dir = cache_dir
         self.default_ttl = default_ttl
         self.master_list_ttl = master_list_ttl

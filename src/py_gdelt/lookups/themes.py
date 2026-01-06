@@ -27,7 +27,6 @@ class GKGThemes:
     """
 
     def __init__(self) -> None:
-        """Initialize GKGThemes with lazy-loaded data."""
         self._themes: dict[str, GKGThemeEntry] | None = None
 
     def _load_json(self, filename: str) -> dict[str, dict[str, Any]]:

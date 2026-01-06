@@ -423,6 +423,14 @@ class BigQuerySource:
     All queries use parameterized queries to prevent SQL injection, and only
     query _partitioned tables with mandatory date filters for cost control.
 
+    Args:
+        settings: GDELT settings (creates default if None)
+        client: BigQuery client (creates new one if None, caller owns lifecycle)
+
+    Note:
+        If client is None, credentials will be loaded from settings on first query.
+        Credentials are validated on first use, never logged.
+
     Example:
         >>> from py_gdelt.filters import EventFilter, DateRange
         >>> from datetime import date
@@ -448,16 +456,6 @@ class BigQuerySource:
         settings: GDELTSettings | None = None,
         client: bigquery.Client | None = None,
     ) -> None:
-        """Initialize BigQuerySource.
-
-        Args:
-            settings: GDELT settings (creates default if None)
-            client: BigQuery client (creates new one if None, caller owns lifecycle)
-
-        Note:
-            If client is None, credentials will be loaded from settings on first query.
-            Credentials are validated on first use, never logged.
-        """
         self.settings = settings or GDELTSettings()
         self._client = client
         self._owns_client = client is None
@@ -575,7 +573,7 @@ class BigQuerySource:
             limit: Maximum number of rows to return (None for unlimited)
 
         Yields:
-            Dictionary of column name -> value for each row
+            dict[str, Any]: Dictionary of column name -> value for each row
 
         Raises:
             BigQueryError: If query execution fails
@@ -636,7 +634,7 @@ class BigQuerySource:
             limit: Maximum number of rows to return (None for unlimited)
 
         Yields:
-            Dictionary of column name -> value for each row
+            dict[str, Any]: Dictionary of column name -> value for each row
 
         Raises:
             BigQueryError: If query execution fails
@@ -696,7 +694,7 @@ class BigQuerySource:
             date_range: Optional date range to narrow search (recommended for performance)
 
         Yields:
-            Dictionary of column name -> value for each mention row
+            dict[str, Any]: Dictionary of column name -> value for each mention row
 
         Raises:
             BigQueryError: If query execution fails
@@ -768,7 +766,7 @@ class BigQuerySource:
             parameters: List of query parameters
 
         Yields:
-            Dictionary of column name -> value for each row
+            dict[str, Any]: Dictionary of column name -> value for each row
 
         Raises:
             BigQueryError: If query execution fails

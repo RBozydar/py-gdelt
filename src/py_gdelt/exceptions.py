@@ -56,19 +56,13 @@ class RateLimitError(APIError):
     """
     Raised when API rate limits are exceeded.
 
-    Attributes:
+    Args:
+        message: Error description
         retry_after: Optional number of seconds to wait before retrying.
                     None if the retry duration is unknown.
     """
 
     def __init__(self, message: str, retry_after: int | None = None) -> None:
-        """
-        Initialize RateLimitError.
-
-        Args:
-            message: Error description
-            retry_after: Optional seconds to wait before retry
-        """
         super().__init__(message)
         self.retry_after = retry_after
 
@@ -109,18 +103,12 @@ class ParseError(DataError, ValueError):
     """
     Raised when data parsing fails.
 
-    Attributes:
+    Args:
+        message: Error description
         raw_data: Optional raw data that failed to parse, for debugging purposes.
     """
 
     def __init__(self, message: str, raw_data: str | None = None) -> None:
-        """
-        Initialize ParseError.
-
-        Args:
-            message: Error description
-            raw_data: Optional raw data that failed parsing
-        """
         super().__init__(message)
         self.raw_data = raw_data
 
@@ -148,20 +136,13 @@ class InvalidCodeError(ValidationError):
     """
     Raised when an invalid GDELT code is encountered.
 
-    Attributes:
+    Args:
+        message: Error description
         code: The invalid code value
         code_type: Type of code (e.g., "cameo", "theme", "country", "fips")
     """
 
     def __init__(self, message: str, code: str, code_type: str) -> None:
-        """
-        Initialize InvalidCodeError.
-
-        Args:
-            message: Error description
-            code: The invalid code value
-            code_type: Type of code (cameo, theme, country, fips, etc.)
-        """
         super().__init__(message)
         self.code = code
         self.code_type = code_type

@@ -106,6 +106,9 @@ class ContextEndpoint(BaseEndpoint):
     Provides contextual information about search terms including
     related themes, entities, and sentiment analysis.
 
+    Attributes:
+        BASE_URL: Base URL for the Context API endpoint
+
     Example:
         async with ContextEndpoint() as ctx:
             result = await ctx.analyze("climate change")

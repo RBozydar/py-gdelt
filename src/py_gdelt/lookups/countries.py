@@ -27,7 +27,6 @@ class Countries:
     """
 
     def __init__(self) -> None:
-        """Initialize Countries with lazy-loaded data."""
         self._countries: dict[str, CountryEntry] | None = None
         self._iso_to_fips_map: dict[str, str] | None = None
 

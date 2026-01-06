@@ -43,6 +43,18 @@ class GKGEndpoint:
     - Files are ALWAYS primary (free, no credentials needed)
     - BigQuery is FALLBACK ONLY (on 429/error, if credentials configured)
 
+    Args:
+        file_source: FileSource instance for downloading GDELT files
+        bigquery_source: Optional BigQuerySource instance for fallback queries
+        settings: Optional GDELTSettings for configuration (currently unused but
+            reserved for future features like caching)
+        fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
+        error_policy: How to handle errors - 'raise', 'warn', or 'skip' (default: 'warn')
+
+    Note:
+        BigQuery fallback only activates if both fallback_enabled=True AND
+        bigquery_source is provided AND credentials are configured.
+
     Example:
         Basic GKG query:
 
@@ -80,9 +92,6 @@ class GKGEndpoint:
         >>> result = endpoint.query_sync(filter_obj)
         >>> for record in result:
         ...     print(record.record_id)
-
-    Attributes:
-        _fetcher: DataFetcher instance for orchestrating data sources
     """
 
     def __init__(
@@ -94,20 +103,6 @@ class GKGEndpoint:
         fallback_enabled: bool = True,
         error_policy: ErrorPolicy = "warn",
     ) -> None:
-        """Initialize GKGEndpoint with data sources.
-
-        Args:
-            file_source: FileSource instance for downloading GDELT files
-            bigquery_source: Optional BigQuerySource instance for fallback queries
-            settings: Optional GDELTSettings for configuration (currently unused but
-                reserved for future features like caching)
-            fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
-            error_policy: How to handle errors - 'raise', 'warn', or 'skip' (default: 'warn')
-
-        Note:
-            BigQuery fallback only activates if both fallback_enabled=True AND
-            bigquery_source is provided AND credentials are configured.
-        """
         from py_gdelt.sources.fetcher import DataFetcher
 
         self._settings = settings
@@ -196,7 +191,7 @@ class GKGEndpoint:
             use_bigquery: If True, skip files and use BigQuery directly (default: False)
 
         Yields:
-            GKGRecord instances for each matching record
+            GKGRecord: Individual GKG records matching the filter criteria
 
         Raises:
             RateLimitError: If rate limited and fallback not available/enabled
@@ -288,8 +283,8 @@ class GKGEndpoint:
             filter_obj: GKG filter with date range and query parameters
             use_bigquery: If True, skip files and use BigQuery directly (default: False)
 
-        Yields:
-            GKGRecord instances for each matching record
+        Returns:
+            Iterator of GKGRecord instances for each matching record
 
         Raises:
             RateLimitError: If rate limited and fallback not available/enabled

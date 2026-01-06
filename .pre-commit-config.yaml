@@ -33,6 +33,23 @@ repos:
         args: [--strict, --ignore-missing-imports]
         files: ^src/
 
+  - repo: local
+    hooks:
+      - id: interrogate
+        name: interrogate (docstring coverage)
+        entry: uv run interrogate src/py_gdelt
+        language: system
+        pass_filenames: false
+        types: [python]
+        files: ^src/
+      - id: pydoclint
+        name: pydoclint (docstring quality)
+        entry: uv run pydoclint src/py_gdelt
+        language: system
+        pass_filenames: false
+        types: [python]
+        files: ^src/
+
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.18.0
     hooks:

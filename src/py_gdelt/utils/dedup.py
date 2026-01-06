@@ -67,6 +67,7 @@ def get_dedup_key(record: HasDedupeFields, strategy: DedupeStrategy) -> tuple[st
 
     # Normalize None to empty string for consistent comparison
     def normalize(value: str | None) -> str:
+        """Convert None to empty string for consistent key comparison."""
         return value if value is not None else ""
 
     if strategy == DedupeStrategy.URL_ONLY:
@@ -122,8 +123,8 @@ def deduplicate(
         strategy: Deduplication strategy to use (default: URL_DATE_LOCATION)
 
     Yields:
-        Unique records based on the strategy. First occurrence is kept,
-        subsequent duplicates are filtered out.
+        T: Unique records based on the strategy. First occurrence is kept,
+            subsequent duplicates are filtered out.
 
     Example:
         >>> records = fetch_events(...)
@@ -160,8 +161,8 @@ async def deduplicate_async(
         strategy: Deduplication strategy to use (default: URL_DATE_LOCATION)
 
     Yields:
-        Unique records based on the strategy. First occurrence is kept,
-        subsequent duplicates are filtered out.
+        T: Unique records based on the strategy. First occurrence is kept,
+            subsequent duplicates are filtered out.
 
     Example:
         >>> async for event in deduplicate_async(fetch_events(...)):

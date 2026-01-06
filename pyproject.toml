@@ -361,6 +361,7 @@ exclude = '\.git|\.venv|build|dist|__pycache__|tests'
 require-return-section-when-returning-nothing = false
 check-return-types = false  # Covered by mypy
 arg-type-hints-in-docstring = false  # Using type hints in signatures
+skip-checking-raises = true  # Allow Raises sections to document delegated/inherited exceptions
 
 [tool.interrogate]
 ignore-init-method = true

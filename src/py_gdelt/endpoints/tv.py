@@ -143,6 +143,9 @@ class TVEndpoint(BaseEndpoint):
     The endpoint handles date formatting, parameter building, and response
     parsing automatically.
 
+    Attributes:
+        BASE_URL: API endpoint URL for TV queries
+
     Example:
         async with TVEndpoint() as tv:
             clips = await tv.search("election", station="CNN")
@@ -392,6 +395,9 @@ class TVAIEndpoint(BaseEndpoint):
 
     Similar to TVEndpoint but uses AI-powered features for enhanced analysis.
     Uses the same data models and similar interface as TVEndpoint.
+
+    Attributes:
+        BASE_URL: API endpoint URL for TVAI queries
 
     Example:
         async with TVAIEndpoint() as tvai:

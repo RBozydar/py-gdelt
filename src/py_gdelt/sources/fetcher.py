@@ -63,8 +63,8 @@ class Parser(Protocol[T_co]):
             data: Raw file content as bytes
             is_translated: Whether this is from the translated feed
 
-        Yields:
-            Parsed records of type T
+        Returns:
+            Iterator of parsed records
 
         Raises:
             ParseError: If parsing fails
@@ -97,6 +97,16 @@ class DataFetcher:
     it easy to test and configure. It supports configurable error handling policies
     and structured logging for all fallback events.
 
+    Args:
+        file_source: FileSource instance for downloading GDELT files
+        bigquery_source: Optional BigQuerySource instance for fallback queries
+        fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
+        error_policy: How to handle errors - 'raise', 'warn', or 'skip' (default: 'warn')
+
+    Note:
+        BigQuery fallback only activates if both fallback_enabled=True AND
+        bigquery_source is provided AND credentials are configured.
+
     Example:
         >>> async with FileSource() as file_source:
         ...     fetcher = DataFetcher(
@@ -108,12 +118,6 @@ class DataFetcher:
         ...     )
         ...     async for event in fetcher.fetch_events(filter_obj):
         ...         print(event.global_event_id)
-
-    Attributes:
-        file_source: FileSource instance for file downloads
-        bigquery_source: Optional BigQuerySource instance for fallback
-        fallback_enabled: Whether to fallback to BigQuery on errors
-        error_policy: How to handle errors ('raise', 'warn', 'skip')
     """
 
     def __init__(
@@ -124,18 +128,6 @@ class DataFetcher:
         fallback_enabled: bool = True,
         error_policy: ErrorPolicy = "warn",
     ) -> None:
-        """Initialize DataFetcher with source dependencies.
-
-        Args:
-            file_source: FileSource instance for downloading GDELT files
-            bigquery_source: Optional BigQuerySource instance for fallback queries
-            fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
-            error_policy: How to handle errors - 'raise', 'warn', or 'skip' (default: 'warn')
-
-        Note:
-            BigQuery fallback only activates if both fallback_enabled=True AND
-            bigquery_source is provided AND credentials are configured.
-        """
         self._file = file_source
         self._bq = bigquery_source
         self._fallback = fallback_enabled and bigquery_source is not None
@@ -165,7 +157,7 @@ class DataFetcher:
             use_bigquery: If True, skip file downloads and use BigQuery directly
 
         Yields:
-            Parsed records of type T
+            R: Parsed records
 
         Raises:
             RateLimitError: If rate limited and fallback not available/enabled
@@ -230,7 +222,7 @@ class DataFetcher:
             parser: Parser instance to convert raw bytes into typed records
 
         Yields:
-            Parsed records of type T
+            R: Parsed records
 
         Raises:
             RateLimitError: If rate limited by file server
@@ -315,7 +307,7 @@ class DataFetcher:
             parser: Parser instance (not used for BigQuery, kept for interface consistency)
 
         Yields:
-            Records from BigQuery (as dictionaries)
+            R: Records from BigQuery (as dictionaries)
 
         Raises:
             ConfigurationError: If BigQuery not configured
@@ -382,7 +374,7 @@ class DataFetcher:
             use_bigquery: If True, skip files and use BigQuery directly
 
         Yields:
-            _RawEvent instances
+            _RawEvent: Event instances
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -421,7 +413,7 @@ class DataFetcher:
             use_bigquery: If True, skip files and use BigQuery directly
 
         Yields:
-            _RawMention instances
+            _RawMention: Mention instances
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -476,7 +468,7 @@ class DataFetcher:
             use_bigquery: If True, skip files and use BigQuery directly
 
         Yields:
-            _RawGKG instances
+            _RawGKG: GKG record instances
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -511,7 +503,7 @@ class DataFetcher:
                        applied client-side in NGramsEndpoint)
 
         Yields:
-            _RawNGram instances
+            _RawNGram: NGram record instances
 
         Raises:
             RateLimitError: If rate limited

@@ -30,6 +30,9 @@ class DocEndpoint(BaseEndpoint):
     with support for various output modes (article lists, timelines, galleries)
     and flexible filtering by time, source, language, and relevance.
 
+    Attributes:
+        BASE_URL: Base URL for the DOC API endpoint
+
     Example:
         Basic article search:
 
@@ -82,7 +85,7 @@ class DocEndpoint(BaseEndpoint):
         mapping of sort values to API parameter names.
 
         Args:
-            filter: Query filter with search parameters.
+            query_filter: Query filter with search parameters.
 
         Returns:
             Dict of query parameters ready for API request.

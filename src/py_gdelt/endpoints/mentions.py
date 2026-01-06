@@ -45,10 +45,20 @@ class MentionsEndpoint:
     - Primary: File downloads (free, no credentials needed)
     - Fallback: BigQuery (on rate limit/error, if credentials configured)
 
+    Args:
+        file_source: FileSource instance for downloading GDELT files
+        bigquery_source: Optional BigQuerySource instance for fallback queries
+        settings: Optional GDELTSettings for configuration (currently unused but
+            reserved for future features like caching)
+        fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
+        error_policy: How to handle errors - 'raise', 'warn', or 'skip' (default: 'warn')
+
     Note:
         Mentions queries require BigQuery as files don't support event-specific filtering.
         File downloads would require fetching entire date ranges and filtering client-side,
         which is inefficient for single-event queries.
+        BigQuery fallback only activates if both fallback_enabled=True AND
+        bigquery_source is provided AND credentials are configured.
 
     Example:
         >>> from datetime import date
@@ -74,9 +84,6 @@ class MentionsEndpoint:
         ...     # Streaming query
         ...     async for mention in endpoint.stream(global_event_id="123456789", filter_obj=filter_obj):
         ...         print(mention.source_name)
-
-    Attributes:
-        _fetcher: DataFetcher instance for source orchestration
     """
 
     def __init__(
@@ -88,21 +95,6 @@ class MentionsEndpoint:
         fallback_enabled: bool = True,
         error_policy: ErrorPolicy = "warn",
     ) -> None:
-        """Initialize MentionsEndpoint with data sources.
-
-        Args:
-            file_source: FileSource instance for downloading GDELT files
-            bigquery_source: Optional BigQuerySource instance for fallback queries
-            settings: Optional GDELTSettings for configuration (currently unused but
-                reserved for future features like caching)
-            fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
-            error_policy: How to handle errors - 'raise', 'warn', or 'skip' (default: 'warn')
-
-        Note:
-            Mentions queries require BigQuery as files don't support event-specific filtering.
-            BigQuery fallback only activates if both fallback_enabled=True AND
-            bigquery_source is provided AND credentials are configured.
-        """
         from py_gdelt.sources.fetcher import DataFetcher
 
         self._settings = settings
@@ -352,8 +344,8 @@ class MentionsEndpoint:
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True)
 
-        Yields:
-            Mention: Individual mention records
+        Returns:
+            Iterator of individual Mention records
 
         Raises:
             ConfigurationError: If BigQuery not configured but required

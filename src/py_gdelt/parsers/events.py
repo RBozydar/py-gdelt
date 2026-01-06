@@ -41,6 +41,10 @@ class EventsParser:
     formats, automatically detecting the version from the column count and
     mapping columns appropriately.
 
+    Attributes:
+        V2_COLUMNS: Column name to index mapping for v2 format (61 columns)
+        V1_COLUMNS: Column name to index mapping for v1 format (57 columns)
+
     Example:
         >>> parser = EventsParser()
         >>> data = b"123\\t20240101\\t..."  # Raw event data
@@ -242,7 +246,7 @@ class EventsParser:
             is_translated: Whether this is from the translated feed
 
         Yields:
-            _RawEvent instances for each valid row
+            _RawEvent: _RawEvent instances for each valid row
 
         Raises:
             ParseError: If the file format is completely invalid or unreadable
