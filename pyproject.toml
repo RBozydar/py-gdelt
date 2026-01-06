@@ -56,6 +56,11 @@ dev = [
     "commitizen>=3.0",
     "memray>=1.19.1",
 ]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.0",
+    "mkdocstrings[python]>=0.24",
+]
 
 [tool.ruff]
 target-version = "py312"
@@ -288,6 +293,10 @@ disallow_untyped_defs = false
 disallow_incomplete_defs = false
 disallow_untyped_calls = false
 disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = ["google.cloud.*", "pandas.*"]
+ignore_missing_imports = true
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
@@ -352,7 +361,7 @@ exclude_lines = [
 directory = "htmlcov"
 
 [tool.bandit]
-targets = ["deep_research"]
+targets = ["src/py_gdelt"]
 exclude_dirs = ["/tests", "/examples"]
 
 [tool.pydoclint]

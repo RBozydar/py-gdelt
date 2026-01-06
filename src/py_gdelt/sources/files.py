@@ -92,7 +92,8 @@ class FileSource:
     async def __aenter__(self) -> "FileSource":
         """Async context manager entry."""
         if self._owns_client:
-            self._client = httpx.AsyncClient(timeout=self.settings.timeout)
+            limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
+            self._client = httpx.AsyncClient(limits=limits, timeout=self.settings.timeout)
         return self
 
     async def __aexit__(self, *args: object) -> None:
