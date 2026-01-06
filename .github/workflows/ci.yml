@@ -170,7 +170,7 @@ jobs:
           uv run coverage report --fail-under=80
 
       - name: Security audit
-        run: uv run pip-audit
+        run: uv run pip-audit --skip-editable
 
   # Summary job that depends on all checks
   ci-success:
