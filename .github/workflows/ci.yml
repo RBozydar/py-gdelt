@@ -170,7 +170,7 @@ jobs:
           uv run coverage report --fail-under=80
 
       - name: Security audit
-        run: uv run pip-audit --skip-editable
+        run: uv run pip-audit --skip-editable --ignore-vuln PYSEC-2022-42969  # disputed/withdrawn CVE in py (interrogate dep)
 
   # Summary job that depends on all checks
   ci-success:
