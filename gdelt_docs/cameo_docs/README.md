@@ -1,0 +1,2 @@
+This folder contains the [CAMEO Manual](http://gdeltproject.org/data/documentation/CAMEO.Manual.1.1b3.pdf) transformed to markdown files using `docling`.
+It also contains individual chapter markdown files.
