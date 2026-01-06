@@ -1,0 +1,1266 @@
+{
+  "01": {
+    "value": 0.0,
+    "description": "MAKE PUBLIC STATEMENT"
+  },
+  "010": {
+    "value": 0.0,
+    "description": "Make statement, not specified below"
+  },
+  "011": {
+    "value": -0.1,
+    "description": "Decline comment"
+  },
+  "012": {
+    "value": -0.4,
+    "description": "Make pessimistic comment"
+  },
+  "013": {
+    "value": 0.4,
+    "description": "Make optimistic comment"
+  },
+  "014": {
+    "value": 0.0,
+    "description": "Consider policy option"
+  },
+  "015": {
+    "value": -0.7,
+    "description": "Acknowledge or claim responsibility"
+  },
+  "016": {
+    "value": 3.4,
+    "description": "Deny responsibility"
+  },
+  "017": {
+    "value": -4.4,
+    "description": "Engage in symbolic act"
+  },
+  "018": {
+    "value": -4.5,
+    "description": "Make empathetic comment"
+  },
+  "019": {
+    "value": -0.3,
+    "description": "Express accord"
+  },
+  "02": {
+    "value": 1.0,
+    "description": "APPEAL"
+  },
+  "020": {
+    "value": 1.0,
+    "description": "Make an appeal or request, not specified below"
+  },
+  "021": {
+    "value": 1.5,
+    "description": "Appeal for material cooperation, not specified below"
+  },
+  "0211": {
+    "value": 1.5,
+    "description": "Appeal for economic cooperation"
+  },
+  "0212": {
+    "value": 1.5,
+    "description": "Appeal for military cooperation"
+  },
+  "0213": {
+    "value": 1.5,
+    "description": "Appeal for judicial cooperation"
+  },
+  "0214": {
+    "value": 1.5,
+    "description": "Appeal for intelligence"
+  },
+  "022": {
+    "value": 1.5,
+    "description": "Appeal for diplomatic cooperation (such as policy support)"
+  },
+  "023": {
+    "value": 2.0,
+    "description": "Appeal for aid, not specified below"
+  },
+  "0231": {
+    "value": 2.0,
+    "description": "Appeal for economic aid"
+  },
+  "0232": {
+    "value": 2.0,
+    "description": "Appeal for military aid"
+  },
+  "0233": {
+    "value": 2.5,
+    "description": "Appeal for humanitarian aid"
+  },
+  "0234": {
+    "value": 2.5,
+    "description": "Appeal for military protection or peacekeeping"
+  },
+  "024": {
+    "value": 1.5,
+    "description": "Appeal for political reform, not specified below"
+  },
+  "0241": {
+    "value": 1.5,
+    "description": "Appeal for change in leadership"
+  },
+  "0242": {
+    "value": 1.5,
+    "description": "Appeal for policy change"
+  },
+  "0243": {
+    "value": 1.5,
+    "description": "Appeal for rights"
+  },
+  "0244": {
+    "value": 1.5,
+    "description": "Appeal for change in institutions, regime"
+  },
+  "025": {
+    "value": 2.0,
+    "description": "Appeal to yield, not specified below"
+  },
+  "0251": {
+    "value": 2.0,
+    "description": "Appeal for easing of administrative sanctions"
+  },
+  "0252": {
+    "value": 2.0,
+    "description": "Appeal for easing of political dissent"
+  },
+  "0253": {
+    "value": 2.5,
+    "description": "Appeal for release of persons or property"
+  },
+  "0254": {
+    "value": 2.0,
+    "description": "Appeal for easing of economic sanctions, boycott, or embargo"
+  },
+  "0255": {
+    "value": 2.0,
+    "description": "Appeal for target to allow international involvement (non-mediation)"
+  },
+  "0256": {
+    "value": 2.5,
+    "description": "Appeal for de-escalation of military engagement"
+  },
+  "026": {
+    "value": 2.0,
+    "description": "Appeal to others to meet or negotiate"
+  },
+  "027": {
+    "value": 2.5,
+    "description": "Appeal to others to settle dispute"
+  },
+  "028": {
+    "value": 2.5,
+    "description": "Appeal to engage in or accept mediation"
+  },
+  "03": {
+    "value": 2.0,
+    "description": "EXPRESS INTENT TO COOPERATE"
+  },
+  "030": {
+    "value": 2.0,
+    "description": "Express intent to cooperate, not specified below"
+  },
+  "031": {
+    "value": 2.5,
+    "description": "Express intent to engage in material cooperation, not specified below"
+  },
+  "0311": {
+    "value": 2.5,
+    "description": "Express intent to cooperate economically"
+  },
+  "0312": {
+    "value": 2.5,
+    "description": "Express intent to cooperate militarily"
+  },
+  "0313": {
+    "value": 2.5,
+    "description": "Express intent to cooperate on judicial matters"
+  },
+  "0314": {
+    "value": 2.5,
+    "description": "Express intent to cooperate on intelligence"
+  },
+  "032": {
+    "value": 2.0,
+    "description": "Express intent to engage in diplomatic cooperation (such as policy support)"
+  },
+  "033": {
+    "value": 3.0,
+    "description": "Express intent to provide material aid, not specified below"
+  },
+  "0331": {
+    "value": 3.5,
+    "description": "Express intent to provide economic aid"
+  },
+  "0332": {
+    "value": 3.5,
+    "description": "Express intent to provide military aid"
+  },
+  "0333": {
+    "value": 3.5,
+    "description": "Express intent to provide humanitarian aid"
+  },
+  "0334": {
+    "value": 3.5,
+    "description": "Express intent to provide military protection or peacekeeping"
+  },
+  "034": {
+    "value": 2.0,
+    "description": "Express intent to institute political reform, not specified below"
+  },
+  "0341": {
+    "value": 2.0,
+    "description": "Express intent to change leadership"
+  },
+  "0342": {
+    "value": 2.0,
+    "description": "Express intent to change policy"
+  },
+  "0343": {
+    "value": 2.0,
+    "description": "Express intent to provide rights"
+  },
+  "0344": {
+    "value": 2.0,
+    "description": "Express intent to change institutions, regime"
+  },
+  "035": {
+    "value": 3.0,
+    "description": "Express intent to yield, not specified below"
+  },
+  "0351": {
+    "value": 3.0,
+    "description": "Express intent to ease administrative sanctions"
+  },
+  "0352": {
+    "value": 3.0,
+    "description": "Express intent to ease popular dissent"
+  },
+  "0353": {
+    "value": 3.0,
+    "description": "Express intent to release persons or property"
+  },
+  "0354": {
+    "value": 3.0,
+    "description": "Express intent to ease economic sanctions, boycott, or embargo"
+  },
+  "0355": {
+    "value": 3.0,
+    "description": "Express intent to allow international involvement (non-mediation)"
+  },
+  "0356": {
+    "value": 3.0,
+    "description": "Express intent to de-escalate military engagement"
+  },
+  "036": {
+    "value": 2.5,
+    "description": "Express intent to meet or negotiate"
+  },
+  "037": {
+    "value": 3.0,
+    "description": "Express intent to settle dispute"
+  },
+  "038": {
+    "value": 3.0,
+    "description": "Express intent to accept mediation"
+  },
+  "039": {
+    "value": 3.5,
+    "description": "Express intent to mediate"
+  },
+  "04": {
+    "value": 3.0,
+    "description": "CONSULT"
+  },
+  "040": {
+    "value": 3.0,
+    "description": "Consult, not specified below"
+  },
+  "041": {
+    "value": 2.5,
+    "description": "Discuss by telephone"
+  },
+  "042": {
+    "value": 3.0,
+    "description": "Make a visit"
+  },
+  "043": {
+    "value": 3.0,
+    "description": "Host a visit"
+  },
+  "044": {
+    "value": 3.5,
+    "description": "Meet at a \"third\" location"
+  },
+  "045": {
+    "value": 4.0,
+    "description": "Mediate"
+  },
+  "046": {
+    "value": 4.0,
+    "description": "Engage in negotiation"
+  },
+  "05": {
+    "value": 4.0,
+    "description": "ENGAGE IN DIPLOMATIC COOPERATION"
+  },
+  "050": {
+    "value": 4.0,
+    "description": "Engage in diplomatic cooperation, not specified below"
+  },
+  "051": {
+    "value": 3.5,
+    "description": "Praise or endorse"
+  },
+  "052": {
+    "value": 3.5,
+    "description": "Defend verbally"
+  },
+  "053": {
+    "value": 4.0,
+    "description": "Rally support on behalf of"
+  },
+  "054": {
+    "value": 5.0,
+    "description": "Grant diplomatic recognition"
+  },
+  "055": {
+    "value": 4.5,
+    "description": "Apologize"
+  },
+  "056": {
+    "value": 5.0,
+    "description": "Forgive"
+  },
+  "057": {
+    "value": 5.0,
+    "description": "Sign formal agreement"
+  },
+  "06": {
+    "value": 4.0,
+    "description": "ENGAGE IN MATERIAL COOPERATION"
+  },
+  "060": {
+    "value": 4.0,
+    "description": "Engage in material cooperation, not specified below"
+  },
+  "061": {
+    "value": 5.0,
+    "description": "Cooperate economically"
+  },
+  "062": {
+    "value": 4.5,
+    "description": "Cooperate militarily"
+  },
+  "063": {
+    "value": 4.0,
+    "description": "Engage in judicial cooperation"
+  },
+  "064": {
+    "value": 4.5,
+    "description": "Share intelligence or information"
+  },
+  "07": {
+    "value": 6.0,
+    "description": "PROVIDE AID"
+  },
+  "070": {
+    "value": 6.0,
+    "description": "Provide aid, not specified below"
+  },
+  "071": {
+    "value": 7.0,
+    "description": "Provide economic aid"
+  },
+  "072": {
+    "value": 6.0,
+    "description": "Provide military aid"
+  },
+  "073": {
+    "value": 7.5,
+    "description": "Provide humanitarian aid"
+  },
+  "074": {
+    "value": 6.5,
+    "description": "Provide military protection or peacekeeping"
+  },
+  "075": {
+    "value": 6.0,
+    "description": "Grant asylum"
+  },
+  "08": {
+    "value": 5.0,
+    "description": "YIELD"
+  },
+  "080": {
+    "value": 5.0,
+    "description": "Yield, not specified below"
+  },
+  "081": {
+    "value": 5.5,
+    "description": "Ease administrative sanctions, not specified below"
+  },
+  "0811": {
+    "value": 5.5,
+    "description": "Ease restrictions on political freedoms"
+  },
+  "0812": {
+    "value": 5.5,
+    "description": "Ease ban on political parties or politicians"
+  },
+  "0813": {
+    "value": 5.0,
+    "description": "Ease curfew"
+  },
+  "0814": {
+    "value": 5.0,
+    "description": "Ease state of emergency or martial law"
+  },
+  "082": {
+    "value": 4.5,
+    "description": "Ease political dissent"
+  },
+  "083": {
+    "value": 6.0,
+    "description": "Accede to requests or demands for political reform, not specified below"
+  },
+  "0831": {
+    "value": 6.5,
+    "description": "Accede to demands for change in leadership"
+  },
+  "0832": {
+    "value": 6.0,
+    "description": "Accede to demands for change in policy"
+  },
+  "0833": {
+    "value": 6.5,
+    "description": "Accede to demands for rights"
+  },
+  "0834": {
+    "value": 7.0,
+    "description": "Accede to demands for change in institutions, regime"
+  },
+  "084": {
+    "value": 5.5,
+    "description": "Return, release, not specified below"
+  },
+  "0841": {
+    "value": 6.0,
+    "description": "Return, release person(s)"
+  },
+  "0842": {
+    "value": 5.5,
+    "description": "Return, release property"
+  },
+  "085": {
+    "value": 6.0,
+    "description": "Ease economic sanctions, boycott, embargo"
+  },
+  "086": {
+    "value": 5.0,
+    "description": "Allow international involvement, not specified below"
+  },
+  "0861": {
+    "value": 5.5,
+    "description": "Receive deployment of peacekeepers"
+  },
+  "0862": {
+    "value": 5.0,
+    "description": "Receive inspectors"
+  },
+  "0863": {
+    "value": 6.5,
+    "description": "Allow humanitarian access"
+  },
+  "087": {
+    "value": 6.5,
+    "description": "De-escalate military engagement"
+  },
+  "0871": {
+    "value": 7.0,
+    "description": "Declare truce, ceasefire"
+  },
+  "0872": {
+    "value": 6.5,
+    "description": "Ease military blockade"
+  },
+  "0873": {
+    "value": 7.5,
+    "description": "Demobilize armed forces"
+  },
+  "0874": {
+    "value": 8.0,
+    "description": "Retreat or surrender militarily"
+  },
+  "09": {
+    "value": -2.0,
+    "description": "INVESTIGATE"
+  },
+  "090": {
+    "value": -2.0,
+    "description": "Investigate, not specified below"
+  },
+  "091": {
+    "value": -2.5,
+    "description": "Investigate crime, corruption"
+  },
+  "092": {
+    "value": -3.0,
+    "description": "Investigate human rights abuses"
+  },
+  "093": {
+    "value": -2.5,
+    "description": "Investigate military action"
+  },
+  "094": {
+    "value": -3.5,
+    "description": "Investigate war crimes"
+  },
+  "10": {
+    "value": -2.2,
+    "description": "DEMAND"
+  },
+  "100": {
+    "value": -2.2,
+    "description": "Demand, not specified below"
+  },
+  "101": {
+    "value": -2.5,
+    "description": "Demand material cooperation, not specified below"
+  },
+  "1011": {
+    "value": -2.5,
+    "description": "Demand economic cooperation"
+  },
+  "1012": {
+    "value": -3.0,
+    "description": "Demand military cooperation"
+  },
+  "1013": {
+    "value": -2.5,
+    "description": "Demand judicial cooperation"
+  },
+  "1014": {
+    "value": -2.5,
+    "description": "Demand intelligence cooperation"
+  },
+  "102": {
+    "value": -2.0,
+    "description": "Demand diplomatic cooperation (such as policy support)"
+  },
+  "103": {
+    "value": -2.5,
+    "description": "Demand material aid, not specified below"
+  },
+  "1031": {
+    "value": -2.5,
+    "description": "Demand economic aid"
+  },
+  "1032": {
+    "value": -3.0,
+    "description": "Demand military aid"
+  },
+  "1033": {
+    "value": -2.0,
+    "description": "Demand humanitarian aid"
+  },
+  "1034": {
+    "value": -3.0,
+    "description": "Demand military protection or peacekeeping"
+  },
+  "104": {
+    "value": -3.0,
+    "description": "Demand political reform, not specified below"
+  },
+  "1041": {
+    "value": -3.5,
+    "description": "Demand change in leadership"
+  },
+  "1042": {
+    "value": -3.0,
+    "description": "Demand policy change"
+  },
+  "1043": {
+    "value": -2.5,
+    "description": "Demand rights"
+  },
+  "1044": {
+    "value": -3.5,
+    "description": "Demand change in institutions, regime"
+  },
+  "105": {
+    "value": -3.0,
+    "description": "Demand that target yields, not specified below"
+  },
+  "1051": {
+    "value": -3.0,
+    "description": "Demand easing of administrative sanctions"
+  },
+  "1052": {
+    "value": -3.0,
+    "description": "Demand easing of political dissent"
+  },
+  "1053": {
+    "value": -3.5,
+    "description": "Demand release of persons or property"
+  },
+  "1054": {
+    "value": -3.0,
+    "description": "Demand easing of economic sanctions, boycott, or embargo"
+  },
+  "1055": {
+    "value": -2.5,
+    "description": "Demand that target allows international involvement (non-mediation)"
+  },
+  "1056": {
+    "value": -3.5,
+    "description": "Demand de-escalation of military engagement"
+  },
+  "106": {
+    "value": -2.0,
+    "description": "Demand meeting, negotiation"
+  },
+  "107": {
+    "value": -2.5,
+    "description": "Demand settling of dispute"
+  },
+  "108": {
+    "value": -2.0,
+    "description": "Demand mediation"
+  },
+  "11": {
+    "value": -3.0,
+    "description": "DISAPPROVE"
+  },
+  "110": {
+    "value": -3.0,
+    "description": "Disapprove, not specified below"
+  },
+  "111": {
+    "value": -3.5,
+    "description": "Criticize or denounce"
+  },
+  "112": {
+    "value": -4.0,
+    "description": "Accuse, not specified below"
+  },
+  "1121": {
+    "value": -4.5,
+    "description": "Accuse of crime, corruption"
+  },
+  "1122": {
+    "value": -5.0,
+    "description": "Accuse of human rights abuses"
+  },
+  "1123": {
+    "value": -4.5,
+    "description": "Accuse of aggression"
+  },
+  "1124": {
+    "value": -5.5,
+    "description": "Accuse of war crimes"
+  },
+  "1125": {
+    "value": -5.0,
+    "description": "Accuse of espionage, treason"
+  },
+  "113": {
+    "value": -4.0,
+    "description": "Rally opposition against"
+  },
+  "114": {
+    "value": -3.0,
+    "description": "Complain officially"
+  },
+  "115": {
+    "value": -3.5,
+    "description": "Bring lawsuit against"
+  },
+  "116": {
+    "value": -4.0,
+    "description": "Find guilty or liable (legally)"
+  },
+  "12": {
+    "value": -3.5,
+    "description": "REJECT"
+  },
+  "120": {
+    "value": -3.5,
+    "description": "Reject, not specified below"
+  },
+  "121": {
+    "value": -3.5,
+    "description": "Reject material cooperation"
+  },
+  "1211": {
+    "value": -3.5,
+    "description": "Reject economic cooperation"
+  },
+  "1212": {
+    "value": -4.0,
+    "description": "Reject military cooperation"
+  },
+  "122": {
+    "value": -3.0,
+    "description": "Reject request or demand for material aid, not specified below"
+  },
+  "1221": {
+    "value": -3.0,
+    "description": "Reject request for economic aid"
+  },
+  "1222": {
+    "value": -3.5,
+    "description": "Reject request for military aid"
+  },
+  "1223": {
+    "value": -2.5,
+    "description": "Reject request for humanitarian aid"
+  },
+  "1224": {
+    "value": -3.5,
+    "description": "Reject request for military protection or peacekeeping"
+  },
+  "123": {
+    "value": -4.0,
+    "description": "Reject request or demand for political reform, not specified below"
+  },
+  "1231": {
+    "value": -4.5,
+    "description": "Reject request for change in leadership"
+  },
+  "1232": {
+    "value": -4.0,
+    "description": "Reject request for policy change"
+  },
+  "1233": {
+    "value": -3.5,
+    "description": "Reject request for rights"
+  },
+  "1234": {
+    "value": -4.5,
+    "description": "Reject request for change in institutions, regime"
+  },
+  "124": {
+    "value": -4.0,
+    "description": "Refuse to yield, not specified below"
+  },
+  "1241": {
+    "value": -4.0,
+    "description": "Refuse to ease administrative sanctions"
+  },
+  "1242": {
+    "value": -4.5,
+    "description": "Refuse to ease popular dissent"
+  },
+  "1243": {
+    "value": -4.5,
+    "description": "Refuse to release persons or property"
+  },
+  "1244": {
+    "value": -4.0,
+    "description": "Refuse to ease economic sanctions, boycott, or embargo"
+  },
+  "1245": {
+    "value": -3.5,
+    "description": "Refuse to allow international involvement (non mediation)"
+  },
+  "1246": {
+    "value": -4.5,
+    "description": "Refuse to de-escalate military engagement"
+  },
+  "125": {
+    "value": -3.0,
+    "description": "Reject proposal to meet,"
+  },
+  "126": {
+    "value": -3.0,
+    "description": "Reject mediation"
+  },
+  "127": {
+    "value": -3.5,
+    "description": "Reject plan, agreement"
+  },
+  "128": {
+    "value": -4.5,
+    "description": "Defy"
+  },
+  "129": {
+    "value": -4.0,
+    "description": "Veto"
+  },
+  "13": {
+    "value": -4.0,
+    "description": "THREATEN"
+  },
+  "130": {
+    "value": -4.0,
+    "description": "Threaten, not specified below"
+  },
+  "131": {
+    "value": -4.0,
+    "description": "Threaten non-force, not specified below"
+  },
+  "1311": {
+    "value": -4.0,
+    "description": "Threaten to reduce or stop aid"
+  },
+  "1312": {
+    "value": -4.5,
+    "description": "Threate n with sanctions, boycott, embargo"
+  },
+  "1313": {
+    "value": -4.5,
+    "description": "Threate n to reduce or break relations"
+  },
+  "132": {
+    "value": -4.5,
+    "description": "Threate n with administrative sanctions, not specified below"
+  },
+  "1321": {
+    "value": -5.0,
+    "description": "Threate n with restrictions on political freedoms"
+  },
+  "1322": {
+    "value": -5.0,
+    "description": "Threate n to ban political parties or politicians"
+  },
+  "1323": {
+    "value": -4.5,
+    "description": "Threate n to impose curfew"
+  },
+  "1324": {
+    "value": -5.0,
+    "description": "Threate n to impose state of emergency or martial law"
+  },
+  "133": {
+    "value": -4.0,
+    "description": "Threate n with political dissent, protest"
+  },
+  "134": {
+    "value": -3.5,
+    "description": "Threate n to halt negotiations"
+  },
+  "135": {
+    "value": -3.5,
+    "description": "Threate n to halt mediation"
+  },
+  "136": {
+    "value": -3.5,
+    "description": "Threate n to halt international involvement (non-mediation)"
+  },
+  "137": {
+    "value": -5.5,
+    "description": "Threate n with repression"
+  },
+  "138": {
+    "value": -5.0,
+    "description": "Threate n with military force, not specified below"
+  },
+  "1381": {
+    "value": -5.5,
+    "description": "Threate n blockade"
+  },
+  "1382": {
+    "value": -6.0,
+    "description": "Threate n occupation"
+  },
+  "1383": {
+    "value": -6.5,
+    "description": "Threate n unconventional violence"
+  },
+  "1384": {
+    "value": -6.0,
+    "description": "Threate n conventional attack"
+  },
+  "1385": {
+    "value": -7.0,
+    "description": "Threate n attack with WMD"
+  },
+  "139": {
+    "value": -5.5,
+    "description": "Give ultimatum"
+  },
+  "14": {
+    "value": -5.0,
+    "description": "PROTEST"
+  },
+  "140": {
+    "value": -5.0,
+    "description": "Engage in political dissent, not specified below"
+  },
+  "141": {
+    "value": -4.4,
+    "description": "Demonstrate or rally, not specified below"
+  },
+  "1411": {
+    "value": -4.5,
+    "description": "Demonstrate for leadership change"
+  },
+  "1412": {
+    "value": -4.5,
+    "description": "Demonstrate for policy change"
+  },
+  "1413": {
+    "value": -4.5,
+    "description": "Demonstrate for rights"
+  },
+  "1414": {
+    "value": -4.5,
+    "description": "Demonstrate for change in institutions, regime"
+  },
+  "142": {
+    "value": -6.0,
+    "description": "Conduct hunger strike, not specified below"
+  },
+  "1421": {
+    "value": -6.0,
+    "description": "Conduct hunger strike for leadership change"
+  },
+  "1422": {
+    "value": -6.0,
+    "description": "Conduct hunger strike for policy change"
+  },
+  "1423": {
+    "value": -6.0,
+    "description": "Conduct hunger strike for rights"
+  },
+  "1424": {
+    "value": -6.0,
+    "description": "Conduct hunger strike for change in institutions, regime"
+  },
+  "143": {
+    "value": -5.6,
+    "description": "Conduct strike or boycott, not specified below"
+  },
+  "1431": {
+    "value": -6.0,
+    "description": "Conduct strike or boycott for leadership change"
+  },
+  "1432": {
+    "value": -6.0,
+    "description": "Conduct strike or boycott for policy change"
+  },
+  "1433": {
+    "value": -6.0,
+    "description": "Conduct strike or boycott for rights"
+  },
+  "1434": {
+    "value": -6.0,
+    "description": "Conduct strike or boycott for change in institutions, regime"
+  },
+  "144": {
+    "value": -6.0,
+    "description": "Obstruct passage, block, not specified below"
+  },
+  "1441": {
+    "value": -6.0,
+    "description": "Obstruct passage to demand leadership change"
+  },
+  "1442": {
+    "value": -6.0,
+    "description": "Obstruct passage to demand policy change"
+  },
+  "1443": {
+    "value": -6.0,
+    "description": "Obstruct passage to demand rights"
+  },
+  "1444": {
+    "value": -6.0,
+    "description": "Obstruct passage to demand change in institutions, regime"
+  },
+  "145": {
+    "value": -6.5,
+    "description": "Protest violently, riot, not specified below"
+  },
+  "1451": {
+    "value": -6.5,
+    "description": "Engage in violent protest for leadership change"
+  },
+  "1452": {
+    "value": -6.5,
+    "description": "Engage in violent protest for policy change"
+  },
+  "1453": {
+    "value": -6.5,
+    "description": "Engage in violent protest for rights"
+  },
+  "1454": {
+    "value": -6.5,
+    "description": "Engage in violent protest for change in institutions, regime"
+  },
+  "15": {
+    "value": -6.0,
+    "description": "EXHIBIT FORCE POSTURE"
+  },
+  "150": {
+    "value": -6.0,
+    "description": "Demonstrate military or police power, not specified below"
+  },
+  "151": {
+    "value": -5.5,
+    "description": "Increase police alert status"
+  },
+  "152": {
+    "value": -6.0,
+    "description": "Increase military alert status"
+  },
+  "153": {
+    "value": -6.0,
+    "description": "Mobilize or increase police power"
+  },
+  "154": {
+    "value": -6.5,
+    "description": "Mobilize or increase armed forces"
+  },
+  "155": {
+    "value": -6.5,
+    "description": "Mobilize or increase cyber-forces"
+  },
+  "16": {
+    "value": -6.5,
+    "description": "REDUCE RELATIONS"
+  },
+  "160": {
+    "value": -6.5,
+    "description": "Reduce relations, not specified below"
+  },
+  "161": {
+    "value": -7.0,
+    "description": "Reduce or break diplomatic relations"
+  },
+  "162": {
+    "value": -6.5,
+    "description": "Reduce or stop material aid, not specified below"
+  },
+  "1621": {
+    "value": -6.5,
+    "description": "Reduce or stop economic assistance"
+  },
+  "1622": {
+    "value": -7.0,
+    "description": "Reduce or stop military assistance"
+  },
+  "1623": {
+    "value": -6.0,
+    "description": "Reduce or stop humanitarian assistance"
+  },
+  "163": {
+    "value": -7.0,
+    "description": "Impose embargo, boycott, or sanctions"
+  },
+  "164": {
+    "value": -6.0,
+    "description": "Halt negotiations"
+  },
+  "165": {
+    "value": -6.0,
+    "description": "Halt mediation"
+  },
+  "166": {
+    "value": -6.0,
+    "description": "Expel or withdraw, not specified below"
+  },
+  "1661": {
+    "value": -6.0,
+    "description": "Expel or withdraw peacekeepers"
+  },
+  "1662": {
+    "value": -5.5,
+    "description": "Expel or withdraw inspectors, observers"
+  },
+  "1663": {
+    "value": -6.0,
+    "description": "Expel or withdraw aid agencies"
+  },
+  "17": {
+    "value": -7.0,
+    "description": "COERCE"
+  },
+  "170": {
+    "value": -7.0,
+    "description": "Coerce, not specified below"
+  },
+  "171": {
+    "value": -7.5,
+    "description": "Seize or damage property, not specified below"
+  },
+  "1711": {
+    "value": -7.0,
+    "description": "Confiscate property"
+  },
+  "1712": {
+    "value": -8.0,
+    "description": "Destroy property"
+  },
+  "172": {
+    "value": -7.5,
+    "description": "Impose administrative sanctions, not specified below"
+  },
+  "1721": {
+    "value": -8.0,
+    "description": "Impose restrictions on political freedoms"
+  },
+  "1722": {
+    "value": -8.0,
+    "description": "Ban political parties or politicians"
+  },
+  "1723": {
+    "value": -7.5,
+    "description": "Impose curfew"
+  },
+  "1724": {
+    "value": -8.0,
+    "description": "Impose state of emergency or martial law"
+  },
+  "173": {
+    "value": -7.5,
+    "description": "Arrest, detain, or charge with legal action"
+  },
+  "174": {
+    "value": -7.0,
+    "description": "Expel or deport individuals"
+  },
+  "175": {
+    "value": -8.5,
+    "description": "Use tactics of violent repression"
+  },
+  "176": {
+    "value": -7.0,
+    "description": "Attack cybernetically"
+  },
+  "18": {
+    "value": -8.0,
+    "description": "ASSAULT"
+  },
+  "180": {
+    "value": -8.0,
+    "description": "Use unconventional violence, not specified below"
+  },
+  "181": {
+    "value": -8.5,
+    "description": "Abduct, hijack, or take hostage"
+  },
+  "182": {
+    "value": -9.0,
+    "description": "Physically assault, not specified below"
+  },
+  "1821": {
+    "value": -9.5,
+    "description": "Sexually assault"
+  },
+  "1822": {
+    "value": -9.5,
+    "description": "Torture"
+  },
+  "1823": {
+    "value": -10.0,
+    "description": "Kill by physical assault"
+  },
+  "1883": {
+    "value": -9.0,
+    "description": "Conduct suicide, car, or other non-military bombing, not specified below"
+  },
+  "1831": {
+    "value": -9.5,
+    "description": "Carry out suicide bombing"
+  },
+  "1832": {
+    "value": -9.0,
+    "description": "Carry out vehicular bombing"
+  },
+  "1833": {
+    "value": -9.0,
+    "description": "Carry out roadside bombing"
+  },
+  "1834": {
+    "value": -9.0,
+    "description": "Carry out location bombing"
+  },
+  "184": {
+    "value": -8.0,
+    "description": "Use as human shield"
+  },
+  "185": {
+    "value": -9.5,
+    "description": "Attempt to assassinate"
+  },
+  "186": {
+    "value": -10.0,
+    "description": "Assassinate"
+  },
+  "19": {
+    "value": -8.0,
+    "description": "FIGHT"
+  },
+  "190": {
+    "value": -8.0,
+    "description": "Use conventional military force, not specified below"
+  },
+  "191": {
+    "value": -8.5,
+    "description": "Impose blockade, restrict movement"
+  },
+  "192": {
+    "value": -9.0,
+    "description": "Occupy territory"
+  },
+  "193": {
+    "value": -8.0,
+    "description": "Fight with small arms and light weapons"
+  },
+  "194": {
+    "value": -8.5,
+    "description": "Fight with artillery and tanks"
+  },
+  "195": {
+    "value": -9.0,
+    "description": "Employ aerial weapons, not specified below"
+  },
+  "1951": {
+    "value": -9.0,
+    "description": "Employ precision-guided aerial munitions"
+  },
+  "1952": {
+    "value": -9.0,
+    "description": "Employ remotely piloted aerial munitions"
+  },
+  "196": {
+    "value": -8.5,
+    "description": "Violate ceasefire"
+  },
+  "20": {
+    "value": -10.0,
+    "description": "USE UNCONVENTIONAL MASS VIOLENCE"
+  },
+  "200": {
+    "value": -10.0,
+    "description": "Use unconventional mass violence, not specified below"
+  },
+  "201": {
+    "value": -10.0,
+    "description": "Engage in mass expulsion"
+  },
+  "202": {
+    "value": -10.0,
+    "description": "Engage in mass killings"
+  },
+  "203": {
+    "value": -10.0,
+    "description": "Engage in ethnic cleansing"
+  },
+  "204": {
+    "value": -10.0,
+    "description": "Use weapons of mass destruction, not specified below"
+  },
+  "2041": {
+    "value": -10.0,
+    "description": "Use chemical, biological, or radiological weapons"
+  },
+  "2042": {
+    "value": -10.0,
+    "description": "Detonate nuclear weapons"
+  }
+}

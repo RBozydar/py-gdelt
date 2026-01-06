@@ -8,8 +8,8 @@ install:  ## Install dependencies with uv
 	uv sync --all-extras
 
 fmt:  ## Format code with ruff
-	uvx ruff format .
-	uvx ruff check . --fix
+	uvx ruff format src/py_gdelt
+	uvx ruff check src/py_gdelt --fix
 
 lint:  ## Lint code with ruff (no auto-fix)
 	uvx ruff check .

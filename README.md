@@ -6,5 +6,6 @@
 [![License](https://img.shields.io/github/license/RBozydar/py-gdelt.svg)](https://github.com/RBozydar/py-gdelt/blob/main/LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](http://mypy-lang.org/)
+[![Docstring coverage: interrogate](https://img.shields.io/badge/docstrings-100%25-brightgreen.svg)](https://interrogate.readthedocs.io/)
 
 Python library for GDELT - https://www.gdeltproject.org

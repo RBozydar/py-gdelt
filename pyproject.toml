@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Robert Wasilewski", email = "wasilewski.robert@gmail.com" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.12.5",
@@ -22,8 +22,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 [project.urls]
@@ -40,18 +42,24 @@ build-backend = "uv_build"
 bigquery = ["google-cloud-bigquery>=3.0"]
 pandas = ["pandas>=2.0"]
 dev = [
-    "pytest>=8.0",
+    "interrogate>=1.7.0",
+    "mypy>=1.0",
+    "pip-audit>=2.0",
+    "pre-commit>=3.5.0",
+    "pydoclint>=0.5.0",
     "pytest-asyncio>=0.23",
     "pytest-cov>=4.0",
-    "mypy>=1.0",
-    "ruff>=0.8",
+    "pytest-timeout>=2.0",
+    "pytest>=8.0",
     "respx>=0.21",
-    "pip-audit>=2.0",
-    "pydoclint>=0.5.0",
-    "interrogate>=1.7.0",
-    "pre-commit>=3.5.0",
+    "ruff>=0.8",
     "commitizen>=3.0",
     "memray>=1.19.1",
+]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.0",
+    "mkdocstrings[python]>=0.24",
 ]
 
 [tool.ruff]
@@ -60,63 +68,301 @@ line-length = 100
 
 [tool.ruff.lint]
 select = [
+    # === Core Quality (PEP 8, Pyflakes, Bugbear) ===
     "E",      # pycodestyle errors
     "W",      # pycodestyle warnings
     "F",      # Pyflakes
-    "I",      # isort
     "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
+
+    # === Import & Organization ===
+    "I",      # isort
+    "TID",    # flake8-tidy-imports
+    "TCH",    # flake8-type-checking (TYPE_CHECKING blocks)
+
+    # === Modern Python ===
     "UP",     # pyupgrade
-    "ARG",    # flake8-unused-arguments
+    "YTT",    # flake8-2020 (sys.version checks)
+    "FLY",    # flynt (f-string conversion)
+
+    # === Code Quality & Simplification ===
+    "C4",     # flake8-comprehensions
     "SIM",    # flake8-simplify
-    "TCH",    # flake8-type-checking
-    "PTH",    # flake8-use-pathlib
-    "ERA",    # eradicate (commented code)
-    "RUF",    # Ruff-specific rules
+    "PIE",    # flake8-pie (misc best practices)
+    "RET",    # flake8-return (return statement best practices)
+
+    # === Naming & Style ===
+    "N",      # pep8-naming
+    "Q",      # flake8-quotes
+    "COM",    # flake8-commas
+    "ISC",    # flake8-implicit-str-concat
+
+    # === Security ===
     "S",      # flake8-bandit (security)
-    "T20",    # flake8-print
+    "BLE",    # flake8-blind-except
+
+    # === Exception Handling ===
+    "TRY",    # tryceratops (exception handling)
+    "RSE",    # flake8-raise (exception raising)
+    "EM",     # flake8-errmsg (exception message formatting)
+
+    # === Type Safety ===
+    "A",      # flake8-builtins (shadowing built-ins)
+
+    # === Performance ===
+    "PERF",   # Perflint (performance anti-patterns)
+
+    # === Async/Await (CRITICAL for py-gdelt) ===
+    "ASYNC",  # flake8-async (async/await best practices)
+
+    # === Framework-Specific ===
+    "PD",     # pandas-vet (optional dependency)
+    "PT",     # flake8-pytest-style
+
+    # === Debugging & Maintenance ===
+    "T10",    # flake8-debugger
+    "T20",    # flake8-print (no print statements in production)
+    "ERA",    # eradicate (commented-out code)
+
+    # === Logging ===
+    "G",      # flake8-logging-format
+
+    # === File Hygiene ===
+    "PTH",    # flake8-use-pathlib (prefer pathlib over os.path)
+    "DTZ",    # flake8-datetimez (timezone awareness)
+
+    # === Argument Handling ===
+    "ARG",    # flake8-unused-arguments
+
+    # === Private Access ===
+    "SLF",    # flake8-self (private member access)
+
+    # === Conventions ===
+    "ICN",    # flake8-import-conventions
+
+    # === Pylint (All Categories) ===
+    "PL",     # Pylint (PLC, PLE, PLR, PLW)
+
+    # === Misc Checks ===
+    "PGH",    # pygrep-hooks
+
+    # === Ruff-Specific ===
+    "RUF",    # Ruff-specific rules
 ]
 ignore = [
-    "E501",   # line too long (handled by formatter)
+    # === PERMANENT - Justified by Architecture (5 rules) ===
+    "ARG002",   # unused-method-argument (8 violations - protocol compliance)
+    "S608",     # hardcoded-sql-expression (3 violations - BigQuery safe builders)
+    "PLR0913",  # too-many-arguments (1 violation - dataclass constructor)
+    "UP046",    # non-pep695-generic-class (Python 3.11 compatibility)
+    "UP047",    # non-pep695-generic-function (Python 3.11 compatibility)
+
+    # === INTENTIONAL STYLE - Keep Ignored (2 rules) ===
+    "PLR2004",  # magic-value-comparison (38 violations - HTTP codes, column counts are self-documenting)
+    "TRY003",   # raise-vanilla-args (35 violations - descriptive messages preferred over exception classes)
+
+    # === CONFIGURATION ===
+    "E501",     # line-too-long (handled by formatter)
+    "COM812",   # missing-trailing-comma (conflicts with formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Lazy imports for optional dependencies and parser imports
+"src/py_gdelt/endpoints/*.py" = ["PLC0415"]  # Lazy parser imports
+"src/py_gdelt/sources/fetcher.py" = ["PLC0415"]  # Lazy parser imports
+"src/py_gdelt/filters.py" = ["PLC0415"]  # Lazy validation imports
+"src/py_gdelt/utils/streaming.py" = ["PLC0415"]  # Optional dependency (pandas)
+
+# Test files get more flexibility
+"tests/**/*.py" = [
+  "S101",     # assert allowed
+  "PLR2004",  # Magic values allowed
+  "ARG001",   # Unused arguments/fixtures
+  "ARG005",   # Unused lambda arguments
+  "S106",     # Hardcoded passwords in tests
+  "S108",     # Hardcoded temp file OK in tests
+  "S311",     # Random OK in tests
+  "T201",     # print statements OK in tests
+  "SLF001",   # Private member access OK in tests
+  "DTZ001",   # datetime without tz OK in tests
+  "DTZ007",   # strptime without tz OK in tests
+  "DTZ011",   # date.today() OK in tests
+  "BLE001",   # Blind except OK in tests
+  "TRY003",   # Raise vanilla args OK in tests
+  "A001",     # Builtin shadowing OK in tests
+  "A002",     # Builtin argument shadowing OK in tests
+  "F841",     # Unused variables OK in tests
+  "B007",     # Unused loop variable OK in tests
+  "B017",     # assert-raises-exception OK in tests
+  "B905",     # zip-without-strict OK in tests
+  "PT011",    # pytest-raises-too-broad OK
+  "RET504",   # unnecessary-assign OK in tests
+  "SIM117",   # multiple-with OK in tests
+  "PERF402",  # manual-list-copy OK in tests
+  "ERA001",   # commented-out-code OK in tests
+  "PLR1722",  # sys-exit-alias OK in tests
+  "RUF002",   # ambiguous-unicode OK in tests
+  "RUF003",   # ambiguous-unicode OK in tests
+  "PLC0415",  # Lazy imports OK in tests
+  "SIM105",   # suppressible-exception OK in tests
+]
+
+"examples/**/*.py" = [
+  "T201",     # print statements are the point
+  "S101",     # assert OK in examples
+  "BLE001",   # Blind except OK in examples
+  "PLR2004",  # Magic values OK in examples
+  "DTZ001",   # datetime without tz OK in examples
+  "DTZ011",   # date.today() OK in examples
+  "S108",     # Hardcoded temp file OK in examples
+  "PLC0415",  # Lazy imports OK in examples
+]
+
+"notebooks/**/*.ipynb" = [
+  "T201",     # print expected in notebooks
+  "SIM102",   # Collapsible if OK in notebooks
+  "E402",     # imports not at top OK
+  "BLE001",   # Blind except OK in notebooks
+  "PLR2004",  # Magic values OK in notebooks
+  "ERA001",   # Commented code OK in notebooks (explanations)
+  "F841",     # Unused variables OK (demo purposes)
+  "DTZ001",   # datetime without tz OK in notebooks
+  "DTZ011",   # date.today() OK in notebooks
+  "B007",     # Unused loop variable OK in notebooks
 ]
 
 [tool.ruff.lint.isort]
 known-first-party = ["py_gdelt"]
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
+lines-after-imports = 2
+
+[tool.ruff.lint.mccabe]
+# Complexity threshold
+max-complexity = 15
+
+[tool.ruff.lint.pydocstyle]
+# Google-style docstrings (matching your current style)
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 8
+max-branches = 15
+max-returns = 6
+max-statements = 60
+
+[tool.ruff.format]
+# Formatting settings
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.mypy]
 python_version = "3.12"
-strict = true
-warn_return_any = true
-warn_unused_ignores = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
 check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
 disallow_untyped_decorators = true
+disallow_untyped_defs = true
 no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_configs = true
+pretty = true
+show_column_numbers = true
 show_error_codes = true
+show_error_context = true
+strict = true
+strict_concatenate = true
+strict_equality = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = ["google.cloud.*", "pandas.*"]
+ignore_missing_imports = true
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
+# Test discovery
 testpaths = ["tests"]
-addopts = "-v --tb=short"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+# Output options
+addopts = [
+  "-ra",                    # Show summary of all test outcomes
+  "--strict-markers",       # Error on unknown markers
+  "--strict-config",        # Error on unknown config options
+  "--showlocals",           # Show local variables in tracebacks
+  "--tb=short",             # Shorter traceback format
+  "-v",                     # Verbose output
+]
+
+markers = [
+    "integration: mark test as integration test (makes live API calls)",
+    "slow: mark test as slow (typically integration tests)",
+]
 
 [tool.coverage.run]
 source = ["src/py_gdelt"]
 branch = true
+parallel = true
+omit = [
+  "tests/*",
+  "examples/*",
+  "*/__main__.py",
+]
 
 [tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
 exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "raise NotImplementedError",
+  # Standard exclusions
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
+
+  # Debug and logging that's hard to test
+  "logger\\.debug",
+
+  # Type checking blocks
+  "if TYPE_CHECKING:",
 ]
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.bandit]
+targets = ["src/py_gdelt"]
+exclude_dirs = ["/tests", "/examples"]
 
 [tool.pydoclint]
 style = "google"
@@ -124,6 +370,7 @@ exclude = '\.git|\.venv|build|dist|__pycache__|tests'
 require-return-section-when-returning-nothing = false
 check-return-types = false  # Covered by mypy
 arg-type-hints-in-docstring = false  # Using type hints in signatures
+skip-checking-raises = true  # Allow Raises sections to document delegated/inherited exceptions
 
 [tool.interrogate]
 ignore-init-method = true
