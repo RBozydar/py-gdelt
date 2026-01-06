@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
-    import pandas as pd  # type: ignore[import-untyped]
+    import pandas as pd
 
 T = TypeVar("T")
 
