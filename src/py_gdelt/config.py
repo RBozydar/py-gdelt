@@ -35,15 +35,13 @@ class TOMLConfigSource(PydanticBaseSettingsSource):
 
     This source loads settings from a TOML file specified by the config_path
     initialization parameter. It has lower priority than environment variables.
+
+    Args:
+        settings_cls: The settings class being initialized.
+        config_path: Optional path to TOML configuration file.
     """
 
     def __init__(self, settings_cls: type[BaseSettings], config_path: Path | None = None) -> None:
-        """Initialize the TOML configuration source.
-
-        Args:
-            settings_cls: The settings class being initialized.
-            config_path: Optional path to TOML configuration file.
-        """
         super().__init__(settings_cls)
         self.config_path = config_path
         self._config_data: dict[str, Any] = {}
@@ -96,11 +94,19 @@ class GDELTSettings(BaseSettings):
 
     Environment variables take precedence over TOML configuration.
 
+    Args:
+        config_path: Optional path to TOML configuration file.
+            If provided and exists, settings will be loaded from it.
+            Environment variables will override TOML settings.
+        **kwargs: Additional keyword arguments for setting field values.
+
     Attributes:
+        model_config: Pydantic settings configuration (env prefix, case sensitivity)
         bigquery_project: Google Cloud project ID for BigQuery access
         bigquery_credentials: Path to Google Cloud credentials JSON file
         cache_dir: Directory for caching downloaded GDELT data
         cache_ttl: Cache time-to-live in seconds
+        master_file_list_ttl: Master file list cache TTL in seconds
         max_retries: Maximum number of HTTP request retries
         timeout: HTTP request timeout in seconds
         max_concurrent_requests: Maximum concurrent HTTP requests
@@ -185,18 +191,6 @@ class GDELTSettings(BaseSettings):
     _current_config_path: Path | None = None
 
     def __init__(self, config_path: Path | None = None, **kwargs: Any) -> None:
-        """Initialize GDELTSettings with optional TOML config file.
-
-        Args:
-            config_path: Optional path to TOML configuration file.
-                If provided and exists, settings will be loaded from it.
-                Environment variables will override TOML settings.
-            **kwargs: Additional keyword arguments passed to BaseSettings.
-
-        Example:
-            >>> settings = GDELTSettings()  # Use defaults + env vars
-            >>> settings = GDELTSettings(config_path=Path("config.toml"))
-        """
         # Store config_path temporarily on class for settings_customise_sources
         GDELTSettings._current_config_path = config_path
         try:

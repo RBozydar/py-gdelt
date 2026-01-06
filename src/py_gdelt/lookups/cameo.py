@@ -39,7 +39,6 @@ class CAMEOCodes:
     """
 
     def __init__(self) -> None:
-        """Initialize CAMEOCodes with lazy-loaded data."""
         self._codes: dict[str, CAMEOCodeEntry] | None = None
         self._goldstein: dict[str, GoldsteinEntry] | None = None
 

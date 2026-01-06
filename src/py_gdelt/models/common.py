@@ -46,6 +46,9 @@ class Location(BaseModel):
     def as_wkt(self) -> str:
         """Return WKT POINT string for geopandas compatibility.
 
+        Returns:
+            WKT POINT string in format "POINT(lon lat)".
+
         Raises:
             ValueError: If lat or lon is None.
         """

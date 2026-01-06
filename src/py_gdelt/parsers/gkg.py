@@ -77,7 +77,7 @@ class GKGParser:
                 by "-T" suffix in record IDs). Defaults to False.
 
         Yields:
-            _RawGKG instances for each valid record.
+            _RawGKG: _RawGKG instances for each valid record.
 
         Notes:
             - Automatically detects v1 vs v2.1 format from first line
@@ -109,7 +109,7 @@ class GKGParser:
             is_translated: Whether records are translated.
 
         Yields:
-            _RawGKG instances with v1-specific field mapping.
+            _RawGKG: _RawGKG instances with v1-specific field mapping.
 
         Notes:
             v1 lacks many v2.1 fields (dates, GCAM, social embeds, etc.).
@@ -179,7 +179,7 @@ class GKGParser:
                 from "-T" suffix in GKGRECORDID).
 
         Yields:
-            _RawGKG instances with full v2.1 field mapping.
+            _RawGKG: _RawGKG instances with full v2.1 field mapping.
 
         Notes:
             - Record ID format: YYYYMMDDHHMMSS-XXXXX or YYYYMMDDHHMMSS-T-XXXXX

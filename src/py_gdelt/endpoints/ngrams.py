@@ -59,6 +59,11 @@ class NGramsEndpoint:
     retry, error handling, and intelligent caching. Internal _RawNGram dataclass
     instances are converted to Pydantic NGramRecord models at the yield boundary.
 
+    Args:
+        settings: Configuration settings. If None, uses defaults.
+        file_source: Optional shared FileSource. If None, creates owned instance.
+                    When provided, the source lifecycle is managed externally.
+
     Example:
         Batch query with filtering:
 
@@ -86,13 +91,6 @@ class NGramsEndpoint:
         ...     async for record in endpoint.stream(filter_obj):
         ...         if record.is_early_in_article:
         ...             print(f"Early: {record.ngram} in {record.url}")
-
-    Attributes:
-        settings: Configuration settings
-        _file_source: FileSource for downloading GDELT files
-        _fetcher: DataFetcher for orchestrating downloads
-        _parser: NGramsParser for parsing file contents
-        _owns_sources: Whether this instance owns the source lifecycle
     """
 
     def __init__(
@@ -100,13 +98,6 @@ class NGramsEndpoint:
         settings: GDELTSettings | None = None,
         file_source: FileSource | None = None,
     ) -> None:
-        """Initialize NGramsEndpoint.
-
-        Args:
-            settings: Configuration settings. If None, uses defaults.
-            file_source: Optional shared FileSource. If None, creates owned instance.
-                        When provided, the source lifecycle is managed externally.
-        """
         self.settings = settings or GDELTSettings()
 
         if file_source is not None:
@@ -203,7 +194,7 @@ class NGramsEndpoint:
             filter_obj: Filter with date range and optional ngram/language constraints
 
         Yields:
-            NGramRecord instances matching the filter criteria
+            NGramRecord: Individual NGram records matching the filter criteria
 
         Raises:
             RateLimitError: If rate limited and retries exhausted
@@ -304,7 +295,7 @@ class NGramsEndpoint:
             filter_obj: Filter with date range and optional constraints
 
         Yields:
-            NGramRecord instances matching the filter criteria
+            NGramRecord: Individual NGram records matching the filter criteria
 
         Raises:
             RateLimitError: If rate limited and retries exhausted

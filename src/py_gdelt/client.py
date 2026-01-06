@@ -92,14 +92,33 @@ class GDELTClient:
     The client can be used as either an async or sync context manager, and
     supports dependency injection for testing.
 
+    Args:
+        settings: Optional GDELTSettings instance. If None, creates default settings.
+        config_path: Optional path to TOML configuration file. Only used if
+            settings is None. If both are provided, settings takes precedence.
+        http_client: Optional shared HTTP client for testing. If None, client
+            creates and owns its own HTTP client. If provided, the lifecycle
+            is managed externally and the client will not be closed on exit.
+
     Example:
         >>> async with GDELTClient() as client:
         ...     events = await client.events.query(filter_obj)
         ...     articles = await client.doc.search("climate")
         ...     theme = client.lookups.themes.get_category("ENV_CLIMATECHANGE")
 
-    Attributes:
-        settings: Configuration settings for the client
+        >>> # With config file
+        >>> async with GDELTClient(config_path=Path("gdelt.toml")) as client:
+        ...     pass
+
+        >>> # With custom settings
+        >>> settings = GDELTSettings(timeout=60, max_retries=5)
+        >>> async with GDELTClient(settings=settings) as client:
+        ...     pass
+
+        >>> # With dependency injection for testing
+        >>> async with httpx.AsyncClient() as http_client:
+        ...     async with GDELTClient(http_client=http_client) as client:
+        ...         pass
     """
 
     def __init__(
@@ -108,35 +127,6 @@ class GDELTClient:
         config_path: Path | None = None,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
-        """Initialize GDELTClient.
-
-        Args:
-            settings: Optional GDELTSettings instance. If None, creates default settings.
-            config_path: Optional path to TOML configuration file. Only used if
-                settings is None. If both are provided, settings takes precedence.
-            http_client: Optional shared HTTP client for testing. If None, client
-                creates and owns its own HTTP client. If provided, the lifecycle
-                is managed externally and the client will not be closed on exit.
-
-        Example:
-            >>> # Using defaults
-            >>> async with GDELTClient() as client:
-            ...     pass
-
-            >>> # With config file
-            >>> async with GDELTClient(config_path=Path("gdelt.toml")) as client:
-            ...     pass
-
-            >>> # With custom settings
-            >>> settings = GDELTSettings(timeout=60, max_retries=5)
-            >>> async with GDELTClient(settings=settings) as client:
-            ...     pass
-
-            >>> # With dependency injection for testing
-            >>> async with httpx.AsyncClient() as http_client:
-            ...     async with GDELTClient(http_client=http_client) as client:
-            ...         pass
-        """
         # Initialize settings
         if settings is not None:
             self.settings = settings

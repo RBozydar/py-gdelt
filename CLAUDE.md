@@ -105,6 +105,98 @@ uv run mypy deep_research
 ```
 
 
+### Docstrings (pydoclint + interrogate)
+
+**Configuration:** `pyproject.toml` → `[tool.pydoclint]`, `[tool.interrogate]`
+
+**Style:** Google-style docstrings
+
+**Commands:**
+```bash
+# Check docstring coverage and quality
+make doc-coverage
+```
+
+#### Docstring Rules
+
+1. **Class docstrings** - Document the class, not `__init__`
+   - Put all documentation in the class docstring (description, Args, Attributes, Examples)
+   - Do NOT add a separate docstring to `__init__()` (DOC301 violation)
+   - Include an `Attributes:` section only for public class/instance attributes (not private `_foo`)
+
+2. **Arguments** - Must match function signature exactly
+   - Document all parameters (except `self`/`cls`)
+   - Order must match the function signature
+   - Types are in signatures, not docstrings (we use type hints)
+
+3. **Returns/Yields** - Must match return annotation
+   - For generators/iterators, use `Yields:` with the yield type: `Yields:\n    TypeName: Description`
+   - For regular returns, use `Returns:` with the return type
+   - If method returns Iterator but uses `yield`, use `Yields:` not `Returns:`
+
+4. **Raises** - Only document exceptions actually raised in the method body
+   - `skip-checking-raises = true` is configured, so you MAY document exceptions raised by called methods
+   - But be accurate about what the method itself raises
+
+#### Example (Correct)
+
+```python
+class MyClient:
+    """Client for accessing the API.
+
+    Provides methods for querying and streaming data.
+
+    Args:
+        base_url: The API base URL.
+        timeout: Request timeout in seconds.
+
+    Attributes:
+        BASE_URL: Default API endpoint URL.
+    """
+
+    BASE_URL: str = "https://api.example.com"
+
+    def __init__(self, base_url: str, timeout: int = 30) -> None:
+        self.base_url = base_url
+        self.timeout = timeout
+
+    def fetch(self, query: str, limit: int = 100) -> list[dict[str, Any]]:
+        """Fetch data from the API.
+
+        Args:
+            query: The search query string.
+            limit: Maximum number of results to return.
+
+        Returns:
+            List of result dictionaries.
+
+        Raises:
+            APIError: If the API request fails.
+        """
+        ...
+
+    def stream(self, query: str) -> Iterator[dict[str, Any]]:
+        """Stream results from the API.
+
+        Args:
+            query: The search query string.
+
+        Yields:
+            dict[str, Any]: Individual result dictionaries.
+        """
+        ...
+```
+
+#### Common Mistakes to Avoid
+
+- ❌ Adding docstring to `__init__()` - use class docstring instead
+- ❌ Documenting private attributes (`_foo`) in Attributes section
+- ❌ Documenting args not in the signature
+- ❌ Missing args that are in the signature
+- ❌ Wrong yield type in `Yields:` section (must match Iterator/Generator type param)
+- ❌ Using `Returns:` for methods that yield (use `Yields:` instead)
+
+
 ### PyTest & Coverage
 
 **Configuration:** `pyproject.toml` → `[tool.pytest.ini_options]`, `[tool.coverage.*]`

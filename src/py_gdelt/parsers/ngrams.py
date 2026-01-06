@@ -63,7 +63,7 @@ class NGramsParser:
                 of gzip decompression, but decompression happens upstream.
 
         Yields:
-            _RawNGram instances, one per valid JSON line.
+            _RawNGram: _RawNGram instances, one per valid JSON line.
 
         Note:
             Malformed JSON lines are logged as warnings and skipped. The parser

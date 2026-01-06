@@ -58,6 +58,11 @@ class FileSource:
     - Intelligent caching (historical files permanent, recent files TTL)
     - Progress tracking and error handling
 
+    Args:
+        settings: GDELT settings (creates default if None)
+        client: HTTP client (creates new one if None, caller owns lifecycle)
+        cache: Cache manager (creates new one if None)
+
     Example:
         >>> async with httpx.AsyncClient() as client:
         ...     source = FileSource(client=client)
@@ -76,13 +81,6 @@ class FileSource:
         client: httpx.AsyncClient | None = None,
         cache: Cache | None = None,
     ) -> None:
-        """Initialize FileSource.
-
-        Args:
-            settings: GDELT settings (creates default if None)
-            client: HTTP client (creates new one if None, caller owns lifecycle)
-            cache: Cache manager (creates new one if None)
-        """
         self.settings = settings or GDELTSettings()
         self._client = client
         self._owns_client = client is None
@@ -358,7 +356,7 @@ class FileSource:
             max_concurrent: Override default concurrent download limit
 
         Yields:
-            Tuple of (url, decompressed_data) for each successful download
+            tuple[str, bytes]: Tuple of (url, decompressed_data) for each successful download
 
         Note:
             Failed downloads are logged but do not stop iteration.

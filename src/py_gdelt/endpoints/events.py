@@ -87,6 +87,15 @@ class EventsEndpoint:
     The endpoint uses dependency injection to receive source instances, making
     it easy to test and configure.
 
+    Args:
+        file_source: FileSource instance for downloading GDELT files
+        bigquery_source: Optional BigQuerySource instance for fallback queries
+        fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
+
+    Note:
+        BigQuery fallback only activates if both fallback_enabled=True AND
+        bigquery_source is provided AND credentials are configured.
+
     Example:
         >>> from py_gdelt.sources import FileSource
         >>> from py_gdelt.filters import DateRange, EventFilter
@@ -114,17 +123,6 @@ class EventsEndpoint:
         *,
         fallback_enabled: bool = True,
     ) -> None:
-        """Initialize EventsEndpoint with data sources.
-
-        Args:
-            file_source: FileSource instance for downloading GDELT files
-            bigquery_source: Optional BigQuerySource instance for fallback queries
-            fallback_enabled: Whether to fallback to BigQuery on errors (default: True)
-
-        Note:
-            BigQuery fallback only activates if both fallback_enabled=True AND
-            bigquery_source is provided AND credentials are configured.
-        """
         # Import DataFetcher here to avoid circular imports
         from py_gdelt.sources.fetcher import DataFetcher
 
@@ -244,7 +242,7 @@ class EventsEndpoint:
             use_bigquery: If True, skip files and use BigQuery directly
 
         Yields:
-            Event instances
+            Event: Individual Event instances matching the filter
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -355,8 +353,8 @@ class EventsEndpoint:
             dedupe_strategy: Deduplication strategy (default: URL_DATE_LOCATION)
             use_bigquery: If True, skip files and use BigQuery directly
 
-        Yields:
-            Event instances for each matching event
+        Returns:
+            Iterator that yields Event instances for each matching event
 
         Raises:
             RateLimitError: If rate limited and fallback not available

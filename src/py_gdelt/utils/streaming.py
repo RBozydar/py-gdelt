@@ -19,6 +19,9 @@ class ResultStream(Generic[T]):
 
     Provides memory-efficient streaming with optional materialization.
 
+    Args:
+        iterator: Async iterator to wrap
+
     Example:
         stream = ResultStream(async_generator())
 
@@ -34,7 +37,6 @@ class ResultStream(Generic[T]):
     """
 
     def __init__(self, iterator: AsyncIterator[T]) -> None:
-        """Initialize with an async iterator."""
         self._iterator = iterator
         self._exhausted = False
 

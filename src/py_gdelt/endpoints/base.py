@@ -44,10 +44,16 @@ class BaseEndpoint(ABC):
     - Define BASE_URL class attribute
     - Implement _build_url() method
 
+    Args:
+        settings: Configuration settings. If None, uses defaults.
+        client: Optional shared HTTP client. If None, creates owned client.
+               When provided, the client lifecycle is managed externally.
+
     Attributes:
-        settings: Configuration settings
-        _client: httpx async client (may be shared)
-        _owns_client: Whether this instance owns the client lifecycle
+        BASE_URL: Base URL for the API endpoint (must be defined by subclasses)
+
+    Raises:
+        NotImplementedError: If subclass does not define BASE_URL class attribute.
     """
 
     # Subclasses must define their base URL
@@ -58,16 +64,6 @@ class BaseEndpoint(ABC):
         settings: GDELTSettings | None = None,
         client: httpx.AsyncClient | None = None,
     ) -> None:
-        """Initialize endpoint with optional shared client.
-
-        Args:
-            settings: Configuration settings. If None, uses defaults.
-            client: Optional shared HTTP client. If None, creates owned client.
-                   When provided, the client lifecycle is managed externally.
-
-        Raises:
-            NotImplementedError: If subclass does not define BASE_URL class attribute.
-        """
         # Validate that subclass defines BASE_URL
         if not hasattr(self.__class__, "BASE_URL") or not self.__class__.BASE_URL:
             msg = f"{self.__class__.__name__} must define a non-empty BASE_URL class attribute"
