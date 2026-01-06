@@ -1,3 +1,5 @@
+# Jupyter notebooks - strip outputs before committing
+*.ipynb filter=nbstripout
 * text=auto
 *.py text eol=lf
 *.yml text eol=lf

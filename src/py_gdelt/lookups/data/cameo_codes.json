@@ -1,0 +1,1898 @@
+{
+  "01": {
+    "name": "MAKE PUBLIC STATEMENT",
+    "description": "MAKE PUBLIC STATEMENT",
+    "quad_class": 1,
+    "root": true
+  },
+  "010": {
+    "name": "Make statement, not specified below",
+    "description": "Make statement, not specified below",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "011": {
+    "name": "Decline comment",
+    "description": "Decline comment",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "012": {
+    "name": "Make pessimistic comment",
+    "description": "Make pessimistic comment",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "013": {
+    "name": "Make optimistic comment",
+    "description": "Make optimistic comment",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "014": {
+    "name": "Consider policy option",
+    "description": "Consider policy option",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "015": {
+    "name": "Acknowledge or claim responsibility",
+    "description": "Acknowledge or claim responsibility",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "016": {
+    "name": "Deny responsibility",
+    "description": "Deny responsibility",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "017": {
+    "name": "Engage in symbolic act",
+    "description": "Engage in symbolic act",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "018": {
+    "name": "Make empathetic comment",
+    "description": "Make empathetic comment",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "019": {
+    "name": "Express accord",
+    "description": "Express accord",
+    "parent": "01",
+    "quad_class": 1
+  },
+  "02": {
+    "name": "APPEAL",
+    "description": "APPEAL",
+    "quad_class": 1,
+    "root": true
+  },
+  "020": {
+    "name": "Make an appeal or request, not specified below",
+    "description": "Make an appeal or request, not specified below",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "021": {
+    "name": "Appeal for material cooperation, not specified below",
+    "description": "Appeal for material cooperation, not specified below",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "0211": {
+    "name": "Appeal for economic cooperation",
+    "description": "Appeal for economic cooperation",
+    "parent": "021",
+    "quad_class": 1
+  },
+  "0212": {
+    "name": "Appeal for military cooperation",
+    "description": "Appeal for military cooperation",
+    "parent": "021",
+    "quad_class": 1
+  },
+  "0213": {
+    "name": "Appeal for judicial cooperation",
+    "description": "Appeal for judicial cooperation",
+    "parent": "021",
+    "quad_class": 1
+  },
+  "0214": {
+    "name": "Appeal for intelligence",
+    "description": "Appeal for intelligence",
+    "parent": "021",
+    "quad_class": 1
+  },
+  "022": {
+    "name": "Appeal for diplomatic cooperation (such as policy support)",
+    "description": "Appeal for diplomatic cooperation (such as policy support)",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "023": {
+    "name": "Appeal for aid, not specified below",
+    "description": "Appeal for aid, not specified below",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "0231": {
+    "name": "Appeal for economic aid",
+    "description": "Appeal for economic aid",
+    "parent": "023",
+    "quad_class": 1
+  },
+  "0232": {
+    "name": "Appeal for military aid",
+    "description": "Appeal for military aid",
+    "parent": "023",
+    "quad_class": 1
+  },
+  "0233": {
+    "name": "Appeal for humanitarian aid",
+    "description": "Appeal for humanitarian aid",
+    "parent": "023",
+    "quad_class": 1
+  },
+  "0234": {
+    "name": "Appeal for military protection or peacekeeping",
+    "description": "Appeal for military protection or peacekeeping",
+    "parent": "023",
+    "quad_class": 1
+  },
+  "024": {
+    "name": "Appeal for political reform, not specified below",
+    "description": "Appeal for political reform, not specified below",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "0241": {
+    "name": "Appeal for change in leadership",
+    "description": "Appeal for change in leadership",
+    "parent": "024",
+    "quad_class": 1
+  },
+  "0242": {
+    "name": "Appeal for policy change",
+    "description": "Appeal for policy change",
+    "parent": "024",
+    "quad_class": 1
+  },
+  "0243": {
+    "name": "Appeal for rights",
+    "description": "Appeal for rights",
+    "parent": "024",
+    "quad_class": 1
+  },
+  "0244": {
+    "name": "Appeal for change in institutions, regime",
+    "description": "Appeal for change in institutions, regime",
+    "parent": "024",
+    "quad_class": 1
+  },
+  "025": {
+    "name": "Appeal to yield, not specified below",
+    "description": "Appeal to yield, not specified below",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "0251": {
+    "name": "Appeal for easing of administrative sanctions",
+    "description": "Appeal for easing of administrative sanctions",
+    "parent": "025",
+    "quad_class": 1
+  },
+  "0252": {
+    "name": "Appeal for easing of political dissent",
+    "description": "Appeal for easing of political dissent",
+    "parent": "025",
+    "quad_class": 1
+  },
+  "0253": {
+    "name": "Appeal for release of persons or property",
+    "description": "Appeal for release of persons or property",
+    "parent": "025",
+    "quad_class": 1
+  },
+  "0254": {
+    "name": "Appeal for easing of economic sanctions, boycott, or embargo",
+    "description": "Appeal for easing of economic sanctions, boycott, or embargo",
+    "parent": "025",
+    "quad_class": 1
+  },
+  "0255": {
+    "name": "Appeal for target to allow international involvement (non-mediation)",
+    "description": "Appeal for target to allow international involvement (non-mediation)",
+    "parent": "025",
+    "quad_class": 1
+  },
+  "0256": {
+    "name": "Appeal for de-escalation of military engagement",
+    "description": "Appeal for de-escalation of military engagement",
+    "parent": "025",
+    "quad_class": 1
+  },
+  "026": {
+    "name": "Appeal to others to meet or negotiate",
+    "description": "Appeal to others to meet or negotiate",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "027": {
+    "name": "Appeal to others to settle dispute",
+    "description": "Appeal to others to settle dispute",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "028": {
+    "name": "Appeal to engage in or accept mediation",
+    "description": "Appeal to engage in or accept mediation",
+    "parent": "02",
+    "quad_class": 1
+  },
+  "03": {
+    "name": "EXPRESS INTENT TO COOPERATE",
+    "description": "EXPRESS INTENT TO COOPERATE",
+    "quad_class": 1,
+    "root": true
+  },
+  "030": {
+    "name": "Express intent to cooperate, not specified below",
+    "description": "Express intent to cooperate, not specified below",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "031": {
+    "name": "Express intent to engage in material cooperation, not specified below",
+    "description": "Express intent to engage in material cooperation, not specified below",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "0311": {
+    "name": "Express intent to cooperate economically",
+    "description": "Express intent to cooperate economically",
+    "parent": "031",
+    "quad_class": 1
+  },
+  "0312": {
+    "name": "Express intent to cooperate militarily",
+    "description": "Express intent to cooperate militarily",
+    "parent": "031",
+    "quad_class": 1
+  },
+  "0313": {
+    "name": "Express intent to cooperate on judicial matters",
+    "description": "Express intent to cooperate on judicial matters",
+    "parent": "031",
+    "quad_class": 1
+  },
+  "0314": {
+    "name": "Express intent to cooperate on intelligence",
+    "description": "Express intent to cooperate on intelligence",
+    "parent": "031",
+    "quad_class": 1
+  },
+  "032": {
+    "name": "Express intent to engage in diplomatic cooperation (such as policy support)",
+    "description": "Express intent to engage in diplomatic cooperation (such as policy support)",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "033": {
+    "name": "Express intent to provide material aid, not specified below",
+    "description": "Express intent to provide material aid, not specified below",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "0331": {
+    "name": "Express intent to provide economic aid",
+    "description": "Express intent to provide economic aid",
+    "parent": "033",
+    "quad_class": 1
+  },
+  "0332": {
+    "name": "Express intent to provide military aid",
+    "description": "Express intent to provide military aid",
+    "parent": "033",
+    "quad_class": 1
+  },
+  "0333": {
+    "name": "Express intent to provide humanitarian aid",
+    "description": "Express intent to provide humanitarian aid",
+    "parent": "033",
+    "quad_class": 1
+  },
+  "0334": {
+    "name": "Express intent to provide military protection or peacekeeping",
+    "description": "Express intent to provide military protection or peacekeeping",
+    "parent": "033",
+    "quad_class": 1
+  },
+  "034": {
+    "name": "Express intent to institute political reform, not specified below",
+    "description": "Express intent to institute political reform, not specified below",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "0341": {
+    "name": "Express intent to change leadership",
+    "description": "Express intent to change leadership",
+    "parent": "034",
+    "quad_class": 1
+  },
+  "0342": {
+    "name": "Express intent to change policy",
+    "description": "Express intent to change policy",
+    "parent": "034",
+    "quad_class": 1
+  },
+  "0343": {
+    "name": "Express intent to provide rights",
+    "description": "Express intent to provide rights",
+    "parent": "034",
+    "quad_class": 1
+  },
+  "0344": {
+    "name": "Express intent to change institutions, regime",
+    "description": "Express intent to change institutions, regime",
+    "parent": "034",
+    "quad_class": 1
+  },
+  "035": {
+    "name": "Express intent to yield, not specified below",
+    "description": "Express intent to yield, not specified below",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "0351": {
+    "name": "Express intent to ease administrative sanctions",
+    "description": "Express intent to ease administrative sanctions",
+    "parent": "035",
+    "quad_class": 1
+  },
+  "0352": {
+    "name": "Express intent to ease popular dissent",
+    "description": "Express intent to ease popular dissent",
+    "parent": "035",
+    "quad_class": 1
+  },
+  "0353": {
+    "name": "Express intent to release persons or property",
+    "description": "Express intent to release persons or property",
+    "parent": "035",
+    "quad_class": 1
+  },
+  "0354": {
+    "name": "Express intent to ease economic sanctions, boycott, or embargo",
+    "description": "Express intent to ease economic sanctions, boycott, or embargo",
+    "parent": "035",
+    "quad_class": 1
+  },
+  "0355": {
+    "name": "Express intent to allow international involvement (non-mediation)",
+    "description": "Express intent to allow international involvement (non-mediation)",
+    "parent": "035",
+    "quad_class": 1
+  },
+  "0356": {
+    "name": "Express intent to de-escalate military engagement",
+    "description": "Express intent to de-escalate military engagement",
+    "parent": "035",
+    "quad_class": 1
+  },
+  "036": {
+    "name": "Express intent to meet or negotiate",
+    "description": "Express intent to meet or negotiate",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "037": {
+    "name": "Express intent to settle dispute",
+    "description": "Express intent to settle dispute",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "038": {
+    "name": "Express intent to accept mediation",
+    "description": "Express intent to accept mediation",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "039": {
+    "name": "Express intent to mediate",
+    "description": "Express intent to mediate",
+    "parent": "03",
+    "quad_class": 1
+  },
+  "04": {
+    "name": "CONSULT",
+    "description": "CONSULT",
+    "quad_class": 1,
+    "root": true
+  },
+  "040": {
+    "name": "Consult, not specified below",
+    "description": "Consult, not specified below",
+    "parent": "04",
+    "quad_class": 1
+  },
+  "041": {
+    "name": "Discuss by telephone",
+    "description": "Discuss by telephone",
+    "parent": "04",
+    "quad_class": 1
+  },
+  "042": {
+    "name": "Make a visit",
+    "description": "Make a visit",
+    "parent": "04",
+    "quad_class": 1
+  },
+  "043": {
+    "name": "Host a visit",
+    "description": "Host a visit",
+    "parent": "04",
+    "quad_class": 1
+  },
+  "044": {
+    "name": "Meet at a \"third\" location",
+    "description": "Meet at a \"third\" location",
+    "parent": "04",
+    "quad_class": 1
+  },
+  "045": {
+    "name": "Mediate",
+    "description": "Mediate",
+    "parent": "04",
+    "quad_class": 1
+  },
+  "046": {
+    "name": "Engage in negotiation",
+    "description": "Engage in negotiation",
+    "parent": "04",
+    "quad_class": 1
+  },
+  "05": {
+    "name": "ENGAGE IN DIPLOMATIC COOPERATION",
+    "description": "ENGAGE IN DIPLOMATIC COOPERATION",
+    "quad_class": 1,
+    "root": true
+  },
+  "050": {
+    "name": "Engage in diplomatic cooperation, not specified below",
+    "description": "Engage in diplomatic cooperation, not specified below",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "051": {
+    "name": "Praise or endorse",
+    "description": "Praise or endorse",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "052": {
+    "name": "Defend verbally",
+    "description": "Defend verbally",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "053": {
+    "name": "Rally support on behalf of",
+    "description": "Rally support on behalf of",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "054": {
+    "name": "Grant diplomatic recognition",
+    "description": "Grant diplomatic recognition",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "055": {
+    "name": "Apologize",
+    "description": "Apologize",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "056": {
+    "name": "Forgive",
+    "description": "Forgive",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "057": {
+    "name": "Sign formal agreement",
+    "description": "Sign formal agreement",
+    "parent": "05",
+    "quad_class": 1
+  },
+  "06": {
+    "name": "ENGAGE IN MATERIAL COOPERATION",
+    "description": "ENGAGE IN MATERIAL COOPERATION",
+    "quad_class": 2,
+    "root": true
+  },
+  "060": {
+    "name": "Engage in material cooperation, not specified below",
+    "description": "Engage in material cooperation, not specified below",
+    "parent": "06",
+    "quad_class": 2
+  },
+  "061": {
+    "name": "Cooperate economically",
+    "description": "Cooperate economically",
+    "parent": "06",
+    "quad_class": 2
+  },
+  "062": {
+    "name": "Cooperate militarily",
+    "description": "Cooperate militarily",
+    "parent": "06",
+    "quad_class": 2
+  },
+  "063": {
+    "name": "Engage in judicial cooperation",
+    "description": "Engage in judicial cooperation",
+    "parent": "06",
+    "quad_class": 2
+  },
+  "064": {
+    "name": "Share intelligence or information",
+    "description": "Share intelligence or information",
+    "parent": "06",
+    "quad_class": 2
+  },
+  "07": {
+    "name": "PROVIDE AID",
+    "description": "PROVIDE AID",
+    "quad_class": 2,
+    "root": true
+  },
+  "070": {
+    "name": "Provide aid, not specified below",
+    "description": "Provide aid, not specified below",
+    "parent": "07",
+    "quad_class": 2
+  },
+  "071": {
+    "name": "Provide economic aid",
+    "description": "Provide economic aid",
+    "parent": "07",
+    "quad_class": 2
+  },
+  "072": {
+    "name": "Provide military aid",
+    "description": "Provide military aid",
+    "parent": "07",
+    "quad_class": 2
+  },
+  "073": {
+    "name": "Provide humanitarian aid",
+    "description": "Provide humanitarian aid",
+    "parent": "07",
+    "quad_class": 2
+  },
+  "074": {
+    "name": "Provide military protection or peacekeeping",
+    "description": "Provide military protection or peacekeeping",
+    "parent": "07",
+    "quad_class": 2
+  },
+  "075": {
+    "name": "Grant asylum",
+    "description": "Grant asylum",
+    "parent": "07",
+    "quad_class": 2
+  },
+  "08": {
+    "name": "YIELD",
+    "description": "YIELD",
+    "quad_class": 2,
+    "root": true
+  },
+  "080": {
+    "name": "Yield, not specified below",
+    "description": "Yield, not specified below",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "081": {
+    "name": "Ease administrative sanctions, not specified below",
+    "description": "Ease administrative sanctions, not specified below",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "0811": {
+    "name": "Ease restrictions on political freedoms",
+    "description": "Ease restrictions on political freedoms",
+    "parent": "081",
+    "quad_class": 2
+  },
+  "0812": {
+    "name": "Ease ban on political parties or politicians",
+    "description": "Ease ban on political parties or politicians",
+    "parent": "081",
+    "quad_class": 2
+  },
+  "0813": {
+    "name": "Ease curfew",
+    "description": "Ease curfew",
+    "parent": "081",
+    "quad_class": 2
+  },
+  "0814": {
+    "name": "Ease state of emergency or martial law",
+    "description": "Ease state of emergency or martial law",
+    "parent": "081",
+    "quad_class": 2
+  },
+  "082": {
+    "name": "Ease political dissent",
+    "description": "Ease political dissent",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "083": {
+    "name": "Accede to requests or demands for political reform, not specified below",
+    "description": "Accede to requests or demands for political reform, not specified below",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "0831": {
+    "name": "Accede to demands for change in leadership",
+    "description": "Accede to demands for change in leadership",
+    "parent": "083",
+    "quad_class": 2
+  },
+  "0832": {
+    "name": "Accede to demands for change in policy",
+    "description": "Accede to demands for change in policy",
+    "parent": "083",
+    "quad_class": 2
+  },
+  "0833": {
+    "name": "Accede to demands for rights",
+    "description": "Accede to demands for rights",
+    "parent": "083",
+    "quad_class": 2
+  },
+  "0834": {
+    "name": "Accede to demands for change in institutions, regime",
+    "description": "Accede to demands for change in institutions, regime",
+    "parent": "083",
+    "quad_class": 2
+  },
+  "084": {
+    "name": "Return, release, not specified below",
+    "description": "Return, release, not specified below",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "0841": {
+    "name": "Return, release person(s)",
+    "description": "Return, release person(s)",
+    "parent": "084",
+    "quad_class": 2
+  },
+  "0842": {
+    "name": "Return, release property",
+    "description": "Return, release property",
+    "parent": "084",
+    "quad_class": 2
+  },
+  "085": {
+    "name": "Ease economic sanctions, boycott, embargo",
+    "description": "Ease economic sanctions, boycott, embargo",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "086": {
+    "name": "Allow international involvement, not specified below",
+    "description": "Allow international involvement, not specified below",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "0861": {
+    "name": "Receive deployment of peacekeepers",
+    "description": "Receive deployment of peacekeepers",
+    "parent": "086",
+    "quad_class": 2
+  },
+  "0862": {
+    "name": "Receive inspectors",
+    "description": "Receive inspectors",
+    "parent": "086",
+    "quad_class": 2
+  },
+  "0863": {
+    "name": "Allow humanitarian access",
+    "description": "Allow humanitarian access",
+    "parent": "086",
+    "quad_class": 2
+  },
+  "087": {
+    "name": "De-escalate military engagement",
+    "description": "De-escalate military engagement",
+    "parent": "08",
+    "quad_class": 2
+  },
+  "0871": {
+    "name": "Declare truce, ceasefire",
+    "description": "Declare truce, ceasefire",
+    "parent": "087",
+    "quad_class": 2
+  },
+  "0872": {
+    "name": "Ease military blockade",
+    "description": "Ease military blockade",
+    "parent": "087",
+    "quad_class": 2
+  },
+  "0873": {
+    "name": "Demobilize armed forces",
+    "description": "Demobilize armed forces",
+    "parent": "087",
+    "quad_class": 2
+  },
+  "0874": {
+    "name": "Retreat or surrender militarily",
+    "description": "Retreat or surrender militarily",
+    "parent": "087",
+    "quad_class": 2
+  },
+  "09": {
+    "name": "INVESTIGATE",
+    "description": "INVESTIGATE",
+    "quad_class": 3,
+    "root": true
+  },
+  "090": {
+    "name": "Investigate, not specified below",
+    "description": "Investigate, not specified below",
+    "parent": "09",
+    "quad_class": 3
+  },
+  "091": {
+    "name": "Investigate crime, corruption",
+    "description": "Investigate crime, corruption",
+    "parent": "09",
+    "quad_class": 3
+  },
+  "092": {
+    "name": "Investigate human rights abuses",
+    "description": "Investigate human rights abuses",
+    "parent": "09",
+    "quad_class": 3
+  },
+  "093": {
+    "name": "Investigate military action",
+    "description": "Investigate military action",
+    "parent": "09",
+    "quad_class": 3
+  },
+  "094": {
+    "name": "Investigate war crimes",
+    "description": "Investigate war crimes",
+    "parent": "09",
+    "quad_class": 3
+  },
+  "10": {
+    "name": "DEMAND",
+    "description": "DEMAND",
+    "quad_class": 3,
+    "root": true
+  },
+  "100": {
+    "name": "Demand, not specified below",
+    "description": "Demand, not specified below",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "101": {
+    "name": "Demand material cooperation, not specified below",
+    "description": "Demand material cooperation, not specified below",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "1011": {
+    "name": "Demand economic cooperation",
+    "description": "Demand economic cooperation",
+    "parent": "101",
+    "quad_class": 3
+  },
+  "1012": {
+    "name": "Demand military cooperation",
+    "description": "Demand military cooperation",
+    "parent": "101",
+    "quad_class": 3
+  },
+  "1013": {
+    "name": "Demand judicial cooperation",
+    "description": "Demand judicial cooperation",
+    "parent": "101",
+    "quad_class": 3
+  },
+  "1014": {
+    "name": "Demand intelligence cooperation",
+    "description": "Demand intelligence cooperation",
+    "parent": "101",
+    "quad_class": 3
+  },
+  "102": {
+    "name": "Demand diplomatic cooperation (such as policy support)",
+    "description": "Demand diplomatic cooperation (such as policy support)",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "103": {
+    "name": "Demand material aid, not specified below",
+    "description": "Demand material aid, not specified below",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "1031": {
+    "name": "Demand economic aid",
+    "description": "Demand economic aid",
+    "parent": "103",
+    "quad_class": 3
+  },
+  "1032": {
+    "name": "Demand military aid",
+    "description": "Demand military aid",
+    "parent": "103",
+    "quad_class": 3
+  },
+  "1033": {
+    "name": "Demand humanitarian aid",
+    "description": "Demand humanitarian aid",
+    "parent": "103",
+    "quad_class": 3
+  },
+  "1034": {
+    "name": "Demand military protection or peacekeeping",
+    "description": "Demand military protection or peacekeeping",
+    "parent": "103",
+    "quad_class": 3
+  },
+  "104": {
+    "name": "Demand political reform, not specified below",
+    "description": "Demand political reform, not specified below",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "1041": {
+    "name": "Demand change in leadership",
+    "description": "Demand change in leadership",
+    "parent": "104",
+    "quad_class": 3
+  },
+  "1042": {
+    "name": "Demand policy change",
+    "description": "Demand policy change",
+    "parent": "104",
+    "quad_class": 3
+  },
+  "1043": {
+    "name": "Demand rights",
+    "description": "Demand rights",
+    "parent": "104",
+    "quad_class": 3
+  },
+  "1044": {
+    "name": "Demand change in institutions, regime",
+    "description": "Demand change in institutions, regime",
+    "parent": "104",
+    "quad_class": 3
+  },
+  "105": {
+    "name": "Demand that target yields, not specified below",
+    "description": "Demand that target yields, not specified below",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "1051": {
+    "name": "Demand easing of administrative sanctions",
+    "description": "Demand easing of administrative sanctions",
+    "parent": "105",
+    "quad_class": 3
+  },
+  "1052": {
+    "name": "Demand easing of political dissent",
+    "description": "Demand easing of political dissent",
+    "parent": "105",
+    "quad_class": 3
+  },
+  "1053": {
+    "name": "Demand release of persons or property",
+    "description": "Demand release of persons or property",
+    "parent": "105",
+    "quad_class": 3
+  },
+  "1054": {
+    "name": "Demand easing of economic sanctions, boycott, or embargo",
+    "description": "Demand easing of economic sanctions, boycott, or embargo",
+    "parent": "105",
+    "quad_class": 3
+  },
+  "1055": {
+    "name": "Demand that target allows international involvement (non-mediation)",
+    "description": "Demand that target allows international involvement (non-mediation)",
+    "parent": "105",
+    "quad_class": 3
+  },
+  "1056": {
+    "name": "Demand de-escalation of military engagement",
+    "description": "Demand de-escalation of military engagement",
+    "parent": "105",
+    "quad_class": 3
+  },
+  "106": {
+    "name": "Demand meeting, negotiation",
+    "description": "Demand meeting, negotiation",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "107": {
+    "name": "Demand settling of dispute",
+    "description": "Demand settling of dispute",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "108": {
+    "name": "Demand mediation",
+    "description": "Demand mediation",
+    "parent": "10",
+    "quad_class": 3
+  },
+  "11": {
+    "name": "DISAPPROVE",
+    "description": "DISAPPROVE",
+    "quad_class": 3,
+    "root": true
+  },
+  "110": {
+    "name": "Disapprove, not specified below",
+    "description": "Disapprove, not specified below",
+    "parent": "11",
+    "quad_class": 3
+  },
+  "111": {
+    "name": "Criticize or denounce",
+    "description": "Criticize or denounce",
+    "parent": "11",
+    "quad_class": 3
+  },
+  "112": {
+    "name": "Accuse, not specified below",
+    "description": "Accuse, not specified below",
+    "parent": "11",
+    "quad_class": 3
+  },
+  "1121": {
+    "name": "Accuse of crime, corruption",
+    "description": "Accuse of crime, corruption",
+    "parent": "112",
+    "quad_class": 3
+  },
+  "1122": {
+    "name": "Accuse of human rights abuses",
+    "description": "Accuse of human rights abuses",
+    "parent": "112",
+    "quad_class": 3
+  },
+  "1123": {
+    "name": "Accuse of aggression",
+    "description": "Accuse of aggression",
+    "parent": "112",
+    "quad_class": 3
+  },
+  "1124": {
+    "name": "Accuse of war crimes",
+    "description": "Accuse of war crimes",
+    "parent": "112",
+    "quad_class": 3
+  },
+  "1125": {
+    "name": "Accuse of espionage, treason",
+    "description": "Accuse of espionage, treason",
+    "parent": "112",
+    "quad_class": 3
+  },
+  "113": {
+    "name": "Rally opposition against",
+    "description": "Rally opposition against",
+    "parent": "11",
+    "quad_class": 3
+  },
+  "114": {
+    "name": "Complain officially",
+    "description": "Complain officially",
+    "parent": "11",
+    "quad_class": 3
+  },
+  "115": {
+    "name": "Bring lawsuit against",
+    "description": "Bring lawsuit against",
+    "parent": "11",
+    "quad_class": 3
+  },
+  "116": {
+    "name": "Find guilty or liable (legally)",
+    "description": "Find guilty or liable (legally)",
+    "parent": "11",
+    "quad_class": 3
+  },
+  "12": {
+    "name": "REJECT",
+    "description": "REJECT",
+    "quad_class": 3,
+    "root": true
+  },
+  "120": {
+    "name": "Reject, not specified below",
+    "description": "Reject, not specified below",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "121": {
+    "name": "Reject material cooperation",
+    "description": "Reject material cooperation",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "1211": {
+    "name": "Reject economic cooperation",
+    "description": "Reject economic cooperation",
+    "parent": "121",
+    "quad_class": 3
+  },
+  "1212": {
+    "name": "Reject military cooperation",
+    "description": "Reject military cooperation",
+    "parent": "121",
+    "quad_class": 3
+  },
+  "122": {
+    "name": "Reject request or demand for material aid, not specified below",
+    "description": "Reject request or demand for material aid, not specified below",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "1221": {
+    "name": "Reject request for economic aid",
+    "description": "Reject request for economic aid",
+    "parent": "122",
+    "quad_class": 3
+  },
+  "1222": {
+    "name": "Reject request for military aid",
+    "description": "Reject request for military aid",
+    "parent": "122",
+    "quad_class": 3
+  },
+  "1223": {
+    "name": "Reject request for humanitarian aid",
+    "description": "Reject request for humanitarian aid",
+    "parent": "122",
+    "quad_class": 3
+  },
+  "1224": {
+    "name": "Reject request for military protection or peacekeeping",
+    "description": "Reject request for military protection or peacekeeping",
+    "parent": "122",
+    "quad_class": 3
+  },
+  "123": {
+    "name": "Reject request or demand for political reform, not specified below",
+    "description": "Reject request or demand for political reform, not specified below",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "1231": {
+    "name": "Reject request for change in leadership",
+    "description": "Reject request for change in leadership",
+    "parent": "123",
+    "quad_class": 3
+  },
+  "1232": {
+    "name": "Reject request for policy change",
+    "description": "Reject request for policy change",
+    "parent": "123",
+    "quad_class": 3
+  },
+  "1233": {
+    "name": "Reject request for rights",
+    "description": "Reject request for rights",
+    "parent": "123",
+    "quad_class": 3
+  },
+  "1234": {
+    "name": "Reject request for change in institutions, regime",
+    "description": "Reject request for change in institutions, regime",
+    "parent": "123",
+    "quad_class": 3
+  },
+  "124": {
+    "name": "Refuse to yield, not specified below",
+    "description": "Refuse to yield, not specified below",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "1241": {
+    "name": "Refuse to ease administrative sanctions",
+    "description": "Refuse to ease administrative sanctions",
+    "parent": "124",
+    "quad_class": 3
+  },
+  "1242": {
+    "name": "Refuse to ease popular dissent",
+    "description": "Refuse to ease popular dissent",
+    "parent": "124",
+    "quad_class": 3
+  },
+  "1243": {
+    "name": "Refuse to release persons or property",
+    "description": "Refuse to release persons or property",
+    "parent": "124",
+    "quad_class": 3
+  },
+  "1244": {
+    "name": "Refuse to ease economic sanctions, boycott, or embargo",
+    "description": "Refuse to ease economic sanctions, boycott, or embargo",
+    "parent": "124",
+    "quad_class": 3
+  },
+  "1245": {
+    "name": "Refuse to allow international involvement (non mediation)",
+    "description": "Refuse to allow international involvement (non mediation)",
+    "parent": "124",
+    "quad_class": 3
+  },
+  "1246": {
+    "name": "Refuse to de-escalate military engagement",
+    "description": "Refuse to de-escalate military engagement",
+    "parent": "124",
+    "quad_class": 3
+  },
+  "125": {
+    "name": "Reject proposal to meet,",
+    "description": "Reject proposal to meet,",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "126": {
+    "name": "Reject mediation",
+    "description": "Reject mediation",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "127": {
+    "name": "Reject plan, agreement",
+    "description": "Reject plan, agreement",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "128": {
+    "name": "Defy",
+    "description": "Defy",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "129": {
+    "name": "Veto",
+    "description": "Veto",
+    "parent": "12",
+    "quad_class": 3
+  },
+  "13": {
+    "name": "THREATEN",
+    "description": "THREATEN",
+    "quad_class": 3,
+    "root": true
+  },
+  "130": {
+    "name": "Threaten, not specified below",
+    "description": "Threaten, not specified below",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "131": {
+    "name": "Threaten non-force, not specified below",
+    "description": "Threaten non-force, not specified below",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "1311": {
+    "name": "Threaten to reduce or stop aid",
+    "description": "Threaten to reduce or stop aid",
+    "parent": "131",
+    "quad_class": 3
+  },
+  "1312": {
+    "name": "Threate n with sanctions, boycott, embargo",
+    "description": "Threate n with sanctions, boycott, embargo",
+    "parent": "131",
+    "quad_class": 3
+  },
+  "1313": {
+    "name": "Threate n to reduce or break relations",
+    "description": "Threate n to reduce or break relations",
+    "parent": "131",
+    "quad_class": 3
+  },
+  "132": {
+    "name": "Threate n with administrative sanctions, not specified below",
+    "description": "Threate n with administrative sanctions, not specified below",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "1321": {
+    "name": "Threate n with restrictions on political freedoms",
+    "description": "Threate n with restrictions on political freedoms",
+    "parent": "132",
+    "quad_class": 3
+  },
+  "1322": {
+    "name": "Threate n to ban political parties or politicians",
+    "description": "Threate n to ban political parties or politicians",
+    "parent": "132",
+    "quad_class": 3
+  },
+  "1323": {
+    "name": "Threate n to impose curfew",
+    "description": "Threate n to impose curfew",
+    "parent": "132",
+    "quad_class": 3
+  },
+  "1324": {
+    "name": "Threate n to impose state of emergency or martial law",
+    "description": "Threate n to impose state of emergency or martial law",
+    "parent": "132",
+    "quad_class": 3
+  },
+  "133": {
+    "name": "Threate n with political dissent, protest",
+    "description": "Threate n with political dissent, protest",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "134": {
+    "name": "Threate n to halt negotiations",
+    "description": "Threate n to halt negotiations",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "135": {
+    "name": "Threate n to halt mediation",
+    "description": "Threate n to halt mediation",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "136": {
+    "name": "Threate n to halt international involvement (non-mediation)",
+    "description": "Threate n to halt international involvement (non-mediation)",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "137": {
+    "name": "Threate n with repression",
+    "description": "Threate n with repression",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "138": {
+    "name": "Threate n with military force, not specified below",
+    "description": "Threate n with military force, not specified below",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "1381": {
+    "name": "Threate n blockade",
+    "description": "Threate n blockade",
+    "parent": "138",
+    "quad_class": 3
+  },
+  "1382": {
+    "name": "Threate n occupation",
+    "description": "Threate n occupation",
+    "parent": "138",
+    "quad_class": 3
+  },
+  "1383": {
+    "name": "Threate n unconventional violence",
+    "description": "Threate n unconventional violence",
+    "parent": "138",
+    "quad_class": 3
+  },
+  "1384": {
+    "name": "Threate n conventional attack",
+    "description": "Threate n conventional attack",
+    "parent": "138",
+    "quad_class": 3
+  },
+  "1385": {
+    "name": "Threate n attack with WMD",
+    "description": "Threate n attack with WMD",
+    "parent": "138",
+    "quad_class": 3
+  },
+  "139": {
+    "name": "Give ultimatum",
+    "description": "Give ultimatum",
+    "parent": "13",
+    "quad_class": 3
+  },
+  "14": {
+    "name": "PROTEST",
+    "description": "PROTEST",
+    "quad_class": 4,
+    "root": true
+  },
+  "140": {
+    "name": "Engage in political dissent, not specified below",
+    "description": "Engage in political dissent, not specified below",
+    "parent": "14",
+    "quad_class": 4
+  },
+  "141": {
+    "name": "Demonstrate or rally, not specified below",
+    "description": "Demonstrate or rally, not specified below",
+    "parent": "14",
+    "quad_class": 4
+  },
+  "1411": {
+    "name": "Demonstrate for leadership change",
+    "description": "Demonstrate for leadership change",
+    "parent": "141",
+    "quad_class": 4
+  },
+  "1412": {
+    "name": "Demonstrate for policy change",
+    "description": "Demonstrate for policy change",
+    "parent": "141",
+    "quad_class": 4
+  },
+  "1413": {
+    "name": "Demonstrate for rights",
+    "description": "Demonstrate for rights",
+    "parent": "141",
+    "quad_class": 4
+  },
+  "1414": {
+    "name": "Demonstrate for change in institutions, regime",
+    "description": "Demonstrate for change in institutions, regime",
+    "parent": "141",
+    "quad_class": 4
+  },
+  "142": {
+    "name": "Conduct hunger strike, not specified below",
+    "description": "Conduct hunger strike, not specified below",
+    "parent": "14",
+    "quad_class": 4
+  },
+  "1421": {
+    "name": "Conduct hunger strike for leadership change",
+    "description": "Conduct hunger strike for leadership change",
+    "parent": "142",
+    "quad_class": 4
+  },
+  "1422": {
+    "name": "Conduct hunger strike for policy change",
+    "description": "Conduct hunger strike for policy change",
+    "parent": "142",
+    "quad_class": 4
+  },
+  "1423": {
+    "name": "Conduct hunger strike for rights",
+    "description": "Conduct hunger strike for rights",
+    "parent": "142",
+    "quad_class": 4
+  },
+  "1424": {
+    "name": "Conduct hunger strike for change in institutions, regime",
+    "description": "Conduct hunger strike for change in institutions, regime",
+    "parent": "142",
+    "quad_class": 4
+  },
+  "143": {
+    "name": "Conduct strike or boycott, not specified below",
+    "description": "Conduct strike or boycott, not specified below",
+    "parent": "14",
+    "quad_class": 4
+  },
+  "1431": {
+    "name": "Conduct strike or boycott for leadership change",
+    "description": "Conduct strike or boycott for leadership change",
+    "parent": "143",
+    "quad_class": 4
+  },
+  "1432": {
+    "name": "Conduct strike or boycott for policy change",
+    "description": "Conduct strike or boycott for policy change",
+    "parent": "143",
+    "quad_class": 4
+  },
+  "1433": {
+    "name": "Conduct strike or boycott for rights",
+    "description": "Conduct strike or boycott for rights",
+    "parent": "143",
+    "quad_class": 4
+  },
+  "1434": {
+    "name": "Conduct strike or boycott for change in institutions, regime",
+    "description": "Conduct strike or boycott for change in institutions, regime",
+    "parent": "143",
+    "quad_class": 4
+  },
+  "144": {
+    "name": "Obstruct passage, block, not specified below",
+    "description": "Obstruct passage, block, not specified below",
+    "parent": "14",
+    "quad_class": 4
+  },
+  "1441": {
+    "name": "Obstruct passage to demand leadership change",
+    "description": "Obstruct passage to demand leadership change",
+    "parent": "144",
+    "quad_class": 4
+  },
+  "1442": {
+    "name": "Obstruct passage to demand policy change",
+    "description": "Obstruct passage to demand policy change",
+    "parent": "144",
+    "quad_class": 4
+  },
+  "1443": {
+    "name": "Obstruct passage to demand rights",
+    "description": "Obstruct passage to demand rights",
+    "parent": "144",
+    "quad_class": 4
+  },
+  "1444": {
+    "name": "Obstruct passage to demand change in institutions, regime",
+    "description": "Obstruct passage to demand change in institutions, regime",
+    "parent": "144",
+    "quad_class": 4
+  },
+  "145": {
+    "name": "Protest violently, riot, not specified below",
+    "description": "Protest violently, riot, not specified below",
+    "parent": "14",
+    "quad_class": 4
+  },
+  "1451": {
+    "name": "Engage in violent protest for leadership change",
+    "description": "Engage in violent protest for leadership change",
+    "parent": "145",
+    "quad_class": 4
+  },
+  "1452": {
+    "name": "Engage in violent protest for policy change",
+    "description": "Engage in violent protest for policy change",
+    "parent": "145",
+    "quad_class": 4
+  },
+  "1453": {
+    "name": "Engage in violent protest for rights",
+    "description": "Engage in violent protest for rights",
+    "parent": "145",
+    "quad_class": 4
+  },
+  "1454": {
+    "name": "Engage in violent protest for change in institutions, regime",
+    "description": "Engage in violent protest for change in institutions, regime",
+    "parent": "145",
+    "quad_class": 4
+  },
+  "15": {
+    "name": "EXHIBIT FORCE POSTURE",
+    "description": "EXHIBIT FORCE POSTURE",
+    "quad_class": 4,
+    "root": true
+  },
+  "150": {
+    "name": "Demonstrate military or police power, not specified below",
+    "description": "Demonstrate military or police power, not specified below",
+    "parent": "15",
+    "quad_class": 4
+  },
+  "151": {
+    "name": "Increase police alert status",
+    "description": "Increase police alert status",
+    "parent": "15",
+    "quad_class": 4
+  },
+  "152": {
+    "name": "Increase military alert status",
+    "description": "Increase military alert status",
+    "parent": "15",
+    "quad_class": 4
+  },
+  "153": {
+    "name": "Mobilize or increase police power",
+    "description": "Mobilize or increase police power",
+    "parent": "15",
+    "quad_class": 4
+  },
+  "154": {
+    "name": "Mobilize or increase armed forces",
+    "description": "Mobilize or increase armed forces",
+    "parent": "15",
+    "quad_class": 4
+  },
+  "155": {
+    "name": "Mobilize or increase cyber-forces",
+    "description": "Mobilize or increase cyber-forces",
+    "parent": "15",
+    "quad_class": 4
+  },
+  "16": {
+    "name": "REDUCE RELATIONS",
+    "description": "REDUCE RELATIONS",
+    "quad_class": 4,
+    "root": true
+  },
+  "160": {
+    "name": "Reduce relations, not specified below",
+    "description": "Reduce relations, not specified below",
+    "parent": "16",
+    "quad_class": 4
+  },
+  "161": {
+    "name": "Reduce or break diplomatic relations",
+    "description": "Reduce or break diplomatic relations",
+    "parent": "16",
+    "quad_class": 4
+  },
+  "162": {
+    "name": "Reduce or stop material aid, not specified below",
+    "description": "Reduce or stop material aid, not specified below",
+    "parent": "16",
+    "quad_class": 4
+  },
+  "1621": {
+    "name": "Reduce or stop economic assistance",
+    "description": "Reduce or stop economic assistance",
+    "parent": "162",
+    "quad_class": 4
+  },
+  "1622": {
+    "name": "Reduce or stop military assistance",
+    "description": "Reduce or stop military assistance",
+    "parent": "162",
+    "quad_class": 4
+  },
+  "1623": {
+    "name": "Reduce or stop humanitarian assistance",
+    "description": "Reduce or stop humanitarian assistance",
+    "parent": "162",
+    "quad_class": 4
+  },
+  "163": {
+    "name": "Impose embargo, boycott, or sanctions",
+    "description": "Impose embargo, boycott, or sanctions",
+    "parent": "16",
+    "quad_class": 4
+  },
+  "164": {
+    "name": "Halt negotiations",
+    "description": "Halt negotiations",
+    "parent": "16",
+    "quad_class": 4
+  },
+  "165": {
+    "name": "Halt mediation",
+    "description": "Halt mediation",
+    "parent": "16",
+    "quad_class": 4
+  },
+  "166": {
+    "name": "Expel or withdraw, not specified below",
+    "description": "Expel or withdraw, not specified below",
+    "parent": "16",
+    "quad_class": 4
+  },
+  "1661": {
+    "name": "Expel or withdraw peacekeepers",
+    "description": "Expel or withdraw peacekeepers",
+    "parent": "166",
+    "quad_class": 4
+  },
+  "1662": {
+    "name": "Expel or withdraw inspectors, observers",
+    "description": "Expel or withdraw inspectors, observers",
+    "parent": "166",
+    "quad_class": 4
+  },
+  "1663": {
+    "name": "Expel or withdraw aid agencies",
+    "description": "Expel or withdraw aid agencies",
+    "parent": "166",
+    "quad_class": 4
+  },
+  "17": {
+    "name": "COERCE",
+    "description": "COERCE",
+    "quad_class": 4,
+    "root": true
+  },
+  "170": {
+    "name": "Coerce, not specified below",
+    "description": "Coerce, not specified below",
+    "parent": "17",
+    "quad_class": 4
+  },
+  "171": {
+    "name": "Seize or damage property, not specified below",
+    "description": "Seize or damage property, not specified below",
+    "parent": "17",
+    "quad_class": 4
+  },
+  "1711": {
+    "name": "Confiscate property",
+    "description": "Confiscate property",
+    "parent": "171",
+    "quad_class": 4
+  },
+  "1712": {
+    "name": "Destroy property",
+    "description": "Destroy property",
+    "parent": "171",
+    "quad_class": 4
+  },
+  "172": {
+    "name": "Impose administrative sanctions, not specified below",
+    "description": "Impose administrative sanctions, not specified below",
+    "parent": "17",
+    "quad_class": 4
+  },
+  "1721": {
+    "name": "Impose restrictions on political freedoms",
+    "description": "Impose restrictions on political freedoms",
+    "parent": "172",
+    "quad_class": 4
+  },
+  "1722": {
+    "name": "Ban political parties or politicians",
+    "description": "Ban political parties or politicians",
+    "parent": "172",
+    "quad_class": 4
+  },
+  "1723": {
+    "name": "Impose curfew",
+    "description": "Impose curfew",
+    "parent": "172",
+    "quad_class": 4
+  },
+  "1724": {
+    "name": "Impose state of emergency or martial law",
+    "description": "Impose state of emergency or martial law",
+    "parent": "172",
+    "quad_class": 4
+  },
+  "173": {
+    "name": "Arrest, detain, or charge with legal action",
+    "description": "Arrest, detain, or charge with legal action",
+    "parent": "17",
+    "quad_class": 4
+  },
+  "174": {
+    "name": "Expel or deport individuals",
+    "description": "Expel or deport individuals",
+    "parent": "17",
+    "quad_class": 4
+  },
+  "175": {
+    "name": "Use tactics of violent repression",
+    "description": "Use tactics of violent repression",
+    "parent": "17",
+    "quad_class": 4
+  },
+  "176": {
+    "name": "Attack cybernetically",
+    "description": "Attack cybernetically",
+    "parent": "17",
+    "quad_class": 4
+  },
+  "18": {
+    "name": "ASSAULT",
+    "description": "ASSAULT",
+    "quad_class": 4,
+    "root": true
+  },
+  "180": {
+    "name": "Use unconventional violence, not specified below",
+    "description": "Use unconventional violence, not specified below",
+    "parent": "18",
+    "quad_class": 4
+  },
+  "181": {
+    "name": "Abduct, hijack, or take hostage",
+    "description": "Abduct, hijack, or take hostage",
+    "parent": "18",
+    "quad_class": 4
+  },
+  "182": {
+    "name": "Physically assault, not specified below",
+    "description": "Physically assault, not specified below",
+    "parent": "18",
+    "quad_class": 4
+  },
+  "1821": {
+    "name": "Sexually assault",
+    "description": "Sexually assault",
+    "parent": "182",
+    "quad_class": 4
+  },
+  "1822": {
+    "name": "Torture",
+    "description": "Torture",
+    "parent": "182",
+    "quad_class": 4
+  },
+  "1823": {
+    "name": "Kill by physical assault",
+    "description": "Kill by physical assault",
+    "parent": "182",
+    "quad_class": 4
+  },
+  "1883": {
+    "name": "Conduct suicide, car, or other non-military bombing, not specified below",
+    "description": "Conduct suicide, car, or other non-military bombing, not specified below",
+    "parent": "188",
+    "quad_class": 4
+  },
+  "1831": {
+    "name": "Carry out suicide bombing",
+    "description": "Carry out suicide bombing",
+    "parent": "183",
+    "quad_class": 4
+  },
+  "1832": {
+    "name": "Carry out vehicular bombing",
+    "description": "Carry out vehicular bombing",
+    "parent": "183",
+    "quad_class": 4
+  },
+  "1833": {
+    "name": "Carry out roadside bombing",
+    "description": "Carry out roadside bombing",
+    "parent": "183",
+    "quad_class": 4
+  },
+  "1834": {
+    "name": "Carry out location bombing",
+    "description": "Carry out location bombing",
+    "parent": "183",
+    "quad_class": 4
+  },
+  "184": {
+    "name": "Use as human shield",
+    "description": "Use as human shield",
+    "parent": "18",
+    "quad_class": 4
+  },
+  "185": {
+    "name": "Attempt to assassinate",
+    "description": "Attempt to assassinate",
+    "parent": "18",
+    "quad_class": 4
+  },
+  "186": {
+    "name": "Assassinate",
+    "description": "Assassinate",
+    "parent": "18",
+    "quad_class": 4
+  },
+  "19": {
+    "name": "FIGHT",
+    "description": "FIGHT",
+    "quad_class": 4,
+    "root": true
+  },
+  "190": {
+    "name": "Use conventional military force, not specified below",
+    "description": "Use conventional military force, not specified below",
+    "parent": "19",
+    "quad_class": 4
+  },
+  "191": {
+    "name": "Impose blockade, restrict movement",
+    "description": "Impose blockade, restrict movement",
+    "parent": "19",
+    "quad_class": 4
+  },
+  "192": {
+    "name": "Occupy territory",
+    "description": "Occupy territory",
+    "parent": "19",
+    "quad_class": 4
+  },
+  "193": {
+    "name": "Fight with small arms and light weapons",
+    "description": "Fight with small arms and light weapons",
+    "parent": "19",
+    "quad_class": 4
+  },
+  "194": {
+    "name": "Fight with artillery and tanks",
+    "description": "Fight with artillery and tanks",
+    "parent": "19",
+    "quad_class": 4
+  },
+  "195": {
+    "name": "Employ aerial weapons, not specified below",
+    "description": "Employ aerial weapons, not specified below",
+    "parent": "19",
+    "quad_class": 4
+  },
+  "1951": {
+    "name": "Employ precision-guided aerial munitions",
+    "description": "Employ precision-guided aerial munitions",
+    "parent": "195",
+    "quad_class": 4
+  },
+  "1952": {
+    "name": "Employ remotely piloted aerial munitions",
+    "description": "Employ remotely piloted aerial munitions",
+    "parent": "195",
+    "quad_class": 4
+  },
+  "196": {
+    "name": "Violate ceasefire",
+    "description": "Violate ceasefire",
+    "parent": "19",
+    "quad_class": 4
+  },
+  "20": {
+    "name": "USE UNCONVENTIONAL MASS VIOLENCE",
+    "description": "USE UNCONVENTIONAL MASS VIOLENCE",
+    "quad_class": 4,
+    "root": true
+  },
+  "200": {
+    "name": "Use unconventional mass violence, not specified below",
+    "description": "Use unconventional mass violence, not specified below",
+    "parent": "20",
+    "quad_class": 4
+  },
+  "201": {
+    "name": "Engage in mass expulsion",
+    "description": "Engage in mass expulsion",
+    "parent": "20",
+    "quad_class": 4
+  },
+  "202": {
+    "name": "Engage in mass killings",
+    "description": "Engage in mass killings",
+    "parent": "20",
+    "quad_class": 4
+  },
+  "203": {
+    "name": "Engage in ethnic cleansing",
+    "description": "Engage in ethnic cleansing",
+    "parent": "20",
+    "quad_class": 4
+  },
+  "204": {
+    "name": "Use weapons of mass destruction, not specified below",
+    "description": "Use weapons of mass destruction, not specified below",
+    "parent": "20",
+    "quad_class": 4
+  },
+  "2041": {
+    "name": "Use chemical, biological, or radiological weapons",
+    "description": "Use chemical, biological, or radiological weapons",
+    "parent": "204",
+    "quad_class": 4
+  },
+  "2042": {
+    "name": "Detonate nuclear weapons",
+    "description": "Detonate nuclear weapons",
+    "parent": "204",
+    "quad_class": 4
+  }
+}
