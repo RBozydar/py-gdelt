@@ -47,8 +47,8 @@ async def test_events_streaming(gdelt_client: GDELTClient) -> None:
         if count >= 10:  # Just verify streaming works
             break
 
-    # We streamed at least something (or 0 if no files)
-    assert count >= 0
+    if count == 0:
+        pytest.skip("No events returned - files may be temporarily unavailable")
 
 
 @pytest.mark.integration
@@ -69,12 +69,12 @@ async def test_events_with_country_filter(gdelt_client: GDELTClient) -> None:
     # Verify we got a result (may be empty list)
     assert isinstance(result, list)
 
-    # If we got events, verify country filter
-    if result:
-        for event in result[:5]:  # Check first 5
-            if hasattr(event, "actor1") and event.actor1:
-                # Some events may not have country code
-                pass
+    if not result:
+        pytest.skip("No events returned for country filter test")
+
+    # Verify country filter works - at least some events should have USA actor
+    usa_events = [e for e in result[:10] if e.actor1_country_code == "USA"]
+    assert len(usa_events) > 0, "Expected at least some events with USA actor"
 
 
 @pytest.mark.integration
@@ -125,8 +125,9 @@ async def test_events_date_range(gdelt_client: GDELTClient) -> None:
     # Verify we got a result
     assert isinstance(result, list)
 
-    # If we got events, verify dates are in range
-    if result:
-        for event in result[:5]:
-            # Events should have dates within the range
-            assert hasattr(event, "date")
+    if not result:
+        pytest.skip("No events returned for date range test")
+
+    # Verify events have expected date attribute
+    for event in result[:5]:
+        assert hasattr(event, "date"), "Event should have date attribute"

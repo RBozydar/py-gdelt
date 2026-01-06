@@ -26,13 +26,15 @@ async def test_doc_search_returns_articles(gdelt_client: GDELTClient) -> None:
     # Assert we got results (don't assert exact count)
     assert isinstance(articles, list)
 
-    # If we got results, verify structure
-    if articles:
-        article = articles[0]
-        assert hasattr(article, "title")
-        assert hasattr(article, "url")
-        assert hasattr(article, "domain")
-        assert article.url.startswith("http")
+    if not articles:
+        pytest.skip("No articles returned - API may be temporarily unavailable")
+
+    # Verify structure
+    article = articles[0]
+    assert hasattr(article, "title"), "Article should have title"
+    assert hasattr(article, "url"), "Article should have url"
+    assert hasattr(article, "domain"), "Article should have domain"
+    assert article.url.startswith("http"), f"URL should start with http, got {article.url}"
 
 
 @pytest.mark.integration
@@ -102,7 +104,10 @@ async def test_doc_search_with_domain_filter(gdelt_client: GDELTClient) -> None:
     # Verify structure (may return empty if no BBC articles)
     assert isinstance(articles, list)
 
-    # If results exist, verify domain filtering
-    if articles:
-        for article in articles:
-            assert hasattr(article, "domain")
+    if not articles:
+        pytest.skip("No articles returned for domain filter test")
+
+    # Verify domain filtering actually works
+    for article in articles:
+        assert hasattr(article, "domain"), "Article should have domain"
+        assert "bbc" in article.url.lower(), f"Expected BBC URL, got {article.url}"

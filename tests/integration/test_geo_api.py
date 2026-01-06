@@ -19,12 +19,14 @@ async def test_geo_search_returns_points(gdelt_client: GDELTClient) -> None:
     assert hasattr(result, "points")
     assert isinstance(result.points, list)
 
-    if result.points:
-        point = result.points[0]
-        assert hasattr(point, "lat")
-        assert hasattr(point, "lon")
-        assert -90 <= point.lat <= 90
-        assert -180 <= point.lon <= 180
+    if not result.points:
+        pytest.skip("No points returned - API may be temporarily unavailable")
+
+    point = result.points[0]
+    assert hasattr(point, "lat"), "Point should have lat"
+    assert hasattr(point, "lon"), "Point should have lon"
+    assert -90 <= point.lat <= 90, f"Latitude {point.lat} out of range"
+    assert -180 <= point.lon <= 180, f"Longitude {point.lon} out of range"
 
 
 @pytest.mark.integration
@@ -39,9 +41,12 @@ async def test_geo_geojson_format(gdelt_client: GDELTClient) -> None:
 
     # Verify GeoJSON structure
     assert isinstance(geojson, dict)
-    # May be FeatureCollection or empty
-    if "features" in geojson:
-        assert isinstance(geojson["features"], list)
+
+    if "features" not in geojson or not geojson["features"]:
+        pytest.skip("No GeoJSON features returned")
+
+    assert isinstance(geojson["features"], list)
+    assert len(geojson["features"]) > 0, "Expected at least one feature"
 
 
 @pytest.mark.integration
@@ -62,11 +67,13 @@ async def test_geo_bounding_box_filter(gdelt_client: GDELTClient) -> None:
     assert hasattr(result, "points")
     assert isinstance(result.points, list)
 
-    # If we got points, verify they're within bounding box
-    if result.points:
-        for point in result.points:
-            assert europe_bbox[0] <= point.lat <= europe_bbox[2]
-            assert europe_bbox[1] <= point.lon <= europe_bbox[3]
+    if not result.points:
+        pytest.skip("No points returned for bounding box test")
+
+    # Verify points are within bounding box
+    for point in result.points:
+        assert europe_bbox[0] <= point.lat <= europe_bbox[2], f"Latitude {point.lat} outside bbox"
+        assert europe_bbox[1] <= point.lon <= europe_bbox[3], f"Longitude {point.lon} outside bbox"
 
 
 @pytest.mark.integration
@@ -97,13 +104,15 @@ async def test_geo_point_attributes(gdelt_client: GDELTClient) -> None:
         max_points=5,
     )
 
-    if result.points:
-        point = result.points[0]
-        # Verify required attributes
-        assert hasattr(point, "lat")
-        assert hasattr(point, "lon")
-        assert hasattr(point, "count")
-        # Name may be None for some points
-        assert hasattr(point, "name")
-        # Count should be positive
-        assert point.count > 0
+    if not result.points:
+        pytest.skip("No points returned for attribute test")
+
+    point = result.points[0]
+    # Verify required attributes
+    assert hasattr(point, "lat"), "Point should have lat"
+    assert hasattr(point, "lon"), "Point should have lon"
+    assert hasattr(point, "count"), "Point should have count"
+    # Name may be None for some points
+    assert hasattr(point, "name"), "Point should have name attribute"
+    # Count should be positive
+    assert point.count > 0, f"Expected positive count, got {point.count}"

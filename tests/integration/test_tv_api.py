@@ -18,11 +18,13 @@ async def test_tv_search_returns_clips(gdelt_client: GDELTClient) -> None:
 
     assert isinstance(clips, list)
 
-    if clips:
-        clip = clips[0]
-        assert hasattr(clip, "station")
-        assert hasattr(clip, "show_name")
-        assert clip.station  # Non-empty
+    if not clips:
+        pytest.skip("No clips returned - API may be temporarily unavailable")
+
+    clip = clips[0]
+    assert hasattr(clip, "station"), "Clip should have station"
+    assert hasattr(clip, "show_name"), "Clip should have show_name"
+    assert clip.station, "Station should be non-empty"
 
 
 @pytest.mark.integration
@@ -72,10 +74,12 @@ async def test_tv_search_by_station(gdelt_client: GDELTClient) -> None:
 
     assert isinstance(clips, list)
 
-    # If we got results, verify they're from CNN
-    if clips:
-        for clip in clips:
-            assert clip.station == "CNN"
+    if not clips:
+        pytest.skip("No clips returned for station filter test")
+
+    # Verify station filtering works
+    for clip in clips:
+        assert clip.station == "CNN", f"Expected CNN, got {clip.station}"
 
 
 @pytest.mark.integration
@@ -89,14 +93,16 @@ async def test_tv_clip_attributes(gdelt_client: GDELTClient) -> None:
         max_results=3,
     )
 
-    if clips:
-        clip = clips[0]
-        # Required attributes
-        assert hasattr(clip, "station")
-        assert hasattr(clip, "show_name")
-        # Optional attributes
-        assert hasattr(clip, "date")
-        assert hasattr(clip, "snippet")
+    if not clips:
+        pytest.skip("No clips returned for attribute test")
+
+    clip = clips[0]
+    # Required attributes
+    assert hasattr(clip, "station"), "Clip should have station"
+    assert hasattr(clip, "show_name"), "Clip should have show_name"
+    # Optional attributes
+    assert hasattr(clip, "date"), "Clip should have date attribute"
+    assert hasattr(clip, "snippet"), "Clip should have snippet attribute"
 
 
 @pytest.mark.integration
@@ -112,10 +118,12 @@ async def test_tvai_search_returns_clips(gdelt_client: GDELTClient) -> None:
 
     assert isinstance(clips, list)
 
-    if clips:
-        clip = clips[0]
-        assert hasattr(clip, "station")
-        assert hasattr(clip, "show_name")
+    if not clips:
+        pytest.skip("No TVAI clips returned")
+
+    clip = clips[0]
+    assert hasattr(clip, "station"), "Clip should have station"
+    assert hasattr(clip, "show_name"), "Clip should have show_name"
 
 
 @pytest.mark.integration
@@ -145,8 +153,10 @@ async def test_tv_timeline_data_points(gdelt_client: GDELTClient) -> None:
         timespan="7d",
     )
 
-    if timeline.points:
-        point = timeline.points[0]
-        assert hasattr(point, "date")
-        assert hasattr(point, "count")
-        assert point.count >= 0
+    if not timeline.points:
+        pytest.skip("No timeline points returned")
+
+    point = timeline.points[0]
+    assert hasattr(point, "date"), "Point should have date"
+    assert hasattr(point, "count"), "Point should have count"
+    assert point.count > 0, f"Expected positive count, got {point.count}"
