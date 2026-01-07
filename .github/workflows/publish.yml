@@ -10,7 +10,7 @@ on:
         required: true
         type: choice
         options:
-          # - testpypi  # Disabled for now
+          - testpypi
           - pypi
 
 jobs:
@@ -40,29 +40,29 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-  # publish-to-testpypi:
-  #   name: Publish to TestPyPI
-  #   needs: [build]
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'workflow_dispatch' && inputs.environment == 'testpypi'
-  #   environment:
-  #     name: testpypi
-  #     url: https://test.pypi.org/p/py-gdelt
-  #   permissions:
-  #     id-token: write  # IMPORTANT: mandatory for trusted publishing
-  #
-  #   steps:
-  #     - name: Download distribution artifacts
-  #       uses: actions/download-artifact@v7
-  #       with:
-  #         name: python-package-distributions
-  #         path: dist/
-  #
-  #     - name: Publish to TestPyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         repository-url: https://test.pypi.org/legacy/
-  #         verbose: true
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'testpypi'
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/gdelt-py
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
 
   publish-to-pypi:
     name: Publish to PyPI
@@ -71,7 +71,7 @@ jobs:
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'pypi')
     environment:
       name: pypi
-      url: https://pypi.org/p/py-gdelt
+      url: https://pypi.org/p/gdelt-py
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
@@ -102,7 +102,7 @@ jobs:
       - name: Extract version from pyproject.toml
         id: get_version
         run: |
-          VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION=$(grep '^version = ' pyproject.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
@@ -116,9 +116,9 @@ jobs:
             ## Installation
 
             ```bash
-            pip install py-gdelt==${{ steps.get_version.outputs.version }}
+            pip install gdelt-py==${{ steps.get_version.outputs.version }}
             # or with uv
-            uv add py-gdelt==${{ steps.get_version.outputs.version }}
+            uv add gdelt-py==${{ steps.get_version.outputs.version }}
             ```
 
-            View on [PyPI](https://pypi.org/project/py-gdelt/${{ steps.get_version.outputs.version }}/)
+            View on [PyPI](https://pypi.org/project/gdelt-py/${{ steps.get_version.outputs.version }}/)

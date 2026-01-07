@@ -1,6 +1,6 @@
-# py-gdelt
+# gdelt-py
 
-A comprehensive Python client library for the GDELT (Global Database of Events, Language, and Tone) project.
+A comprehensive Python client library for the [GDELT](https://www.gdeltproject.org/) (Global Database of Events, Language, and Tone) project.
 
 ## Features
 
@@ -55,13 +55,13 @@ async with GDELTClient() as client:
 
 ```bash
 # Basic installation
-pip install py-gdelt
+pip install gdelt-py
 
 # With BigQuery support
-pip install py-gdelt[bigquery]
+pip install gdelt-py[bigquery]
 
 # With all optional dependencies
-pip install py-gdelt[bigquery,pandas]
+pip install gdelt-py[bigquery,pandas]
 ```
 
 ## Key Concepts
@@ -135,7 +135,6 @@ py-gdelt/
 ```
 
 ## Documentation Structure
-
 - **[Getting Started](getting-started/installation.md)** - Installation and quick start
 - **[User Guide](user-guide/events.md)** - Deep dives into each feature
 - **[API Reference](api/client.md)** - Complete API documentation
