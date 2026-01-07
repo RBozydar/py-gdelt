@@ -67,6 +67,8 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
     - Configuration: getting-started/configuration.md
+    - Data Sources: getting-started/data-sources.md
+  - Architecture: architecture.md
   - User Guide:
     - Events & Mentions: user-guide/events.md
     - GKG: user-guide/gkg.md
