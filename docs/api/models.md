@@ -2,14 +2,14 @@
 
 Data models represent GDELT records and results.
 
-## Events Models
+## Article Models
 
-::: py_gdelt.models.Event
+::: py_gdelt.models.Article
     options:
       show_root_heading: true
       heading_level: 3
 
-::: py_gdelt.models.Actor
+::: py_gdelt.models.Timeline
     options:
       show_root_heading: true
       heading_level: 3
@@ -21,6 +21,16 @@ Data models represent GDELT records and results.
       show_root_heading: true
       heading_level: 3
 
+::: py_gdelt.models.Quotation
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.Amount
+    options:
+      show_root_heading: true
+      heading_level: 3
+
 ## NGrams Models
 
 ::: py_gdelt.models.NGramRecord
@@ -28,32 +38,31 @@ Data models represent GDELT records and results.
       show_root_heading: true
       heading_level: 3
 
-## REST API Models
+## Common Models
 
-### DOC Models
-
-::: py_gdelt.endpoints.doc.DocArticle
+::: py_gdelt.models.Location
     options:
       show_root_heading: true
-      heading_level: 4
+      heading_level: 3
 
-### GEO Models
-
-::: py_gdelt.endpoints.geo.GeoPoint
+::: py_gdelt.models.ToneScores
     options:
       show_root_heading: true
-      heading_level: 4
+      heading_level: 3
 
-### Context Models
-
-::: py_gdelt.endpoints.context.ContextResult
+::: py_gdelt.models.EntityMention
     options:
       show_root_heading: true
-      heading_level: 4
+      heading_level: 3
 
-### TV Models
+## Result Models
 
-::: py_gdelt.endpoints.tv.TVClip
+::: py_gdelt.models.FetchResult
     options:
       show_root_heading: true
-      heading_level: 4
+      heading_level: 3
+
+::: py_gdelt.models.FailedRequest
+    options:
+      show_root_heading: true
+      heading_level: 3
