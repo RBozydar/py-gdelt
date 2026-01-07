@@ -60,7 +60,7 @@ async def query_mentions_batch():
             print(f"Failed requests: {result.total_failed}\n")
 
             # Show first 5 mentions
-            for i, mention in enumerate(result[:5]):
+            for i, mention in enumerate(result.data[:5]):
                 print(f"Mention {i + 1}:")
                 print(f"  Source: {mention.source_name}")
                 print(f"  Identifier: {mention.identifier}")

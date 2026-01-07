@@ -20,6 +20,7 @@ Security Features:
 
 import asyncio
 import logging
+import re
 from collections.abc import AsyncIterator
 from datetime import datetime
 from pathlib import Path
@@ -371,13 +372,13 @@ def _build_where_clause_for_gkg(
         parameters.append(bigquery.ScalarQueryParameter("theme_pattern", "STRING", theme_pattern))
 
     if filter_obj.theme_prefix is not None:
-        # Match themes starting with prefix
+        # Match themes starting with prefix (anchored to start or after semicolon delimiter)
         conditions.append("REGEXP_CONTAINS(V2Themes, @theme_prefix_pattern)")
         parameters.append(
             bigquery.ScalarQueryParameter(
                 "theme_prefix_pattern",
                 "STRING",
-                f"{filter_obj.theme_prefix}",
+                f"(^|;){re.escape(filter_obj.theme_prefix)}",
             ),
         )
 

@@ -43,7 +43,7 @@ async def basic_usage() -> None:
 
             if result:
                 # Show first event
-                first_event = result[0]
+                first_event = result.data[0]
                 print("\nFirst event:")
                 print(f"  ID: {first_event.global_event_id}")
                 print(f"  Date: {first_event.date}")
