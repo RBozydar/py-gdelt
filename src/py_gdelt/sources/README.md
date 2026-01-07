@@ -15,7 +15,6 @@ Downloads GDELT data files directly from `data.gdeltproject.org`.
   - Recent files: TTL-based (default 1 hour)
   - Master file lists: Short TTL (5 minutes)
 - **Security**:
-  - HTTPS enforcement
   - URL validation (only allows `data.gdeltproject.org`)
   - Zip bomb protection (500MB max, 100:1 ratio max)
   - Decompression safety checks
@@ -138,7 +137,7 @@ http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.translation.export.CSV.zip
 1. **File Naming**: Files have `.CSV` extension but use **TAB delimiters**, not commas
 2. **15-minute Granularity**: Files are published every 15 minutes, but some slots may be empty
 3. **404 Errors are Normal**: Not all 15-minute time slots have data, 404s are expected
-4. **HTTPS Required**: All URLs are automatically upgraded from HTTP to HTTPS
+4. **HTTP Only**: `data.gdeltproject.org` only supports HTTP (SSL cert mismatch with `*.storage.googleapis.com`)
 5. **Historical Data**: Files older than 30 days are cached indefinitely (immutable)
 
 ### Error Handling
@@ -165,11 +164,10 @@ async with FileSource() as source:
 FileSource implements multiple security layers:
 
 1. **URL Validation**: Only allows `data.gdeltproject.org` domain
-2. **HTTPS Enforcement**: Automatically upgrades HTTP to HTTPS
-3. **Decompression Limits**:
+2. **Decompression Limits**:
    - Maximum decompressed size: 500MB
    - Maximum compression ratio: 100:1
-4. **Incremental Decompression**: Checks limits while decompressing (prevents memory exhaustion)
+3. **Incremental Decompression**: Checks limits while decompressing (prevents memory exhaustion)
 
 ### Performance Tips
 

@@ -102,9 +102,7 @@ async def _run_test(temp_cache: str) -> None:
     with respx.mock(assert_all_mocked=False) as router:
         # Mock all URLs to return the same ZIP data
         for url in urls:
-            # Need to mock HTTPS since FileSource upgrades to HTTPS
-            https_url = url.replace("http://", "https://")
-            router.get(https_url).mock(return_value=httpx.Response(200, content=mock_zip))
+            router.get(url).mock(return_value=httpx.Response(200, content=mock_zip))
 
         async with FileSource(settings=settings) as source:
             file_count = 0
