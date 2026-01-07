@@ -37,5 +37,13 @@ jobs:
       - name: Install dependencies
         run: uv venv && uv pip install mkdocs-material mkdocstrings[python]
 
+      - name: Sync README to docs index
+        run: |
+          # Copy README.md to docs/index.md, stripping badge lines
+          echo "<!-- AUTO-GENERATED FROM README.md - DO NOT EDIT DIRECTLY -->" > docs/index.md
+          echo "" >> docs/index.md
+          sed '/^\[!\[/d' README.md >> docs/index.md
+          echo "Synced README.md to docs/index.md"
+
       - name: Deploy docs
         run: uv run mkdocs gh-deploy --force
