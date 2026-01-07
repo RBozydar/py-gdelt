@@ -1,11 +1,6 @@
-# gdelt-py
+<!-- AUTO-GENERATED FROM README.md - DO NOT EDIT DIRECTLY -->
 
-[![CI](https://github.com/RBozydar/py-gdelt/workflows/CI/badge.svg)](https://github.com/RBozydar/py-gdelt/actions/workflows/ci.yml)
-[![PyPI version](https://badge.fury.io/py/gdelt-py.svg)](https://badge.fury.io/py/gdelt-py)
-[![Python Versions](https://img.shields.io/pypi/pyversions/gdelt-py.svg)](https://pypi.org/project/gdelt-py/)
-[![License](https://img.shields.io/github/license/RBozydar/py-gdelt.svg)](https://github.com/RBozydar/py-gdelt/blob/main/LICENSE)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](http://mypy-lang.org/)
+# gdelt-py
 
 A comprehensive Python client library for the [GDELT](https://www.gdeltproject.org/) (Global Database of Events, Language, and Tone) project.
 
@@ -17,19 +12,6 @@ A comprehensive Python client library for the [GDELT](https://www.gdeltproject.o
 - **Modern Python**: 3.11+, Async-first, Pydantic models, type hints throughout
 - **Streaming**: Generator-based iteration for large datasets with memory efficiency
 - **Developer Experience**: Clear errors, progress indicators, comprehensive lookups
-
-## Installation
-
-```bash
-# Basic installation
-pip install gdelt-py
-
-# With BigQuery support
-pip install gdelt-py[bigquery]
-
-# With all optional dependencies
-pip install gdelt-py[bigquery,pandas]
-```
 
 ## Quick Start
 
@@ -70,6 +52,19 @@ async with GDELTClient() as client:
 - **Themes** - GDELT theme taxonomy
 - **Countries** - Country code conversions (FIPS, ISO2, ISO3)
 - **Ethnic/Religious Groups** - Group classifications
+
+## Installation
+
+```bash
+# Basic installation
+pip install gdelt-py
+
+# With BigQuery support
+pip install gdelt-py[bigquery]
+
+# With all optional dependencies
+pip install gdelt-py[bigquery,pandas]
+```
 
 ## Key Concepts
 
@@ -123,21 +118,40 @@ async with GDELTClient(settings=settings) as client:
     ...
 ```
 
-## Documentation
+## Project Structure
 
-Full documentation available at: https://rbozydar.github.io/py-gdelt/
+```
+py-gdelt/
+├── src/py_gdelt/
+│   ├── client.py           # Main GDELTClient
+│   ├── endpoints/          # All endpoint implementations
+│   ├── filters/            # Query filter models
+│   ├── models/             # Data models (Event, GKG, etc.)
+│   ├── sources/            # Data sources (files, BigQuery)
+│   ├── lookups/            # Lookup tables
+│   └── utils/              # Utilities (deduplication, etc.)
+├── tests/                  # Unit and integration tests
+├── examples/               # Usage examples
+├── notebooks/              # Jupyter notebooks
+└── docs/                   # Documentation
+```
+
+## Documentation Structure
+- **[Getting Started](getting-started/installation.md)** - Installation and quick start
+- **[User Guide](user-guide/events.md)** - Deep dives into each feature
+- **[API Reference](api/client.md)** - Complete API documentation
+- **[Examples](examples/index.md)** - Practical usage examples
 
 ## Contributing
 
-Contributions are welcome! See [Contributing Guide](https://github.com/RBozydar/py-gdelt/blob/main/CONTRIBUTING.md) for details.
+Contributions are welcome! See [Contributing Guide](contributing.md) for details.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details.
 
 ## Links
 
-- [GitHub Repository](https://github.com/RBozydar/py-gdelt)
-- [PyPI Package](https://pypi.org/project/gdelt-py/)
-- [Documentation](https://rbozydar.github.io/py-gdelt/)
+- [GitHub Repository](https://github.com/rbwasilewski/py-gdelt)
 - [GDELT Project](https://www.gdeltproject.org/)
+- [GDELT Documentation](https://blog.gdeltproject.org/gdelt-2-0-our-global-world-in-realtime/)
