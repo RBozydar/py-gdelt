@@ -36,7 +36,7 @@ async def async_query_example() -> None:
             print(f"Query complete: {result.complete}\n")
 
             # Display first few records
-            for i, record in enumerate(result[:5]):
+            for i, record in enumerate(result.data[:5]):
                 print(f"\nRecord {i + 1}:")
                 print(f"  ID: {record.record_id}")
                 print(f"  Source: {record.source_name}")
