@@ -2,6 +2,23 @@
 
 Data models represent GDELT records and results.
 
+## Events Models
+
+::: py_gdelt.models.events.Event
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.events.Actor
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.events.Mention
+    options:
+      show_root_heading: true
+      heading_level: 3
+
 ## Article Models
 
 ::: py_gdelt.models.Article
