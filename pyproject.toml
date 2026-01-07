@@ -328,6 +328,7 @@ addopts = [
 markers = [
     "integration: mark test as integration test (makes live API calls)",
     "slow: mark test as slow (typically integration tests)",
+    "schema_drift: mark test as schema drift detection test",
 ]
 
 [tool.coverage.run]
