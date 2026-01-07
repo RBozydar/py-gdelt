@@ -8,6 +8,10 @@ This prevents documentation drift where new exports are added but not documented
 """
 
 from pathlib import Path
+from types import ModuleType
+from typing import Any
+
+import pytest
 
 import py_gdelt.exceptions as exceptions_module
 import py_gdelt.models as models_module
@@ -29,136 +33,141 @@ def _get_documented_items(doc_file: Path, module_path: str) -> set[str]:
     Returns:
         Set of class names that are documented in the file.
     """
-    documented = set()
+    documented: set[str] = set()
     content = doc_file.read_text()
+    prefix = f"::: {module_path}."
 
     for raw_line in content.splitlines():
         line = raw_line.strip()
         # Look for mkdocstrings reference pattern: ::: py_gdelt.models.ClassName
-        if line.startswith(f"::: {module_path}."):
-            # Extract the class name after the module path
-            class_name = line.split(".")[-1]
-            documented.add(class_name)
+        if line.startswith(prefix):
+            # Extract the class name using removeprefix for robustness
+            class_name = line.removeprefix(prefix).strip()
+            if class_name:  # Ensure we got a valid name
+                documented.add(class_name)
 
     return documented
 
 
-def test_all_models_documented() -> None:
-    """Verify all exported models are documented in docs/api/models.md."""
-    # Get all exported model names
-    exported_models = set(models_module.__all__)
+def _get_public_classes(module: ModuleType) -> set[str]:
+    """Get all public class names from a module.
 
-    # Get documented models from the docs file
-    models_doc = PROJECT_ROOT / "docs" / "api" / "models.md"
-    assert models_doc.exists(), f"Documentation file not found: {models_doc}"
+    Args:
+        module: The module to inspect.
 
-    documented_models = _get_documented_items(models_doc, "py_gdelt.models")
-
-    # Find any missing documentation
-    undocumented = exported_models - documented_models
-    extra_documented = documented_models - exported_models
-
-    # Build helpful error messages
-    errors = []
-    if undocumented:
-        errors.append(
-            f"Models exported but NOT documented in docs/api/models.md:\n"
-            f"  {sorted(undocumented)}\n"
-            f"  Add these to docs/api/models.md with mkdocstrings syntax:\n"
-            + "\n".join(f"  ::: py_gdelt.models.{m}" for m in sorted(undocumented))
-        )
-    if extra_documented:
-        errors.append(
-            f"Models documented but NOT exported from py_gdelt.models:\n"
-            f"  {sorted(extra_documented)}\n"
-            f"  Either add to models/__init__.py __all__ or remove from docs."
-        )
-
-    assert not errors, "\n\n".join(errors)
-
-
-def test_all_exceptions_documented() -> None:
-    """Verify all exported exceptions are documented in docs/api/exceptions.md."""
-    # Get all exported exception names
-    exported_exceptions = set(exceptions_module.__all__)
-
-    # Get documented exceptions from the docs file
-    exceptions_doc = PROJECT_ROOT / "docs" / "api" / "exceptions.md"
-    assert exceptions_doc.exists(), f"Documentation file not found: {exceptions_doc}"
-
-    documented_exceptions = _get_documented_items(exceptions_doc, "py_gdelt.exceptions")
-
-    # Find any missing documentation
-    undocumented = exported_exceptions - documented_exceptions
-    extra_documented = documented_exceptions - exported_exceptions
-
-    # Build helpful error messages
-    errors = []
-    if undocumented:
-        errors.append(
-            f"Exceptions exported but NOT documented in docs/api/exceptions.md:\n"
-            f"  {sorted(undocumented)}\n"
-            f"  Add these to docs/api/exceptions.md with mkdocstrings syntax:\n"
-            + "\n".join(f"  ::: py_gdelt.exceptions.{e}" for e in sorted(undocumented))
-        )
-    if extra_documented:
-        errors.append(
-            f"Exceptions documented but NOT exported from py_gdelt.exceptions:\n"
-            f"  {sorted(extra_documented)}\n"
-            f"  Either add to exceptions.py __all__ or remove from docs."
-        )
-
-    assert not errors, "\n\n".join(errors)
-
-
-def test_models_all_matches_actual_exports() -> None:
-    """Verify __all__ in models/__init__.py matches actual public classes."""
-    # Get all public classes (non-underscore) that are actually importable
-    actual_public = {
+    Returns:
+        Set of public class names (non-underscore prefixed types).
+    """
+    return {
         name
-        for name in dir(models_module)
-        if not name.startswith("_") and isinstance(getattr(models_module, name), type)
+        for name in dir(module)
+        if not name.startswith("_") and isinstance(getattr(module, name), type)
     }
 
-    declared_all = set(models_module.__all__)
 
-    # Check for mismatches
+def _get_public_exceptions(module: ModuleType) -> set[str]:
+    """Get all public exception class names from a module.
+
+    Args:
+        module: The module to inspect.
+
+    Returns:
+        Set of public exception class names.
+    """
+    return {
+        name
+        for name in dir(module)
+        if not name.startswith("_")
+        and isinstance(getattr(module, name), type)
+        and issubclass(getattr(module, name), Exception)
+    }
+
+
+# Test configurations for documentation coverage
+DOC_COVERAGE_CONFIGS: list[tuple[ModuleType, str, str, str]] = [
+    (models_module, "py_gdelt.models", "docs/api/models.md", "models"),
+    (exceptions_module, "py_gdelt.exceptions", "docs/api/exceptions.md", "exceptions"),
+]
+
+
+@pytest.mark.parametrize(
+    ("module", "module_path", "doc_path", "module_name"),
+    DOC_COVERAGE_CONFIGS,
+    ids=["models", "exceptions"],
+)
+def test_all_exports_documented(
+    module: ModuleType,
+    module_path: str,
+    doc_path: str,
+    module_name: str,
+) -> None:
+    """Verify all exported items are documented in the corresponding docs file."""
+    # Get all exported names from __all__
+    exported = set(module.__all__)
+
+    # Get documented items from the docs file
+    doc_file = PROJECT_ROOT / doc_path
+    assert doc_file.exists(), f"Documentation file not found: {doc_file}"
+
+    documented = _get_documented_items(doc_file, module_path)
+
+    # Find any missing documentation
+    undocumented = exported - documented
+    extra_documented = documented - exported
+
+    # Build helpful error messages
+    errors: list[str] = []
+    if undocumented:
+        suggestions = "\n".join(f"  ::: {module_path}.{item}" for item in sorted(undocumented))
+        errors.append(
+            f"{module_name.title()} exported but NOT documented in {doc_path}:\n"
+            f"  {sorted(undocumented)}\n"
+            f"  Add these to {doc_path} with mkdocstrings syntax:\n"
+            f"{suggestions}"
+        )
+    if extra_documented:
+        errors.append(
+            f"{module_name.title()} documented but NOT exported from {module_path}:\n"
+            f"  {sorted(extra_documented)}\n"
+            f"  Either add to {module_name}/__init__.py __all__ or remove from docs."
+        )
+
+    assert not errors, "\n\n".join(errors)
+
+
+# Test configurations for __all__ validation
+ALL_VALIDATION_CONFIGS: list[tuple[ModuleType, Any, str]] = [
+    (models_module, _get_public_classes, "models"),
+    (exceptions_module, _get_public_exceptions, "exceptions"),
+]
+
+
+@pytest.mark.parametrize(
+    ("module", "get_actual_fn", "module_name"),
+    ALL_VALIDATION_CONFIGS,
+    ids=["models", "exceptions"],
+)
+def test_all_matches_actual_exports(
+    module: ModuleType,
+    get_actual_fn: Any,
+    module_name: str,
+) -> None:
+    """Verify __all__ matches actual public classes/exceptions in the module."""
+    # Get actual public items
+    actual_public = get_actual_fn(module)
+    declared_all = set(module.__all__)
+
+    # Check for items in __all__ that don't exist as public classes
     in_all_not_public = declared_all - actual_public
-    public_not_in_all = actual_public - declared_all
 
-    errors = []
+    errors: list[str] = []
     if in_all_not_public:
         errors.append(
-            f"Items in __all__ but not importable as public classes:\n  {sorted(in_all_not_public)}"
+            f"Items in {module_name}.__all__ but not importable as public classes:\n"
+            f"  {sorted(in_all_not_public)}"
         )
-    if public_not_in_all:
-        # This is less critical - some public classes might intentionally not be exported
-        # But it's worth noting
-        pass  # Don't fail on this, just the reverse
 
-    assert not errors, "\n\n".join(errors)
-
-
-def test_exceptions_all_matches_actual_exports() -> None:
-    """Verify __all__ in exceptions.py matches actual exception classes."""
-    # Get all public exception classes
-    actual_exceptions = {
-        name
-        for name in dir(exceptions_module)
-        if not name.startswith("_")
-        and isinstance(getattr(exceptions_module, name), type)
-        and issubclass(getattr(exceptions_module, name), Exception)
-    }
-
-    declared_all = set(exceptions_module.__all__)
-
-    # Check for mismatches
-    in_all_not_exception = declared_all - actual_exceptions
-
-    errors = []
-    if in_all_not_exception:
-        errors.append(
-            f"Items in __all__ but not actual exception classes:\n  {sorted(in_all_not_exception)}"
-        )
+    # Note: We don't fail on public_not_in_all because some public classes
+    # might intentionally not be exported (e.g., internal helpers)
 
     assert not errors, "\n\n".join(errors)

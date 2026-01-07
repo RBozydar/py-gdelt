@@ -90,7 +90,12 @@ GDELTError (base)
 ## Usage
 
 ```python
+import asyncio
+import logging
+
 from py_gdelt.exceptions import APIError, RateLimitError, DataError
+
+logger = logging.getLogger(__name__)
 
 try:
     result = await client.doc.query(doc_filter)
