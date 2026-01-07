@@ -1,6 +1,6 @@
 [project]
-name = "py-gdelt"
-version = "0.1.0"
+name = "gdelt-py"
+version = "0.1.1"
 description = "Python client library for GDELT (Global Database of Events, Language, and Tone)"
 readme = "README.md"
 authors = [
