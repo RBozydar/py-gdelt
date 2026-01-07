@@ -1,3 +1,5 @@
+<!-- AUTO-GENERATED FROM README.md - DO NOT EDIT DIRECTLY -->
+
 # gdelt-py
 
 A comprehensive Python client library for the [GDELT](https://www.gdeltproject.org/) (Global Database of Events, Language, and Tone) project.
