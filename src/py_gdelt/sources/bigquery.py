@@ -367,7 +367,7 @@ def _build_where_clause_for_gkg(
     if filter_obj.themes is not None and len(filter_obj.themes) > 0:
         # Use REGEXP_CONTAINS for theme matching (themes are semicolon-delimited)
         # We build a regex pattern like: (THEME1|THEME2|THEME3)
-        theme_pattern = "|".join(filter_obj.themes)
+        theme_pattern = "|".join(re.escape(t) for t in filter_obj.themes)
         conditions.append("REGEXP_CONTAINS(V2Themes, @theme_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("theme_pattern", "STRING", theme_pattern))
 
@@ -384,12 +384,12 @@ def _build_where_clause_for_gkg(
 
     # Optional: Entity filters (persons, organizations)
     if filter_obj.persons is not None and len(filter_obj.persons) > 0:
-        person_pattern = "|".join(filter_obj.persons)
+        person_pattern = "|".join(re.escape(p) for p in filter_obj.persons)
         conditions.append("REGEXP_CONTAINS(V2Persons, @person_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("person_pattern", "STRING", person_pattern))
 
     if filter_obj.organizations is not None and len(filter_obj.organizations) > 0:
-        org_pattern = "|".join(filter_obj.organizations)
+        org_pattern = "|".join(re.escape(o) for o in filter_obj.organizations)
         conditions.append("REGEXP_CONTAINS(V2Organizations, @org_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("org_pattern", "STRING", org_pattern))
 

@@ -41,7 +41,7 @@ async def basic_usage() -> None:
             result = await client.events.query(event_filter)
             print(f"Found {len(result)} events from the US on {yesterday}")
 
-            if result:
+            if result and result.data:
                 # Show first event
                 first_event = result.data[0]
                 print("\nFirst event:")
