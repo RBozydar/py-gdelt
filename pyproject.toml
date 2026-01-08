@@ -59,6 +59,7 @@ dev = [
     "ruff>=0.8",
     "commitizen>=3.0",
     "memray>=1.19.1",
+    "pyright>=1.1.408",
 ]
 docs = [
     "mkdocs>=1.5",

@@ -269,21 +269,9 @@ class DataFetcher:
 
             # Parse the file data
             try:
-                # Handle both sync and async parsers
-                parse_result = parser.parse(data, is_translated=is_translated)
-
-                # Check if result is async iterator
-                if hasattr(parse_result, "__aiter__"):
-                    # Async parser
-                    async for record in parse_result:
-                        yield record
-                        records_yielded += 1
-                else:
-                    # Sync parser (most common)
-                    for record in parse_result:
-                        yield record
-                        records_yielded += 1
-
+                for record in parser.parse(data, is_translated=is_translated):
+                    yield record
+                    records_yielded += 1
             except Exception as e:
                 # Error boundary: handle parsing errors according to error policy
                 logger.exception("Failed to parse file %s", url)
