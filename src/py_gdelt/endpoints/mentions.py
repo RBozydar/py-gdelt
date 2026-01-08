@@ -113,7 +113,7 @@ class MentionsEndpoint:
 
     async def query(
         self,
-        global_event_id: str,
+        global_event_id: int,
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
@@ -124,7 +124,7 @@ class MentionsEndpoint:
         For large result sets or memory-constrained environments, use stream() instead.
 
         Args:
-            global_event_id: Global event ID to fetch mentions for
+            global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True, recommended for mentions)
 
@@ -139,7 +139,7 @@ class MentionsEndpoint:
             >>> filter_obj = EventFilter(
             ...     date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
             ... )
-            >>> result = await endpoint.query("123456789", filter_obj)
+            >>> result = await endpoint.query(123456789, filter_obj)
             >>> print(f"Complete: {result.complete}, Count: {len(result)}")
             >>> for mention in result:
             ...     print(f"{mention.source_name}: {mention.confidence}%")
@@ -174,7 +174,7 @@ class MentionsEndpoint:
 
     async def stream(
         self,
-        global_event_id: str,
+        global_event_id: int,
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
@@ -185,7 +185,7 @@ class MentionsEndpoint:
         to public Mention model at the yield boundary. Memory-efficient for large result sets.
 
         Args:
-            global_event_id: Global event ID to fetch mentions for
+            global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True, recommended for mentions)
 
@@ -200,7 +200,7 @@ class MentionsEndpoint:
             >>> filter_obj = EventFilter(
             ...     date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
             ... )
-            >>> async for mention in endpoint.stream("123456789", filter_obj):
+            >>> async for mention in endpoint.stream(123456789, filter_obj):
             ...     if mention.confidence >= 80:
             ...         print(f"High confidence: {mention.source_name}")
         """
@@ -285,7 +285,7 @@ class MentionsEndpoint:
 
     def query_sync(
         self,
-        global_event_id: str,
+        global_event_id: int,
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
@@ -296,7 +296,7 @@ class MentionsEndpoint:
         method in a new event loop. For better performance, use the async version directly.
 
         Args:
-            global_event_id: Global event ID to fetch mentions for
+            global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True)
 
@@ -311,7 +311,7 @@ class MentionsEndpoint:
             >>> filter_obj = EventFilter(
             ...     date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
             ... )
-            >>> result = endpoint.query_sync("123456789", filter_obj)
+            >>> result = endpoint.query_sync(123456789, filter_obj)
             >>> for mention in result:
             ...     print(mention.source_name)
         """
@@ -325,7 +325,7 @@ class MentionsEndpoint:
 
     def stream_sync(
         self,
-        global_event_id: str,
+        global_event_id: int,
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
@@ -340,7 +340,7 @@ class MentionsEndpoint:
         For better performance, use the async stream() method directly if possible.
 
         Args:
-            global_event_id: Global event ID to fetch mentions for
+            global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True)
 
@@ -356,7 +356,7 @@ class MentionsEndpoint:
             >>> filter_obj = EventFilter(
             ...     date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
             ... )
-            >>> for mention in endpoint.stream_sync("123456789", filter_obj):
+            >>> for mention in endpoint.stream_sync(123456789, filter_obj):
             ...     print(mention.source_name)
         """
 

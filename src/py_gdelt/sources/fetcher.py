@@ -397,7 +397,7 @@ class DataFetcher:
 
     async def fetch_mentions(
         self,
-        global_event_id: str,
+        global_event_id: int,
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = False,
@@ -408,7 +408,7 @@ class DataFetcher:
         Note that mentions require a date range filter for efficient querying.
 
         Args:
-            global_event_id: Global event ID to fetch mentions for
+            global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range (other fields ignored for mentions)
             use_bigquery: If True, skip files and use BigQuery directly
 
@@ -424,7 +424,7 @@ class DataFetcher:
             >>> filter_obj = EventFilter(
             ...     date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
             ... )
-            >>> async for mention in fetcher.fetch_mentions("123456789", filter_obj):
+            >>> async for mention in fetcher.fetch_mentions(123456789, filter_obj):
             ...     print(mention.mention_source_name)
         """
         # For mentions, we need to use BigQuery as files don't support event-specific queries

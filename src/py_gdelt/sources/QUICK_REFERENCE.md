@@ -140,7 +140,7 @@ http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.translation.export.CSV.zip
 
 1. **TAB Delimiters**: Files have `.CSV` extension but use TAB delimiters, not commas
 2. **15-minute Slots**: Files published every 15 minutes, but some slots may be empty (404s are normal)
-3. **HTTPS Auto-upgrade**: HTTP URLs automatically upgraded to HTTPS
+3. **HTTP Only**: `data.gdeltproject.org` only supports HTTP (SSL cert mismatch)
 4. **Caching**: Historical files (>30 days) cached indefinitely, recent files use TTL
 5. **Security**: Only allows `data.gdeltproject.org` domain, enforces size limits
 

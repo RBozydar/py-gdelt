@@ -78,7 +78,7 @@ class TestBuildParams:
         params = endpoint._build_params(filter)
 
         assert params["query"] == "earthquake"
-        assert params["format"] == "json"
+        assert params["format"] == "GeoJSON"
         assert "maxpoints" in params
         assert params["maxpoints"] == "250"  # Default
 

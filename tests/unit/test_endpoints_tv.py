@@ -159,38 +159,50 @@ def test_build_params_basic() -> None:
 
     assert params["query"] == "election"
     assert params["format"] == "json"
-    assert params["mode"] == "clipgallery"
+    assert params["mode"] == "ClipGallery"
     assert params["maxrecords"] == "250"
 
 
 def test_build_params_with_station() -> None:
-    """Test params with station filter."""
+    """Test params with station filter.
+
+    Station is now embedded in the query string, not as a separate parameter.
+    """
     filter = TVFilter(query="test", station="CNN")
     endpoint = TVEndpoint()
     params = endpoint._build_params(filter)
 
-    assert params["station"] == "CNN"
-    assert params["query"] == "test"
+    # Station is embedded in query, not as separate param
+    assert "station:CNN" in params["query"]
+    assert params["query"] == "test station:CNN"
 
 
 def test_build_params_with_market() -> None:
-    """Test params with market filter."""
+    """Test params with market filter.
+
+    Market is now embedded in the query string, not as a separate parameter.
+    """
     filter = TVFilter(query="test", market="National")
     endpoint = TVEndpoint()
     params = endpoint._build_params(filter)
 
-    assert params["market"] == "National"
+    # Market is embedded in query, not as separate param
+    assert "market:National" in params["query"]
 
 
 def test_build_params_with_timespan() -> None:
-    """Test params with timespan."""
+    """Test params with timespan.
+
+    Timespan is now converted to explicit STARTDATETIME/ENDDATETIME.
+    """
     filter = TVFilter(query="test", timespan="7d")
     endpoint = TVEndpoint()
     params = endpoint._build_params(filter)
 
-    assert params["timespan"] == "7d"
-    assert "startdatetime" not in params
-    assert "enddatetime" not in params
+    # Timespan is now converted to explicit datetime range
+    assert "STARTDATETIME" in params
+    assert "ENDDATETIME" in params
+    assert "timespan" not in params
 
 
 def test_build_params_with_datetime() -> None:
@@ -203,9 +215,8 @@ def test_build_params_with_datetime() -> None:
     endpoint = TVEndpoint()
     params = endpoint._build_params(filter)
 
-    assert params["startdatetime"] == "20240101000000"
-    assert params["enddatetime"] == "20240102000000"
-    assert "timespan" not in params
+    assert params["STARTDATETIME"] == "20240101000000"
+    assert params["ENDDATETIME"] == "20240102000000"
 
 
 def test_build_params_start_datetime_only() -> None:
@@ -217,8 +228,8 @@ def test_build_params_start_datetime_only() -> None:
     endpoint = TVEndpoint()
     params = endpoint._build_params(filter)
 
-    assert params["startdatetime"] == "20240101123045"
-    assert "enddatetime" not in params
+    assert params["STARTDATETIME"] == "20240101123045"
+    assert "ENDDATETIME" not in params
 
 
 def test_build_params_max_results() -> None:
@@ -232,20 +243,20 @@ def test_build_params_max_results() -> None:
 
 def test_build_params_timeline_mode() -> None:
     """Test params with timeline mode."""
-    filter = TVFilter(query="test", mode="timeline")
+    filter = TVFilter(query="test", mode="TimelineVol")
     endpoint = TVEndpoint()
     params = endpoint._build_params(filter)
 
-    assert params["mode"] == "timeline"
+    assert params["mode"] == "TimelineVol"
 
 
 def test_build_params_stationchart_mode() -> None:
     """Test params with stationchart mode."""
-    filter = TVFilter(query="test", mode="stationchart")
+    filter = TVFilter(query="test", mode="StationChart")
     endpoint = TVEndpoint()
     params = endpoint._build_params(filter)
 
-    assert params["mode"] == "stationchart"
+    assert params["mode"] == "StationChart"
 
 
 # URL Building Tests
@@ -303,7 +314,10 @@ async def test_search_clips() -> None:
 @respx.mock
 @pytest.mark.asyncio
 async def test_search_with_parameters() -> None:
-    """Test search with all parameters."""
+    """Test search with all parameters.
+
+    Station and market are now embedded in query, timespan is converted to datetime range.
+    """
     mock_route = respx.get("https://api.gdeltproject.org/api/v2/tv/tv").mock(
         return_value=httpx.Response(200, json={"clips": []}),
     )
@@ -322,12 +336,15 @@ async def test_search_with_parameters() -> None:
     assert mock_route.called
     request = mock_route.calls[0].request
     params = dict(request.url.params)
-    assert params["query"] == "climate change"
-    assert params["station"] == "CNN"
-    assert params["market"] == "National"
-    assert params["timespan"] == "7d"
+    # Station and market are now embedded in query string
+    assert "climate change" in params["query"]
+    assert "station:CNN" in params["query"]
+    assert "market:National" in params["query"]
+    # Timespan is now converted to explicit datetime range
+    assert "STARTDATETIME" in params
+    assert "ENDDATETIME" in params
     assert params["maxrecords"] == "100"
-    assert params["mode"] == "clipgallery"
+    assert params["mode"] == "ClipGallery"
 
 
 @respx.mock
@@ -549,7 +566,10 @@ async def test_tvai_search() -> None:
 @respx.mock
 @pytest.mark.asyncio
 async def test_tvai_search_with_parameters() -> None:
-    """Test TVAI search with all parameters."""
+    """Test TVAI search with all parameters.
+
+    Station is now embedded in query, timespan is converted to datetime range.
+    """
     mock_route = respx.get("https://api.gdeltproject.org/api/v2/tvai/tvai").mock(
         return_value=httpx.Response(200, json={"clips": []}),
     )
@@ -567,11 +587,14 @@ async def test_tvai_search_with_parameters() -> None:
     assert mock_route.called
     request = mock_route.calls[0].request
     params = dict(request.url.params)
-    assert params["query"] == "artificial intelligence"
-    assert params["station"] == "CNN"
-    assert params["timespan"] == "30d"
+    # Station is now embedded in query string
+    assert "artificial intelligence" in params["query"]
+    assert "station:CNN" in params["query"]
+    # Timespan is now converted to explicit datetime range
+    assert "STARTDATETIME" in params
+    assert "ENDDATETIME" in params
     assert params["maxrecords"] == "50"
-    assert params["mode"] == "clipgallery"
+    assert params["mode"] == "ClipGallery"
 
 
 @respx.mock

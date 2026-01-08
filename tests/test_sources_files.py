@@ -114,7 +114,7 @@ class TestGetMasterFileList:
         )
 
         async with respx.mock:
-            respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
+            respx.get(MASTER_FILE_LIST_URL).mock(
                 return_value=httpx.Response(200, text=mock_content),
             )
 
@@ -136,10 +136,10 @@ class TestGetMasterFileList:
         )
 
         async with respx.mock:
-            respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
+            respx.get(MASTER_FILE_LIST_URL).mock(
                 return_value=httpx.Response(200, text=master_content),
             )
-            respx.get(TRANSLATION_FILE_LIST_URL.replace("http://", "https://")).mock(
+            respx.get(TRANSLATION_FILE_LIST_URL).mock(
                 return_value=httpx.Response(200, text=trans_content),
             )
 
@@ -154,7 +154,7 @@ class TestGetMasterFileList:
     ) -> None:
         """Test master file list with HTTP error."""
         async with respx.mock:
-            respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
+            respx.get(MASTER_FILE_LIST_URL).mock(
                 return_value=httpx.Response(503, text="Service Unavailable"),
             )
 
@@ -168,7 +168,7 @@ class TestGetMasterFileList:
     ) -> None:
         """Test master file list with network error."""
         async with respx.mock:
-            respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
+            respx.get(MASTER_FILE_LIST_URL).mock(
                 side_effect=httpx.ConnectError("Connection failed"),
             )
 
@@ -184,7 +184,7 @@ class TestGetMasterFileList:
         mock_content = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
 
         async with respx.mock:
-            mock_route = respx.get(MASTER_FILE_LIST_URL.replace("http://", "https://")).mock(
+            mock_route = respx.get(MASTER_FILE_LIST_URL).mock(
                 return_value=httpx.Response(200, text=mock_content),
             )
 
@@ -346,7 +346,7 @@ class TestDownloadFile:
         mock_data = b"test data"
 
         async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
+            respx.get(url).mock(
                 return_value=httpx.Response(200, content=mock_data),
             )
 
@@ -363,7 +363,7 @@ class TestDownloadFile:
         url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
 
         async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
+            respx.get(url).mock(
                 return_value=httpx.Response(404, text="Not Found"),
             )
 
@@ -379,7 +379,7 @@ class TestDownloadFile:
         url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
 
         async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
+            respx.get(url).mock(
                 return_value=httpx.Response(500, text="Internal Server Error"),
             )
 
@@ -396,7 +396,7 @@ class TestDownloadFile:
         mock_data = b"test data"
 
         async with respx.mock:
-            mock_route = respx.get(url.replace("http://", "https://")).mock(
+            mock_route = respx.get(url).mock(
                 return_value=httpx.Response(200, content=mock_data),
             )
 
@@ -431,7 +431,7 @@ class TestDownloadAndExtract:
         zip_data = zip_buffer.getvalue()
 
         async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
+            respx.get(url).mock(
                 return_value=httpx.Response(200, content=zip_data),
             )
 
@@ -455,7 +455,7 @@ class TestDownloadAndExtract:
         gzip_data = gzip_buffer.getvalue()
 
         async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
+            respx.get(url).mock(
                 return_value=httpx.Response(200, content=gzip_data),
             )
 
@@ -473,7 +473,7 @@ class TestDownloadAndExtract:
         original_data = b"test data"
 
         async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
+            respx.get(url).mock(
                 return_value=httpx.Response(200, content=original_data),
             )
 
@@ -491,7 +491,7 @@ class TestDownloadAndExtract:
         bad_zip_data = b"not a valid zip file"
 
         async with respx.mock:
-            respx.get(url.replace("http://", "https://")).mock(
+            respx.get(url).mock(
                 return_value=httpx.Response(200, content=bad_zip_data),
             )
 
@@ -521,7 +521,7 @@ class TestStreamFiles:
 
         async with respx.mock:
             for url in urls:
-                respx.get(url.replace("http://", "https://")).mock(
+                respx.get(url).mock(
                     return_value=httpx.Response(200, content=zip_data),
                 )
 
@@ -554,15 +554,15 @@ class TestStreamFiles:
 
         async with respx.mock:
             # First URL succeeds
-            respx.get(urls[0].replace("http://", "https://")).mock(
+            respx.get(urls[0]).mock(
                 return_value=httpx.Response(200, content=zip_data),
             )
             # Second URL fails with 404
-            respx.get(urls[1].replace("http://", "https://")).mock(
+            respx.get(urls[1]).mock(
                 return_value=httpx.Response(404, text="Not Found"),
             )
             # Third URL succeeds
-            respx.get(urls[2].replace("http://", "https://")).mock(
+            respx.get(urls[2]).mock(
                 return_value=httpx.Response(200, content=zip_data),
             )
 
@@ -599,7 +599,7 @@ class TestStreamFiles:
 
         async with respx.mock:
             for url in urls:
-                respx.get(url.replace("http://", "https://")).mock(
+                respx.get(url).mock(
                     return_value=httpx.Response(200, content=zip_data),
                 )
 
@@ -651,7 +651,7 @@ class TestStreamFiles:
 
         async with respx.mock:
             for url in urls:
-                respx.get(url.replace("http://", "https://")).mock(
+                respx.get(url).mock(
                     side_effect=lambda request, url=url: delayed_response(url),
                 )
 

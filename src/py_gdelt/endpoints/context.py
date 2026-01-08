@@ -157,7 +157,7 @@ class ContextEndpoint(BaseEndpoint):
         params: dict[str, str] = {
             "query": query,
             "format": "json",
-            "mode": "context",
+            "mode": "artlist",  # GDELT Context API only supports 'artlist' mode
         }
 
         if timespan:
