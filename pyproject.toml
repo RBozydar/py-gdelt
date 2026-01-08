@@ -15,6 +15,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "defusedxml>=0.7.1",
     "anyio>=4.0",
+    "urllib3>=2.6.3",
 ]
 keywords = ["gdelt", "news", "events", "data-science", "api"]
 classifiers = [
