@@ -90,3 +90,7 @@ jobs:
                 labels: ['schema-drift', 'needs-review']
               });
             }
+
+      - name: Fail workflow if drift detected
+        if: steps.check.outputs.drift_detected == 'true'
+        run: exit 1

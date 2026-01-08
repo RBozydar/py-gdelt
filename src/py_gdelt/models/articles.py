@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
+
+
+logger = logging.getLogger(__name__)
 
 
 __all__ = ["Article", "Timeline", "TimelinePoint"]
@@ -128,11 +132,13 @@ class Timeline(BaseModel):
                 elif isinstance(item, dict):
                     # Check for nested series/data structure from timelinevol API
                     if "data" in item and isinstance(item["data"], list):
-                        points.extend(
-                            TimelinePoint.model_validate(dp)
-                            for dp in item["data"]
-                            if isinstance(dp, dict)
-                        )
+                        for dp in item["data"]:
+                            if isinstance(dp, dict):
+                                points.append(TimelinePoint.model_validate(dp))
+                            else:
+                                logger.warning(
+                                    "Skipping non-dict timeline data point: %s", type(dp).__name__
+                                )
                     else:
                         # Flat structure with date/value directly
                         points.append(TimelinePoint.model_validate(item))
