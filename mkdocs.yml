@@ -1,6 +1,7 @@
 site_name: gdelt-py
 site_description: Python client library for GDELT (Global Database of Events, Language, and Tone)
 site_author: Robert Wasilewski
+site_url: https://rbozydar.github.io/py-gdelt/
 repo_url: https://github.com/RBozydar/py-gdelt
 repo_name: rbozydar/py-gdelt
 

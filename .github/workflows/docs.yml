@@ -35,7 +35,7 @@ jobs:
             mkdocs-material-
 
       - name: Install dependencies
-        run: uv venv && uv pip install mkdocs-material mkdocstrings[python]
+        run: uv sync --extra docs
 
       - name: Sync README to docs index
         run: |
