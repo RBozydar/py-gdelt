@@ -16,7 +16,6 @@ making it easy to test and configure.
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator, Iterator
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal, Protocol, TypeVar
 
@@ -30,6 +29,8 @@ from py_gdelt.filters import EventFilter, GKGFilter, NGramsFilter
 
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from py_gdelt.models._internal import _RawEvent, _RawGKG, _RawMention, _RawNGram
     from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.files import FileSource, FileType
@@ -55,9 +56,7 @@ class Parser(Protocol[T_co]):
     The parser is responsible for converting raw bytes into typed records.
     """
 
-    def parse(
-        self, data: bytes, is_translated: bool = False
-    ) -> Iterator[T_co] | AsyncIterator[T_co]:
+    def parse(self, data: bytes, is_translated: bool = False) -> Iterator[T_co]:
         """Parse raw bytes into typed records.
 
         Args:
@@ -65,7 +64,7 @@ class Parser(Protocol[T_co]):
             is_translated: Whether this is from the translated feed
 
         Returns:
-            Iterator or AsyncIterator of parsed records
+            Iterator of parsed records
 
         Raises:
             ParseError: If parsing fails
@@ -270,20 +269,9 @@ class DataFetcher:
 
             # Parse the file data
             try:
-                # Handle both sync and async parsers
-                parse_result = parser.parse(data, is_translated=is_translated)
-
-                # Check if result is async iterator (isinstance enables type narrowing)
-                if isinstance(parse_result, AsyncIterator):
-                    async for record in parse_result:
-                        yield record
-                        records_yielded += 1
-                else:
-                    # Sync parser (most common)
-                    for record in parse_result:
-                        yield record
-                        records_yielded += 1
-
+                for record in parser.parse(data, is_translated=is_translated):
+                    yield record
+                    records_yielded += 1
             except Exception as e:
                 # Error boundary: handle parsing errors according to error policy
                 logger.exception("Failed to parse file %s", url)
