@@ -71,6 +71,21 @@ async with GDELTClient() as client:
 - **Countries** - Country code conversions (FIPS, ISO2, ISO3)
 - **Ethnic/Religious Groups** - Group classifications
 
+## Data Source Matrix
+
+| Data Type | API | BigQuery | Raw Files | Time Constraint | Fallback |
+|-----------|-----|----------|-----------|-----------------|----------|
+| Articles (fulltext) | DOC 2.0 | - | - | Rolling 3 months | No |
+| Article geo heatmaps | GEO 2.0 | - | - | Rolling 7 days | No |
+| Sentence-level context | Context 2.0 | - | - | Rolling 72 hours | No |
+| TV captions | TV 2.0 | - | - | July 2009+ | No |
+| Events v2 | - | Yes | Yes | Feb 2015+ | Yes |
+| Events v1 | - | Yes | Yes | 1979 - Feb 2015 | Yes |
+| Mentions | - | Yes | Yes | Feb 2015+ | Yes |
+| GKG v2 | - | Yes | Yes | Feb 2015+ | Yes |
+| GKG v1 | - | Yes | Yes | 2013 - Feb 2015 | Yes |
+| Web NGrams 3.0 | - | Yes | Yes | Jan 2020+ | Yes |
+
 ## Key Concepts
 
 ### Async-First Design

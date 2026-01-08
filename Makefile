@@ -1,4 +1,4 @@
-.PHONY: help fmt lint typecheck test coverage doc-coverage ci verify install clean commit bump-version changelog
+.PHONY: help fmt lint typecheck test coverage doc-coverage ci verify install clean commit bump-version changelog integration integration-schema-drift integration-bigquery
 
 help:  ## Show this help message
 	@echo "Available targets:"
@@ -60,3 +60,12 @@ bump-version:  ## Bump version based on commits
 
 changelog:  ## Generate changelog
 	uv run cz changelog
+
+integration:  ## Run all integration tests (requires network)
+	uv run pytest tests/integration/ -v -m integration
+
+integration-schema-drift:  ## Run schema drift detection tests
+	uv run pytest tests/integration/test_schema_drift.py -v
+
+integration-bigquery:  ## Run BigQuery integration tests (requires GDELT_BIGQUERY_PROJECT)
+	uv run pytest tests/integration/test_bigquery.py -v

@@ -103,7 +103,7 @@ class GeoEndpoint(BaseEndpoint):
         """
         params: dict[str, str] = {
             "query": query_filter.query,
-            "format": "json",
+            "format": "GeoJSON",  # GDELT GEO API requires exact case
             "maxpoints": str(query_filter.max_results),
         }
 

@@ -15,6 +15,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "defusedxml>=0.7.1",
     "anyio>=4.0",
+    "urllib3>=2.6.3",
 ]
 keywords = ["gdelt", "news", "events", "data-science", "api"]
 classifiers = [
@@ -63,6 +64,7 @@ docs = [
     "mkdocs>=1.5",
     "mkdocs-material>=9.0",
     "mkdocstrings[python]>=0.24",
+    "mkdocs-llmstxt>=0.2.0",
 ]
 
 [tool.ruff]
@@ -327,6 +329,7 @@ addopts = [
 markers = [
     "integration: mark test as integration test (makes live API calls)",
     "slow: mark test as slow (typically integration tests)",
+    "schema_drift: mark test as schema drift detection test",
 ]
 
 [tool.coverage.run]

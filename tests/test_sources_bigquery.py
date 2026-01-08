@@ -7,6 +7,7 @@ This module tests the BigQuery data source with a focus on:
 - Async execution: run_in_executor usage, streaming results
 """
 
+import re
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -221,6 +222,34 @@ class TestWhereClauseBuilding:
         theme_value = param_dict["theme_pattern"].value
         assert isinstance(theme_value, str)
         assert "ENV_CLIMATECHANGE" in theme_value
+
+    def test_theme_prefix_no_substring_match(self) -> None:
+        """Verify theme_prefix doesn't match substrings in the middle of themes.
+
+        The pattern (^|;)PREFIX should only match when PREFIX appears at the
+        start of the string or immediately after a semicolon delimiter.
+        This prevents "WATER" from matching "FRESHWATER".
+        """
+        filter_obj = GKGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            theme_prefix="WATER",
+        )
+
+        _, parameters = _build_where_clause_for_gkg(filter_obj)
+
+        # Verify the pattern anchors at theme boundaries
+        param_dict = {p.name: p for p in parameters}
+        pattern = param_dict["theme_prefix_pattern"].value
+        assert pattern == r"(^|;)WATER"
+
+        # Test with actual regex to confirm behavior
+        assert re.search(pattern, "WATER;OTHER")  # Should match (at start)
+        assert re.search(pattern, "WATER_SUPPLY")  # Should match (at start, prefix)
+        assert re.search(pattern, "OTHER;WATER")  # Should match (after semicolon)
+        assert re.search(pattern, "OTHER;WATER_SECURITY")  # Should match (after semicolon)
+        assert not re.search(pattern, "FRESHWATER")  # Should NOT match (in middle)
+        assert not re.search(pattern, "OTHER;FRESHWATER")  # Should NOT match (in middle)
+        assert not re.search(pattern, "DEWATER")  # Should NOT match (in middle)
 
 
 class TestBigQuerySourceInit:

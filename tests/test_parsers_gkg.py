@@ -2,6 +2,7 @@
 
 import pytest
 
+from py_gdelt.exceptions import ParseError
 from py_gdelt.parsers.gkg import GKGParser
 
 
@@ -25,16 +26,16 @@ class TestGKGParserVersionDetection:
         assert version == 2
 
     def test_reject_invalid_column_count(self) -> None:
-        """Should raise ValueError for unsupported column counts."""
+        """Should raise ParseError for unsupported column counts."""
         parser = GKGParser()
         header = "\t".join([f"col{i}" for i in range(20)])  # Invalid count
-        with pytest.raises(ValueError, match="Unsupported GKG column count: 20"):
+        with pytest.raises(ParseError, match="Unsupported GKG column count: 20"):
             parser.detect_version(header.encode("utf-8"))
 
     def test_reject_empty_header(self) -> None:
-        """Should raise ValueError for empty header."""
+        """Should raise ParseError for empty header."""
         parser = GKGParser()
-        with pytest.raises(ValueError, match="Empty header line"):
+        with pytest.raises(ParseError, match="Empty header line"):
             parser.detect_version(b"")
 
 
@@ -412,13 +413,13 @@ class TestGKGParserEdgeCases:
     def test_parse_empty_data(self) -> None:
         """Should raise error on empty data."""
         parser = GKGParser()
-        with pytest.raises(ValueError, match="Empty header line"):
+        with pytest.raises(ParseError, match="Empty header line"):
             list(parser.parse(b""))
 
     def test_parse_whitespace_only(self) -> None:
         """Should raise error on whitespace-only data."""
         parser = GKGParser()
-        with pytest.raises(ValueError, match="Empty header line"):
+        with pytest.raises(ParseError, match="Empty header line"):
             list(parser.parse(b"   \n\n   \n"))
 
     def test_parse_utf8_with_invalid_chars(self) -> None:

@@ -217,7 +217,7 @@ class TestDocFilter:
             source_language="en",
             max_results=100,
             sort_by="relevance",
-            mode="timeline",
+            mode="timelinevol",
         )
         assert df.query == "climate change"
         assert df.timespan == "24h"
@@ -225,7 +225,7 @@ class TestDocFilter:
         assert df.source_language == "en"
         assert df.max_results == 100
         assert df.sort_by == "relevance"
-        assert df.mode == "timeline"
+        assert df.mode == "timelinevol"
 
     def test_cannot_use_both_timespan_and_datetime_range(self) -> None:
         """Test that timespan and datetime range are mutually exclusive."""
@@ -347,30 +347,30 @@ class TestTVFilter:
             station="CNN",
             market="National",
             max_results=100,
-            mode="timeline",
+            mode="TimelineVol",
         )
         assert tf.query == "presidential debate"
         assert tf.timespan == "24h"
         assert tf.station == "CNN"
         assert tf.market == "National"
         assert tf.max_results == 100
-        assert tf.mode == "timeline"
+        assert tf.mode == "TimelineVol"
 
     def test_mode_validation(self) -> None:
         """Test that mode accepts only valid values."""
-        # Valid modes
-        tf1 = TVFilter(query="test", mode="clipgallery")
-        assert tf1.mode == "clipgallery"
+        # Valid modes (PascalCase required by GDELT TV API)
+        tf1 = TVFilter(query="test", mode="ClipGallery")
+        assert tf1.mode == "ClipGallery"
 
-        tf2 = TVFilter(query="test", mode="timeline")
-        assert tf2.mode == "timeline"
+        tf2 = TVFilter(query="test", mode="TimelineVol")
+        assert tf2.mode == "TimelineVol"
 
-        tf3 = TVFilter(query="test", mode="stationchart")
-        assert tf3.mode == "stationchart"
+        tf3 = TVFilter(query="test", mode="StationChart")
+        assert tf3.mode == "StationChart"
 
         # Invalid mode - Pydantic will validate at runtime
         with pytest.raises(ValidationError):
-            TVFilter(query="test", mode="invalid_mode")
+            TVFilter(query="test", mode="invalid_mode")  # type: ignore[arg-type]
 
     def test_default_values(self) -> None:
         """Test default values for optional fields."""
@@ -381,7 +381,7 @@ class TestTVFilter:
         assert tf.station is None
         assert tf.market is None
         assert tf.max_results == 250
-        assert tf.mode == "clipgallery"
+        assert tf.mode == "ClipGallery"
 
     def test_datetime_range(self) -> None:
         """Test using datetime range instead of timespan."""

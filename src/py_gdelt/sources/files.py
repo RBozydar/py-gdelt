@@ -30,12 +30,14 @@ __all__ = ["FileSource", "FileType"]
 
 logger = logging.getLogger(__name__)
 
-# GDELT file list URLs (use HTTPS for security)
-MASTER_FILE_LIST_URL: Final[str] = "https://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
+# GDELT file list URLs
+# NOTE: data.gdeltproject.org only supports HTTP (SSL cert is for *.storage.googleapis.com)
+# See: https://blog.gdeltproject.org/https-now-available-for-selected-gdelt-apis-and-services/
+MASTER_FILE_LIST_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
 TRANSLATION_FILE_LIST_URL: Final[str] = (
-    "https://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt"
+    "http://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt"
 )
-LAST_UPDATE_URL: Final[str] = "https://data.gdeltproject.org/gdeltv2/lastupdate.txt"
+LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
 
 # File type patterns
 FILE_TYPE_PATTERNS: Final[dict[str, str]] = {
@@ -139,10 +141,8 @@ class FileSource:
                     logger.debug("Using cached master file list: %s", url)
                     content = cached_data.decode("utf-8")
                 else:
-                    secure_url = self._upgrade_to_https(url)
-
-                    logger.info("Fetching master file list: %s", secure_url)
-                    response = await self.client.get(secure_url)
+                    logger.info("Fetching master file list: %s", url)
+                    response = await self.client.get(url)
                     response.raise_for_status()
 
                     content = response.text
@@ -255,17 +255,18 @@ class FileSource:
         Raises:
             APIError: If download fails
         """
-        secure_url = self._upgrade_to_https(url)
-
         # Check cache first
         cached_data = self.cache.get(url)
         if cached_data is not None:
             logger.debug("Cache hit for URL: %s", url)
             return cached_data
 
+        # NOTE: We use HTTP (not HTTPS) for data.gdeltproject.org because their
+        # SSL certificate is for *.storage.googleapis.com, causing hostname mismatch.
+        # See: https://blog.gdeltproject.org/https-now-available-for-selected-gdelt-apis-and-services/
         try:
-            logger.debug("Downloading: %s", secure_url)
-            response = await self.client.get(secure_url)
+            logger.debug("Downloading: %s", url)
+            response = await self.client.get(url)
             response.raise_for_status()
 
             content = response.content
@@ -281,16 +282,16 @@ class FileSource:
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 # Missing files are normal (not all 15-min slots exist)
-                logger.debug("File not found (404): %s", secure_url)
+                logger.debug("File not found (404): %s", url)
                 msg = f"File not found: {url}"
                 raise APIError(msg) from e
 
-            logger.error("HTTP error downloading %s: %s", secure_url, e)  # noqa: TRY400
+            logger.error("HTTP error downloading %s: %s", url, e)  # noqa: TRY400
             msg = f"Failed to download file: {e}"
             raise APIUnavailableError(msg) from e
 
         except httpx.RequestError as e:
-            logger.error("Request error downloading %s: %s", secure_url, e)  # noqa: TRY400
+            logger.error("Request error downloading %s: %s", url, e)  # noqa: TRY400
             msg = f"Network error downloading file: {e}"
             raise APIError(msg) from e
         else:
@@ -469,6 +470,11 @@ class FileSource:
     @staticmethod
     def _upgrade_to_https(url: str) -> str:
         """Upgrade HTTP URL to HTTPS.
+
+        Note:
+            This method is currently unused because data.gdeltproject.org only
+            supports HTTP (SSL cert is for *.storage.googleapis.com). Kept for
+            potential future use if GDELT fixes their SSL certificate.
 
         Args:
             url: URL to upgrade

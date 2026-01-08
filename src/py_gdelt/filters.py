@@ -185,7 +185,7 @@ class DocFilter(BaseModel):
     sort_by: Literal["date", "relevance", "tone"] = "date"
 
     # Output mode
-    mode: Literal["artlist", "timeline", "artgallery"] = "artlist"
+    mode: Literal["artlist", "artgallery", "timelinevol"] = "artlist"
 
     @model_validator(mode="after")
     def validate_time_constraints(self) -> DocFilter:
@@ -267,7 +267,7 @@ class TVFilter(BaseModel):
 
     # Result options
     max_results: int = Field(default=250, ge=1, le=250)
-    mode: Literal["clipgallery", "timeline", "stationchart"] = "clipgallery"
+    mode: Literal["ClipGallery", "TimelineVol", "StationChart"] = "ClipGallery"
 
 
 class NGramsFilter(BaseModel):

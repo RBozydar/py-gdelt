@@ -35,6 +35,35 @@ theme:
 
 plugins:
   - search
+  - llmstxt:
+      markdown_description: |
+        gdelt-py is a Python client library for GDELT (Global Database of Events, Language, and Tone).
+        It provides unified access to all 6 REST APIs, 3 database tables (Events, Mentions, GKG),
+        and NGrams dataset with modern async-first design, Pydantic models, and streaming support.
+      sections:
+        Getting Started:
+          - getting-started/installation.md
+          - getting-started/quickstart.md
+          - getting-started/configuration.md
+        User Guide:
+          - user-guide/events.md
+          - user-guide/gkg.md
+          - user-guide/ngrams.md
+          - user-guide/rest-apis.md
+          - user-guide/lookups.md
+          - user-guide/streaming.md
+          - user-guide/deduplication.md
+          - user-guide/errors.md
+        API Reference:
+          - api/client.md
+          - api/endpoints.md
+          - api/filters.md
+          - api/models.md
+          - api/exceptions.md
+        Examples:
+          - examples/basic.md
+          - examples/advanced.md
+      full_output: llms-full.txt
   - mkdocstrings:
       handlers:
         python:
@@ -67,6 +96,8 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
     - Configuration: getting-started/configuration.md
+    - Data Sources: getting-started/data-sources.md
+  - Architecture: architecture.md
   - User Guide:
     - Events & Mentions: user-guide/events.md
     - GKG: user-guide/gkg.md

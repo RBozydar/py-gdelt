@@ -104,13 +104,13 @@ class TestBuildParams:
 
         assert params["maxrecords"] == "100"
 
-    def test_build_params_timeline_mode(self) -> None:
-        """Test params for timeline mode."""
-        filter = DocFilter(query="test", mode="timeline")  # type: ignore[arg-type]
+    def test_build_params_timelinevol_mode(self) -> None:
+        """Test params for timelinevol mode (used by timeline method)."""
+        filter = DocFilter(query="test", mode="timelinevol")
         endpoint = DocEndpoint()
         params = endpoint._build_params(filter)
 
-        assert params["mode"] == "timeline"
+        assert params["mode"] == "timelinevol"
 
 
 class TestBuildUrl:
@@ -331,7 +331,7 @@ class TestTimelineMethod:
 
             # Verify mode and timespan
             request = route.calls.last.request
-            assert request.url.params["mode"] == "timeline"
+            assert request.url.params["mode"] == "timelinevol"
             assert request.url.params["timespan"] == "30d"
 
     @respx.mock
