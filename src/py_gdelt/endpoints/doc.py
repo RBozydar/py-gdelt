@@ -268,7 +268,7 @@ class DocEndpoint(BaseEndpoint):
         query_filter = DocFilter(
             query=query,
             timespan=timespan,
-            mode="timeline",
+            mode="timelinevol",  # GDELT API uses 'timelinevol', not 'timeline'
         )
 
         params = self._build_params(query_filter)

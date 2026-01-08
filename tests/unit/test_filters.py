@@ -217,7 +217,7 @@ class TestDocFilter:
             source_language="en",
             max_results=100,
             sort_by="relevance",
-            mode="timeline",
+            mode="timelinevol",
         )
         assert df.query == "climate change"
         assert df.timespan == "24h"
@@ -225,7 +225,7 @@ class TestDocFilter:
         assert df.source_language == "en"
         assert df.max_results == 100
         assert df.sort_by == "relevance"
-        assert df.mode == "timeline"
+        assert df.mode == "timelinevol"
 
     def test_cannot_use_both_timespan_and_datetime_range(self) -> None:
         """Test that timespan and datetime range are mutually exclusive."""

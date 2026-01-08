@@ -58,7 +58,6 @@ async def test_doc_search_with_language_filter(gdelt_client: GDELTClient) -> Non
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.timeout(60)
-@pytest.mark.skip(reason="GDELT API uses 'timelinevol' mode, not 'timeline' - library bug")
 async def test_doc_timeline(gdelt_client: GDELTClient) -> None:
     """Test timeline endpoint returns data points."""
     timeline = await gdelt_client.doc.timeline(

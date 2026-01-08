@@ -185,7 +185,7 @@ class DocFilter(BaseModel):
     sort_by: Literal["date", "relevance", "tone"] = "date"
 
     # Output mode
-    mode: Literal["artlist", "timeline", "artgallery"] = "artlist"
+    mode: Literal["artlist", "artgallery", "timelinevol"] = "artlist"
 
     @model_validator(mode="after")
     def validate_time_constraints(self) -> DocFilter:
