@@ -29,7 +29,8 @@ Example:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import re
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from pydantic import BaseModel
@@ -175,30 +176,41 @@ class TVEndpoint(BaseEndpoint):
         Handles both timespan and datetime range parameters, station/market
         filtering, and output mode selection.
 
+        Note: GDELT TV API requires station to be in the query string itself
+        (e.g., "election station:CNN") rather than as a separate parameter.
+
         Args:
             query_filter: Validated TV filter object
 
         Returns:
             Dictionary of query parameters ready for HTTP request
         """
+        # Build query string - GDELT TV API requires station in query
+        query = query_filter.query
+        if query_filter.station:
+            query = f"{query} station:{query_filter.station}"
+        if query_filter.market:
+            query = f"{query} market:{query_filter.market}"
+
         params: dict[str, str] = {
-            "query": query_filter.query,
+            "query": query,
             "format": "json",
             "mode": query_filter.mode,
             "maxrecords": str(query_filter.max_results),
         }
 
+        # Convert timespan to explicit datetime range (GDELT TV API TIMESPAN is unreliable)
         if query_filter.timespan:
-            params["timespan"] = query_filter.timespan
+            delta = _parse_timespan(query_filter.timespan)
+            if delta:
+                end_dt = datetime.now(UTC)
+                start_dt = end_dt - delta
+                params["STARTDATETIME"] = start_dt.strftime("%Y%m%d%H%M%S")
+                params["ENDDATETIME"] = end_dt.strftime("%Y%m%d%H%M%S")
         elif query_filter.start_datetime:
-            params["startdatetime"] = query_filter.start_datetime.strftime("%Y%m%d%H%M%S")
+            params["STARTDATETIME"] = query_filter.start_datetime.strftime("%Y%m%d%H%M%S")
             if query_filter.end_datetime:
-                params["enddatetime"] = query_filter.end_datetime.strftime("%Y%m%d%H%M%S")
-
-        if query_filter.station:
-            params["station"] = query_filter.station
-        if query_filter.market:
-            params["market"] = query_filter.market
+                params["ENDDATETIME"] = query_filter.end_datetime.strftime("%Y%m%d%H%M%S")
 
         return params
 
@@ -207,6 +219,8 @@ class TVEndpoint(BaseEndpoint):
         query: str,
         *,
         timespan: str | None = None,
+        start_datetime: datetime | None = None,
+        end_datetime: datetime | None = None,
         station: str | None = None,
         market: str | None = None,
         max_results: int = 250,
@@ -219,6 +233,8 @@ class TVEndpoint(BaseEndpoint):
         Args:
             query: Search query (keywords, phrases, or boolean expressions)
             timespan: Time range (e.g., "24h", "7d", "30d")
+            start_datetime: Start of date range (alternative to timespan)
+            end_datetime: End of date range (alternative to timespan)
             station: Filter by station (CNN, FOXNEWS, MSNBC, etc.)
             market: Filter by market (National, Philadelphia, etc.)
             max_results: Maximum clips to return (1-250)
@@ -237,10 +253,12 @@ class TVEndpoint(BaseEndpoint):
         query_filter = TVFilter(
             query=query,
             timespan=timespan,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
             station=station,
             market=market,
             max_results=max_results,
-            mode="clipgallery",
+            mode="ClipGallery",
         )
         return await self.query_clips(query_filter)
 
@@ -262,7 +280,7 @@ class TVEndpoint(BaseEndpoint):
             APIUnavailableError: If the API is unavailable
         """
         params = self._build_params(query_filter)
-        params["mode"] = "clipgallery"
+        params["mode"] = "ClipGallery"
         url = await self._build_url()
 
         data = await self._get_json(url, params=params)
@@ -287,6 +305,8 @@ class TVEndpoint(BaseEndpoint):
         query: str,
         *,
         timespan: str | None = "7d",
+        start_datetime: datetime | None = None,
+        end_datetime: datetime | None = None,
         station: str | None = None,
     ) -> TVTimeline:
         """Get timeline of TV mentions.
@@ -297,6 +317,8 @@ class TVEndpoint(BaseEndpoint):
         Args:
             query: Search query
             timespan: Time range (default: "7d")
+            start_datetime: Start of date range (alternative to timespan)
+            end_datetime: End of date range (alternative to timespan)
             station: Optional station filter
 
         Returns:
@@ -314,9 +336,11 @@ class TVEndpoint(BaseEndpoint):
         """
         query_filter = TVFilter(
             query=query,
-            timespan=timespan,
+            timespan=timespan if not start_datetime else None,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
             station=station,
-            mode="timeline",
+            mode="TimelineVol",
         )
 
         params = self._build_params(query_filter)
@@ -340,6 +364,8 @@ class TVEndpoint(BaseEndpoint):
         query: str,
         *,
         timespan: str | None = "7d",
+        start_datetime: datetime | None = None,
+        end_datetime: datetime | None = None,
     ) -> TVStationChart:
         """Get station comparison chart.
 
@@ -349,6 +375,8 @@ class TVEndpoint(BaseEndpoint):
         Args:
             query: Search query
             timespan: Time range (default: "7d")
+            start_datetime: Start of date range (alternative to timespan)
+            end_datetime: End of date range (alternative to timespan)
 
         Returns:
             TVStationChart with station breakdown
@@ -365,8 +393,10 @@ class TVEndpoint(BaseEndpoint):
         """
         query_filter = TVFilter(
             query=query,
-            timespan=timespan,
-            mode="stationchart",
+            timespan=timespan if not start_datetime else None,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            mode="StationChart",
         )
 
         params = self._build_params(query_filter)
@@ -424,6 +454,8 @@ class TVAIEndpoint(BaseEndpoint):
         query: str,
         *,
         timespan: str | None = None,
+        start_datetime: datetime | None = None,
+        end_datetime: datetime | None = None,
         station: str | None = None,
         max_results: int = 250,
     ) -> list[TVClip]:
@@ -435,6 +467,8 @@ class TVAIEndpoint(BaseEndpoint):
         Args:
             query: Search query
             timespan: Time range (e.g., "24h", "7d")
+            start_datetime: Start of date range (alternative to timespan)
+            end_datetime: End of date range (alternative to timespan)
             station: Filter by station
             max_results: Maximum clips to return (1-250)
 
@@ -449,17 +483,30 @@ class TVAIEndpoint(BaseEndpoint):
         Example:
             clips = await tvai.search("machine learning", timespan="7d")
         """
+        # Build query string - GDELT TV API requires station in query
+        query_str = query
+        if station:
+            query_str = f"{query} station:{station}"
+
         params: dict[str, str] = {
-            "query": query,
+            "query": query_str,
             "format": "json",
-            "mode": "clipgallery",
+            "mode": "ClipGallery",
             "maxrecords": str(max_results),
         }
 
-        if timespan:
-            params["timespan"] = timespan
-        if station:
-            params["station"] = station
+        # Use explicit datetime range if provided, otherwise convert timespan
+        if start_datetime:
+            params["STARTDATETIME"] = start_datetime.strftime("%Y%m%d%H%M%S")
+            if end_datetime:
+                params["ENDDATETIME"] = end_datetime.strftime("%Y%m%d%H%M%S")
+        elif timespan:
+            delta = _parse_timespan(timespan)
+            if delta:
+                end_dt = datetime.now(UTC)
+                start_dt = end_dt - delta
+                params["STARTDATETIME"] = start_dt.strftime("%Y%m%d%H%M%S")
+                params["ENDDATETIME"] = end_dt.strftime("%Y%m%d%H%M%S")
 
         url = await self._build_url()
         data = await self._get_json(url, params=params)
@@ -508,3 +555,36 @@ def _parse_date(date_str: str | None) -> datetime | None:
         return result if result.tzinfo else result.replace(tzinfo=UTC)
     except ValueError:
         return None
+
+
+def _parse_timespan(timespan: str) -> timedelta | None:
+    """Parse timespan string to timedelta.
+
+    Converts GDELT-style timespan strings (e.g., "24h", "7d") to Python timedelta.
+
+    Args:
+        timespan: Timespan like "24h", "7d", "4w", "3m", "1y"
+
+    Returns:
+        timedelta or None if unparseable
+
+    Example:
+        >>> _parse_timespan("24h")
+        timedelta(hours=24)
+        >>> _parse_timespan("7d")
+        timedelta(days=7)
+    """
+    match = re.match(r"(\d+)\s*([hdwmy])", timespan.lower())
+    if not match:
+        return None
+
+    value, unit = int(match.group(1)), match.group(2)
+    # Map unit to timedelta kwargs (days approximations for months/years)
+    unit_map: dict[str, timedelta] = {
+        "h": timedelta(hours=value),
+        "d": timedelta(days=value),
+        "w": timedelta(weeks=value),
+        "m": timedelta(days=value * 30),
+        "y": timedelta(days=value * 365),
+    }
+    return unit_map.get(unit)

@@ -267,7 +267,7 @@ class TVFilter(BaseModel):
 
     # Result options
     max_results: int = Field(default=250, ge=1, le=250)
-    mode: Literal["clipgallery", "timeline", "stationchart"] = "clipgallery"
+    mode: Literal["ClipGallery", "TimelineVol", "StationChart"] = "ClipGallery"
 
 
 class NGramsFilter(BaseModel):

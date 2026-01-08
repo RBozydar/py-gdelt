@@ -680,7 +680,7 @@ class BigQuerySource:
 
     async def query_mentions(
         self,
-        global_event_id: str,
+        global_event_id: int,
         columns: list[str] | None = None,
         date_range: DateRange | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
@@ -690,7 +690,7 @@ class BigQuerySource:
         A date range should be provided for efficient querying.
 
         Args:
-            global_event_id: Global event ID to query mentions for
+            global_event_id: Global event ID to query mentions for (INT64)
             columns: List of columns to select (defaults to all allowed columns)
             date_range: Optional date range to narrow search (recommended for performance)
 
@@ -703,7 +703,7 @@ class BigQuerySource:
 
         Example:
             >>> async for mention in source.query_mentions(
-            ...     global_event_id="123456789",
+            ...     global_event_id=123456789,
             ...     date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
             ... ):
             ...     print(mention["MentionTimeDate"], mention["MentionSourceName"])
@@ -718,7 +718,7 @@ class BigQuerySource:
         # Build WHERE clause
         conditions: list[str] = ["GLOBALEVENTID = @event_id"]
         parameters: list[bigquery.ScalarQueryParameter] = [
-            bigquery.ScalarQueryParameter("event_id", "STRING", global_event_id),
+            bigquery.ScalarQueryParameter("event_id", "INT64", global_event_id),
         ]
 
         # Add date range filter if provided (for partition pruning)

@@ -120,17 +120,11 @@ async def test_bigquery_query_gkg_basic(bigquery_source: BigQuerySource) -> None
     assert "DATE" in row, "Row should have DATE"
 
 
-@pytest.mark.skip(
-    reason="Library bug: query_mentions passes event_id as STRING but GLOBALEVENTID is INT64"
-)
 async def test_bigquery_query_mentions_basic(bigquery_source: BigQuerySource) -> None:
     """Test basic mentions query returns data.
 
     Note: query_mentions requires a global_event_id, so we first get an event
     and then query its mentions.
-
-    KNOWN BUG: The library passes global_event_id as STRING but BigQuery's
-    GLOBALEVENTID column is INT64, causing a type mismatch error.
     """
     yesterday = date.today() - timedelta(days=1)
 
@@ -139,9 +133,9 @@ async def test_bigquery_query_mentions_basic(bigquery_source: BigQuerySource) ->
         date_range=DateRange(start=yesterday, end=yesterday),
     )
 
-    event_id: str | None = None
+    event_id: int | None = None
     async for row in bigquery_source.query_events(event_filter, limit=1):
-        event_id = str(row["GLOBALEVENTID"])
+        event_id = int(row["GLOBALEVENTID"])
         break
 
     if event_id is None:
