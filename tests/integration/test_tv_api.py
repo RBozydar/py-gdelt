@@ -60,17 +60,6 @@ async def test_tv_timeline(gdelt_client: GDELTClient) -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.timeout(60)
-async def test_tv_station_chart(gdelt_client: GDELTClient) -> None:
-    """Test station chart returns station data."""
-    # Skip this test - StationChart mode requires a station in the query even though
-    # the purpose is to compare across stations. This is a GDELT API design quirk.
-    _ = gdelt_client  # Avoid unused parameter warning
-    pytest.skip("StationChart mode requires different query structure")
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-@pytest.mark.timeout(60)
 async def test_tv_search_by_station(gdelt_client: GDELTClient) -> None:
     """Test filtering by specific station."""
     clips = await gdelt_client.tv.search(
@@ -114,20 +103,6 @@ async def test_tv_clip_attributes(gdelt_client: GDELTClient) -> None:
     # Optional attributes
     assert hasattr(clip, "date"), "Clip should have date attribute"
     assert hasattr(clip, "snippet"), "Clip should have snippet attribute"
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-@pytest.mark.timeout(60)
-async def test_tvai_search_returns_clips(gdelt_client: GDELTClient) -> None:
-    """Test TVAI search returns clips.
-
-    Note: TVAI API has strict query requirements - generic keywords often fail.
-    """
-    # Skip this test - TVAI API returns "Non-field specific keywords are not currently
-    # supported" for most queries. This is a GDELT API limitation, not a library bug.
-    _ = gdelt_client  # Avoid unused parameter warning
-    pytest.skip("TVAI API has strict query requirements that generic keywords don't satisfy")
 
 
 @pytest.mark.integration

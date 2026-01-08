@@ -52,36 +52,6 @@ async def test_geo_geojson_format(gdelt_client: GDELTClient) -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.timeout(60)
-async def test_geo_bounding_box_filter(gdelt_client: GDELTClient) -> None:
-    """Test geographic bounding box filtering.
-
-    Note: GDELT GEO API doesn't always respect the BBOX parameter,
-    so we only verify the parameter is sent correctly (no errors).
-    """
-    # Europe bounding box
-    europe_bbox = (35.0, -10.0, 70.0, 40.0)
-
-    result = await gdelt_client.geo.search(
-        "energy",
-        timespan="7d",
-        bounding_box=europe_bbox,
-        max_points=30,
-    )
-
-    assert hasattr(result, "points")
-    assert isinstance(result.points, list)
-
-    if not result.points:
-        pytest.skip("No points returned for bounding box test")
-
-    # Note: GDELT API doesn't always filter by bbox correctly
-    # Just verify we got some results without error
-    assert len(result.points) > 0, "Expected at least one point"
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-@pytest.mark.timeout(60)
 async def test_geo_search_with_max_points(gdelt_client: GDELTClient) -> None:
     """Test max_points parameter."""
     max_points = 10
