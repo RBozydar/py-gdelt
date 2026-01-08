@@ -13,7 +13,7 @@ This page describes the high-level architecture of gdelt-py and how it manages m
 │  │  (API)  │ │  (API)  │ │  (API)  │ │  (API)  │ │   (API)   │ │
 │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └───────────┘ │
 │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌───────────┐ │
-│  │ events  │ │ mentions│ │   gkg   │ │ ngrams  │ │  lookups  │ │
+│  │ events  │ │mentions │ │   gkg   │ │ ngrams  │ │  lookups  │ │
 │  │(Multi)  │ │ (Multi) │ │ (Multi) │ │ (Multi) │ │ (Bundled) │ │
 │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └───────────┘ │
 └─────────────────────────────────────────────────────────────────┘
@@ -49,7 +49,7 @@ These endpoints only access GDELT REST APIs and have no fallback options.
 - `ngrams` - Web NGrams 3.0 (Files + BigQuery)
 - `lookups` - Reference data (bundled with library)
 
-These endpoints can switch between raw files and BigQuery for resilience. See [Data Sources](getting-started/data-sources.md) for detailed information about each data source and access method.
+These endpoints can switch between raw files and BigQuery for resilience.
 
 ## Multi-Source Endpoints
 

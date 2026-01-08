@@ -73,21 +73,18 @@ async with GDELTClient() as client:
 
 ## Data Source Matrix
 
-For detailed documentation, see [Data Sources](https://rbozydar.github.io/py-gdelt/getting-started/data-sources/).
-
-| Data Type              | API         | BigQuery | Raw Files | Time Constraint     | Fallback Available   |
-|------------------------|-------------|----------|-----------|---------------------|----------------------|
-| Articles (fulltext)    | DOC 2.0     | -        | -         | Rolling 3 months    | No equivalent        |
-| Article geo heatmaps   | GEO 2.0     | -        | -         | Rolling 7 days      | No equivalent        |
-| Sentence-level context | Context 2.0 | -        | -         | Rolling 72 hours    | No equivalent        |
-| TV captions            | TV 2.0      | -        | -         | July 2009+ (full)   | No equivalent        |
-| TV visual/AI           | TV AI 2.0   | -        | -         | 2010+, limited      | No equivalent        |
-| Events v2              | -           | Yes      | Yes       | Feb 2015+           | Files <-> BigQuery   |
-| Events v1              | -           | Yes      | Yes       | 1979 - Feb 2015     | Files <-> BigQuery   |
-| Mentions               | -           | Yes      | Yes       | Feb 2015+ (v2 only) | Files <-> BigQuery   |
-| GKG v2                 | -           | Yes      | Yes       | Feb 2015+           | Files <-> BigQuery   |
-| GKG v1                 | -           | Yes      | Yes       | 2013 - Feb 2015     | Files <-> BigQuery   |
-| Web NGrams 3.0         | -           | Yes      | Yes       | Jan 2020+           | Files <-> BigQuery   |
+| Data Type | API | BigQuery | Raw Files | Time Constraint | Fallback |
+|-----------|-----|----------|-----------|-----------------|----------|
+| Articles (fulltext) | DOC 2.0 | - | - | Rolling 3 months | No |
+| Article geo heatmaps | GEO 2.0 | - | - | Rolling 7 days | No |
+| Sentence-level context | Context 2.0 | - | - | Rolling 72 hours | No |
+| TV captions | TV 2.0 | - | - | July 2009+ | No |
+| Events v2 | - | Yes | Yes | Feb 2015+ | Yes |
+| Events v1 | - | Yes | Yes | 1979 - Feb 2015 | Yes |
+| Mentions | - | Yes | Yes | Feb 2015+ | Yes |
+| GKG v2 | - | Yes | Yes | Feb 2015+ | Yes |
+| GKG v1 | - | Yes | Yes | 2013 - Feb 2015 | Yes |
+| Web NGrams 3.0 | - | Yes | Yes | Jan 2020+ | Yes |
 
 ## Key Concepts
 
