@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, Protocol, TypeVar
+from typing import TYPE_CHECKING, Literal, Protocol, TypeVar, cast
 
 from py_gdelt.exceptions import (
     APIError,
@@ -56,7 +56,9 @@ class Parser(Protocol[T_co]):
     The parser is responsible for converting raw bytes into typed records.
     """
 
-    def parse(self, data: bytes, is_translated: bool = False) -> Iterator[T_co]:
+    def parse(
+        self, data: bytes, is_translated: bool = False
+    ) -> Iterator[T_co] | AsyncIterator[T_co]:
         """Parse raw bytes into typed records.
 
         Args:
@@ -64,7 +66,7 @@ class Parser(Protocol[T_co]):
             is_translated: Whether this is from the translated feed
 
         Returns:
-            Iterator of parsed records
+            Iterator or AsyncIterator of parsed records
 
         Raises:
             ParseError: If parsing fails
@@ -274,13 +276,15 @@ class DataFetcher:
 
                 # Check if result is async iterator
                 if hasattr(parse_result, "__aiter__"):
-                    # Async parser
-                    async for record in parse_result:
+                    # Async parser - cast to tell type checker about runtime narrowing
+                    async_result = cast("AsyncIterator[R]", parse_result)
+                    async for record in async_result:
                         yield record
                         records_yielded += 1
                 else:
-                    # Sync parser (most common)
-                    for record in parse_result:
+                    # Sync parser (most common) - cast for pyright compatibility
+                    sync_result = cast("Iterator[R]", parse_result)  # type: ignore[redundant-cast]
+                    for record in sync_result:
                         yield record
                         records_yielded += 1
 

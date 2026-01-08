@@ -24,9 +24,11 @@ Choosing the right source based on time range:
 
 | Need | <3 months | 3mo - 5yr | >5yr |
 |------|-----------|-----------|------|
-| Fulltext search | DOC API | NGrams 3.0 | Not available |
+| Fulltext search | DOC API | NGrams 3.0 | Not available* |
 | Entity/theme search | GKG | GKG | GKG (v1 to 2013) |
 | Event tracking | Events | Events | Events (v1 to 1979) |
+
+*Fulltext search beyond 5 years is not available because NGrams 3.0 only covers data from January 2020 onwards, and the DOC API only retains a rolling 3-month window.
 
 ## API Endpoints Reference
 
@@ -36,7 +38,15 @@ Choosing the right source based on time range:
 - **Purpose**: Full-text article search
 - **Time Window**: Rolling 3 months
 - **Max Records**: 250
-- **Output Modes**: artlist, timelinevol, timelinevolraw, timelinetone, timelinelang, timelinesourcecountry, imagecollage, tonechart
+- **Output Modes**:
+    - `artlist`
+    - `timelinevol`
+    - `timelinevolraw`
+    - `timelinetone`
+    - `timelinelang`
+    - `timelinesourcecountry`
+    - `imagecollage`
+    - `tonechart`
 
 ### GEO 2.0 API
 
@@ -73,8 +83,10 @@ Choosing the right source based on time range:
 
 ## BigQuery Tables
 
-| Table | Size | Project |
-|-------|------|---------|
+Table sizes are approximate and grow continuously as new data is added.
+
+| Table | Size (approx.) | Project |
+|-------|----------------|---------|
 | `gdelt-bq.gdeltv2.events` | ~63GB | gdelt-bq |
 | `gdelt-bq.gdeltv2.events_partitioned` | ~63GB | gdelt-bq |
 | `gdelt-bq.gdeltv2.eventmentions` | ~104GB | gdelt-bq |
@@ -124,15 +136,17 @@ Files are updated every 15 minutes at :00, :15, :30, and :45 past the hour.
 
 ## How gdelt-py Handles Sources
 
+For detailed information about the library's architecture and fallback mechanisms, see [Architecture](../architecture.md).
+
 The library provides automatic source selection:
 
 ```python
 # Auto mode (default) - tries files first, falls back to BigQuery
-events = await client.events.query(filter)
+events_auto = await client.events.query(filter)
 
 # Explicit source selection
-events = await client.events.query(filter, source="bigquery")
-events = await client.events.query(filter, source="files")
+events_bq = await client.events.query(filter, source="bigquery")
+events_files = await client.events.query(filter, source="files")
 ```
 
 For API-only endpoints (DOC, GEO, Context, TV), there are no fallback options - the library will return an error if the API is unavailable.

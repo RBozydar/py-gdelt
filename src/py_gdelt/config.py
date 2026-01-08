@@ -62,11 +62,11 @@ class TOMLConfigSource(PydanticBaseSettingsSource):
         elif config_path is not None:
             logger.debug("Config file not found: %s, using defaults", config_path)
 
-    def get_field_value(self, _field_info: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
+    def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
         """Get the value for a specific field from the TOML config.
 
         Args:
-            _field_info: Field information from Pydantic (unused).
+            field: Field information from Pydantic (unused).
             field_name: Name of the field to retrieve.
 
         Returns:
