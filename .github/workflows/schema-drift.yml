@@ -39,7 +39,7 @@ jobs:
       - name: Find existing drift issue
         if: steps.check.outputs.drift_detected == 'true'
         id: find_issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const issues = await github.rest.issues.listForRepo({
@@ -54,7 +54,7 @@ jobs:
 
       - name: Update or create issue
         if: steps.check.outputs.drift_detected == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
