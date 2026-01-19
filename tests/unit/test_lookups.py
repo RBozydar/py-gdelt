@@ -178,6 +178,44 @@ class TestCAMEOCodes:
         assert "INVALID" in str(exc_info.value)
         assert "cameo" in str(exc_info.value)
 
+    def test_get_goldstein_category_highly_conflictual(self) -> None:
+        """Test get_goldstein_category returns highly_conflictual for scores < -5."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(-10.0) == "highly_conflictual"
+        assert cameo.get_goldstein_category(-7.5) == "highly_conflictual"
+        assert cameo.get_goldstein_category(-5.1) == "highly_conflictual"
+
+    def test_get_goldstein_category_moderately_conflictual(self) -> None:
+        """Test get_goldstein_category returns moderately_conflictual for -5 <= score < -2."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(-5.0) == "moderately_conflictual"
+        assert cameo.get_goldstein_category(-3.5) == "moderately_conflictual"
+        assert cameo.get_goldstein_category(-2.1) == "moderately_conflictual"
+
+    def test_get_goldstein_category_mildly_conflictual(self) -> None:
+        """Test get_goldstein_category returns mildly_conflictual for -2 <= score < 0."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(-2.0) == "mildly_conflictual"
+        assert cameo.get_goldstein_category(-1.0) == "mildly_conflictual"
+        assert cameo.get_goldstein_category(-0.1) == "mildly_conflictual"
+
+    def test_get_goldstein_category_cooperative(self) -> None:
+        """Test get_goldstein_category returns cooperative for scores >= 0."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(0.0) == "cooperative"
+        assert cameo.get_goldstein_category(5.0) == "cooperative"
+        assert cameo.get_goldstein_category(10.0) == "cooperative"
+
+    def test_get_goldstein_category_boundary_values(self) -> None:
+        """Test get_goldstein_category at exact boundary values."""
+        cameo = CAMEOCodes()
+        # Boundary at -5: -5.0 is moderately_conflictual, -5.01 is highly_conflictual
+        assert cameo.get_goldstein_category(-5.0) == "moderately_conflictual"
+        # Boundary at -2: -2.0 is mildly_conflictual, -2.01 is moderately_conflictual
+        assert cameo.get_goldstein_category(-2.0) == "mildly_conflictual"
+        # Boundary at 0: 0.0 is cooperative, -0.01 is mildly_conflictual
+        assert cameo.get_goldstein_category(0.0) == "cooperative"
+
 
 class TestGKGThemes:
     """Tests for GKGThemes class."""

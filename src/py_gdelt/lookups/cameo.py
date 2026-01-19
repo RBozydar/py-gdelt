@@ -116,6 +116,30 @@ class CAMEOCodes:
         """
         return self._goldstein_data.get(code)
 
+    def get_goldstein_category(self, score: float) -> str:
+        """
+        Categorize a Goldstein scale score into conflict/cooperation buckets.
+
+        Categories:
+        - highly_conflictual: -10 to -5
+        - moderately_conflictual: -5 to -2
+        - mildly_conflictual: -2 to 0
+        - cooperative: 0 to +10
+
+        Args:
+            score: Goldstein scale value from -10 to +10
+
+        Returns:
+            Category name string
+        """
+        if score < -5:
+            return "highly_conflictual"
+        if score < -2:
+            return "moderately_conflictual"
+        if score < 0:
+            return "mildly_conflictual"
+        return "cooperative"
+
     def search(self, query: str) -> list[str]:
         """
         Search codes by name/description (substring match).
