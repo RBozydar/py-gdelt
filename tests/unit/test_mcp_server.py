@@ -6,6 +6,7 @@ These tests verify the helper functions used in the MCP server.
 
 import pytest
 
+
 # Check if mcp is available
 try:
     import mcp  # noqa: F401
