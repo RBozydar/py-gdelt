@@ -301,7 +301,7 @@ class NGramsFilter(BaseModel):
 class LowerThirdFilter(BaseModel):
     """Filter for LowerThird (Chyron) API queries.
 
-    Args:
+    Attributes:
         query: Search terms. Supports exact phrases, boolean operators,
             show filters (show:"name"), station filters (station:CNN).
         timespan: Time offset (e.g., "24h", "7d", "1w"). Mutually exclusive
@@ -337,7 +337,7 @@ class GKGGeoJSONFilter(BaseModel):
         This is a v1.0 API that uses UPPERCASE parameter names.
         The timespan is limited to 1440 minutes (24 hours).
 
-    Args:
+    Attributes:
         query: Theme, person, or organization to search.
         timespan: Minutes of data to include (1-1440, default 60).
     """

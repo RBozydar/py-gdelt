@@ -29,7 +29,7 @@ Example:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import Any, Literal
 
 from pydantic import BaseModel
@@ -40,6 +40,7 @@ from py_gdelt.endpoints.tv import (
     TVStationData,
     TVTimeline,
     TVTimelinePoint,
+    _parse_date,
 )
 from py_gdelt.filters import LowerThirdFilter
 
@@ -292,25 +293,3 @@ class LowerThirdEndpoint(BaseEndpoint):
         ]
 
         return TVStationChart(stations=stations)
-
-
-def _parse_date(date_str: str | None) -> datetime | None:
-    """Parse GDELT date string to datetime.
-
-    Handles both GDELT's native YYYYMMDDHHMMSS format and ISO 8601 format.
-
-    Args:
-        date_str: Date string in GDELT or ISO format.
-
-    Returns:
-        Parsed datetime object, or None if input is None or invalid.
-    """
-    if not date_str:
-        return None
-    try:
-        if len(date_str) == 14:
-            return datetime.strptime(date_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        result = datetime.fromisoformat(date_str)
-        return result if result.tzinfo else result.replace(tzinfo=UTC)
-    except ValueError:
-        return None
