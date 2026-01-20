@@ -6,14 +6,21 @@ py-gdelt library, including CAMEO codes, Goldstein scale values, countries,
 and GKG themes.
 """
 
+from __future__ import annotations
+
+from typing import Literal
+
 from pydantic import BaseModel
 
 
 __all__ = [
     "CAMEOCodeEntry",
     "CountryEntry",
+    "GCAMEntry",
     "GKGThemeEntry",
     "GoldsteinEntry",
+    "LanguageEntry",
+    "TagCountEntry",
 ]
 
 
@@ -30,6 +37,8 @@ class CAMEOCodeEntry(BaseModel):
         quad_class: Quad class classification (1-4)
         root: Whether this is a root-level code
     """
+
+    model_config = {"frozen": True}
 
     name: str
     description: str
@@ -54,6 +63,8 @@ class GoldsteinEntry(BaseModel):
         description: Description of the CAMEO code this value applies to
     """
 
+    model_config = {"frozen": True}
+
     value: float
     description: str
 
@@ -69,6 +80,8 @@ class CountryEntry(BaseModel):
         full_name: Official full country name
         region: Geographic or political region classification
     """
+
+    model_config = {"frozen": True}
 
     iso3: str
     iso2: str
@@ -89,5 +102,61 @@ class GKGThemeEntry(BaseModel):
         description: Detailed description of what this theme represents
     """
 
+    model_config = {"frozen": True}
+
     category: str
     description: str
+
+
+class TagCountEntry(BaseModel):
+    """Tag entry with usage frequency count.
+
+    Used for both Cloud Vision API image tags and crowdsourced web tags.
+
+    Attributes:
+        tag: The tag label text.
+        count: Usage frequency count.
+    """
+
+    model_config = {"frozen": True}
+
+    tag: str
+    count: int
+
+
+class LanguageEntry(BaseModel):
+    """Supported language code for GDELT DOC/GEO APIs.
+
+    Attributes:
+        code: ISO 639-3 language code (e.g., "eng", "spa", "zho").
+        name: Human-readable language name.
+    """
+
+    model_config = {"frozen": True}
+
+    code: str
+    name: str
+
+
+class GCAMEntry(BaseModel):
+    """GCAM (Global Content Analysis Measures) dimension entry.
+
+    Attributes:
+        variable: Full variable code (e.g., "c2.14", "v42.2").
+        dictionary_id: Numeric dictionary identifier.
+        dimension_id: Numeric dimension within dictionary.
+        data_type: Either "WORDCOUNT" or "SCOREDVALUE".
+        language: ISO 639-3 language code.
+        dictionary_name: Human-readable dictionary name.
+        dimension_name: Human-readable dimension name.
+    """
+
+    model_config = {"frozen": True}
+
+    variable: str
+    dictionary_id: int
+    dimension_id: int
+    data_type: Literal["WORDCOUNT", "SCOREDVALUE"]
+    language: str
+    dictionary_name: str
+    dimension_name: str
