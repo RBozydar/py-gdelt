@@ -351,7 +351,6 @@ class GGGFilter(BaseModel):
     """Filter for Global Geographic Graph queries (max 7 days)."""
 
     date_range: DateRange
-    languages: list[str] | None = None
 
     @model_validator(mode="after")
     def validate_date_range(self) -> Self:

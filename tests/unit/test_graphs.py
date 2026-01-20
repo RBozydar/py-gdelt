@@ -646,3 +646,75 @@ class TestDateParsing:
             {"date": iso_date, "url": "https://example.com", "lang": "en"}
         )
         assert geg_iso.date.year == 2025
+
+
+class TestThreadSafety:
+    """Tests for thread-safety of schema evolution warnings."""
+
+    def test_concurrent_schema_warnings_thread_safe(self) -> None:
+        """Test that concurrent validation with unknown fields is thread-safe."""
+        import concurrent.futures
+
+        _warned_fields.clear()
+
+        # Create test data with unknown fields
+        def validate_with_unknown_field(thread_id: int) -> None:
+            """Validate a record with an unknown field in a thread."""
+            data = {
+                "date": "20250120103000",
+                "url": f"https://example{thread_id}.com",
+                "lang": "en",
+                "unknown_field_thread_test": f"value_{thread_id}",
+            }
+            # Suppress warnings in this test
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                GQGRecord.model_validate(data)
+
+        # Run validations concurrently in multiple threads
+        num_threads = 20
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [executor.submit(validate_with_unknown_field, i) for i in range(num_threads)]
+            # Wait for all threads to complete
+            concurrent.futures.wait(futures)
+
+        # Verify that the warning was only registered once despite concurrent access
+        # The key should be ("GQGRecord", "unknown_field_thread_test")
+        assert ("GQGRecord", "unknown_field_thread_test") in _warned_fields
+        # Verify the set has exactly one entry for this field
+        matching_keys = [
+            k for k in _warned_fields if k == ("GQGRecord", "unknown_field_thread_test")
+        ]
+        assert len(matching_keys) == 1
+
+    def test_concurrent_different_fields_thread_safe(self) -> None:
+        """Test concurrent validation with different unknown fields is thread-safe."""
+        import concurrent.futures
+
+        _warned_fields.clear()
+
+        def validate_with_unique_field(field_num: int) -> None:
+            """Validate a record with a unique unknown field."""
+            data = {
+                "date": "20250120103000",
+                "url": "https://example.com",
+                "lang": "en",
+                f"unknown_field_{field_num}": f"value_{field_num}",
+            }
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                GQGRecord.model_validate(data)
+
+        # Run validations with different unknown fields concurrently
+        num_fields = 10
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_fields) as executor:
+            futures = [executor.submit(validate_with_unique_field, i) for i in range(num_fields)]
+            concurrent.futures.wait(futures)
+
+        # Verify all unique fields were registered exactly once
+        for i in range(num_fields):
+            assert ("GQGRecord", f"unknown_field_{i}") in _warned_fields
+
+        # Verify we have exactly num_fields warnings
+        gqg_warnings = [k for k in _warned_fields if k[0] == "GQGRecord"]
+        assert len(gqg_warnings) == num_fields

@@ -378,6 +378,7 @@ require-return-section-when-returning-nothing = false
 check-return-types = false  # Covered by mypy
 arg-type-hints-in-docstring = false  # Using type hints in signatures
 skip-checking-raises = true  # Allow Raises sections to document delegated/inherited exceptions
+check-class-attributes = false  # Don't require documenting Pydantic internal attributes like model_config
 
 [tool.interrogate]
 ignore-init-method = true

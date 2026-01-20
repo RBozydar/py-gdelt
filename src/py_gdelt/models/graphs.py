@@ -12,9 +12,10 @@ This module contains models for all 6 GDELT graph datasets:
 from __future__ import annotations
 
 import logging
+import threading
 import warnings
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -40,6 +41,31 @@ logger = logging.getLogger(__name__)
 
 # Module-level set to track warned fields (avoid spam)
 _warned_fields: set[tuple[str, str]] = set()
+_warned_fields_lock = threading.Lock()
+
+
+def _parse_gdelt_date(v: Any) -> datetime:
+    """Parse date from ISO or GDELT format.
+
+    Args:
+        v: Date value (datetime, string, or other).
+
+    Returns:
+        Parsed datetime with UTC timezone.
+
+    Raises:
+        ValueError: If date format is invalid.
+    """
+    if isinstance(v, datetime):
+        return v
+    if isinstance(v, str):
+        # ISO format with 'T'
+        if "T" in v:
+            return datetime.fromisoformat(v.replace("Z", "+00:00"))
+        # GDELT format (YYYYMMDDHHMMSS)
+        return datetime.strptime(v, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+    msg = f"Invalid date format: {v}"
+    raise ValueError(msg)
 
 
 class SchemaEvolutionMixin(BaseModel):
@@ -48,6 +74,9 @@ class SchemaEvolutionMixin(BaseModel):
     This mixin uses model_validator to detect unknown fields and issue warnings
     to help users identify when GDELT adds new fields to their data formats.
     """
+
+    # Cache for known fields per model class
+    _known_fields_cache: ClassVar[dict[type, set[str]]] = {}
 
     @model_validator(mode="before")
     @classmethod
@@ -63,26 +92,31 @@ class SchemaEvolutionMixin(BaseModel):
         if not isinstance(data, dict):
             return data
 
-        # Get all known field names (including aliases)
-        known_fields = set(cls.model_fields.keys())
-        for field_info in cls.model_fields.values():
-            if field_info.alias:
-                known_fields.add(field_info.alias)
+        # Get or compute known fields for this class
+        if cls not in cls._known_fields_cache:
+            known = set(cls.model_fields.keys())
+            for field_info in cls.model_fields.values():
+                if field_info.alias:
+                    known.add(field_info.alias)
+            cls._known_fields_cache[cls] = known
 
-        # Detect unknown fields
-        unknown_fields = set(data.keys()) - known_fields
+        known_fields = cls._known_fields_cache[cls]
 
-        # Issue warnings for new unknown fields (avoid duplicates)
+        # Use dict_keys set operations (no need to convert data.keys() to set)
+        unknown_fields = data.keys() - known_fields
+
+        # Issue warnings for new unknown fields (thread-safe)
         for field in unknown_fields:
             warn_key = (cls.__name__, field)
-            if warn_key not in _warned_fields:
-                _warned_fields.add(warn_key)
-                message = (
-                    f"GDELT schema change detected: {cls.__name__} has new field "
-                    f"'{field}'. Consider updating py-gdelt. Field will be ignored."
-                )
-                warnings.warn(message, UserWarning, stacklevel=4)
-                logger.warning(message)
+            with _warned_fields_lock:
+                if warn_key not in _warned_fields:
+                    _warned_fields.add(warn_key)
+                    message = (
+                        f"GDELT schema change detected: {cls.__name__} has new field "
+                        f"'{field}'. Consider updating py-gdelt. Field will be ignored."
+                    )
+                    warnings.warn(message, UserWarning, stacklevel=4)
+                    logger.warning(message)
 
         return data
 
@@ -93,7 +127,6 @@ class Quote(SchemaEvolutionMixin, BaseModel):
     Represents a single quotation with surrounding context.
 
     Attributes:
-        model_config: Pydantic configuration
         pre: Text before the quote
         quote: The quotation text
         post: Text after the quote
@@ -112,7 +145,6 @@ class GQGRecord(SchemaEvolutionMixin, BaseModel):
     Represents a document with extracted quotations and their context.
 
     Attributes:
-        model_config: Pydantic configuration
         date: Publication date/time
         url: Source document URL
         lang: Language code
@@ -129,28 +161,8 @@ class GQGRecord(SchemaEvolutionMixin, BaseModel):
     @field_validator("date", mode="before")
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
-        """Parse date from ISO or GDELT format.
-
-        Args:
-            v: Date string in ISO format (with 'T') or GDELT format (YYYYMMDDHHMMSS).
-
-        Returns:
-            Parsed datetime with UTC timezone.
-
-        Raises:
-            ValueError: If date format is invalid.
-        """
-        if isinstance(v, datetime):
-            return v
-        if isinstance(v, str):
-            # ISO format with 'T'
-            if "T" in v:
-                # Handle ISO format (e.g., "2024-01-20T12:30:45Z")
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            # GDELT format (YYYYMMDDHHMMSS)
-            return datetime.strptime(v, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        msg = f"Invalid date format: {v}"
-        raise ValueError(msg)
+        """Parse date from ISO or GDELT format."""
+        return _parse_gdelt_date(v)
 
 
 class Entity(SchemaEvolutionMixin, BaseModel):
@@ -159,7 +171,6 @@ class Entity(SchemaEvolutionMixin, BaseModel):
     Represents a named entity with metadata and knowledge graph links.
 
     Attributes:
-        model_config: Pydantic configuration
         name: Entity name
         entity_type: Entity type
         salience: Salience score
@@ -182,7 +193,6 @@ class GEGRecord(SchemaEvolutionMixin, BaseModel):
     Represents a document with extracted entities and their metadata.
 
     Attributes:
-        model_config: Pydantic configuration
         date: Publication date/time
         url: Source document URL
         lang: Language code
@@ -199,27 +209,8 @@ class GEGRecord(SchemaEvolutionMixin, BaseModel):
     @field_validator("date", mode="before")
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
-        """Parse date from ISO or GDELT format.
-
-        Args:
-            v: Date string in ISO format (with 'T') or GDELT format (YYYYMMDDHHMMSS).
-
-        Returns:
-            Parsed datetime with UTC timezone.
-
-        Raises:
-            ValueError: If date format is invalid.
-        """
-        if isinstance(v, datetime):
-            return v
-        if isinstance(v, str):
-            # ISO format with 'T'
-            if "T" in v:
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            # GDELT format (YYYYMMDDHHMMSS)
-            return datetime.strptime(v, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        msg = f"Invalid date format: {v}"
-        raise ValueError(msg)
+        """Parse date from ISO or GDELT format."""
+        return _parse_gdelt_date(v)
 
 
 class GFGRecord(SchemaEvolutionMixin, BaseModel):
@@ -228,7 +219,6 @@ class GFGRecord(SchemaEvolutionMixin, BaseModel):
     Represents a hyperlink from a frontpage to another URL.
 
     Attributes:
-        model_config: Pydantic configuration
         date: Publication date/time
         from_frontpage_url: Source frontpage URL
         link_url: Destination link URL
@@ -283,7 +273,6 @@ class GGGRecord(SchemaEvolutionMixin, BaseModel):
     Represents a document with an extracted geographic location.
 
     Attributes:
-        model_config: Pydantic configuration
         date: Publication date/time
         url: Source document URL
         location_name: Name of the location
@@ -304,27 +293,8 @@ class GGGRecord(SchemaEvolutionMixin, BaseModel):
     @field_validator("date", mode="before")
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
-        """Parse date from ISO or GDELT format.
-
-        Args:
-            v: Date string in ISO format (with 'T') or GDELT format (YYYYMMDDHHMMSS).
-
-        Returns:
-            Parsed datetime with UTC timezone.
-
-        Raises:
-            ValueError: If date format is invalid.
-        """
-        if isinstance(v, datetime):
-            return v
-        if isinstance(v, str):
-            # ISO format with 'T'
-            if "T" in v:
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            # GDELT format (YYYYMMDDHHMMSS)
-            return datetime.strptime(v, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        msg = f"Invalid date format: {v}"
-        raise ValueError(msg)
+        """Parse date from ISO or GDELT format."""
+        return _parse_gdelt_date(v)
 
 
 class MetaTag(SchemaEvolutionMixin, BaseModel):
@@ -333,7 +303,6 @@ class MetaTag(SchemaEvolutionMixin, BaseModel):
     Represents a single metadata tag from HTML meta tags or JSON-LD.
 
     Attributes:
-        model_config: Pydantic configuration
         key: Tag key/name
         tag_type: Tag type
         value: Tag value
@@ -352,7 +321,6 @@ class GEMGRecord(SchemaEvolutionMixin, BaseModel):
     Represents a document with extracted metadata tags and JSON-LD.
 
     Attributes:
-        model_config: Pydantic configuration
         date: Publication date/time
         url: Source document URL
         title: Document title if available
@@ -373,27 +341,8 @@ class GEMGRecord(SchemaEvolutionMixin, BaseModel):
     @field_validator("date", mode="before")
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
-        """Parse date from ISO or GDELT format.
-
-        Args:
-            v: Date string in ISO format (with 'T') or GDELT format (YYYYMMDDHHMMSS).
-
-        Returns:
-            Parsed datetime with UTC timezone.
-
-        Raises:
-            ValueError: If date format is invalid.
-        """
-        if isinstance(v, datetime):
-            return v
-        if isinstance(v, str):
-            # ISO format with 'T'
-            if "T" in v:
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            # GDELT format (YYYYMMDDHHMMSS)
-            return datetime.strptime(v, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        msg = f"Invalid date format: {v}"
-        raise ValueError(msg)
+        """Parse date from ISO or GDELT format."""
+        return _parse_gdelt_date(v)
 
 
 class GALRecord(SchemaEvolutionMixin, BaseModel):
@@ -402,7 +351,6 @@ class GALRecord(SchemaEvolutionMixin, BaseModel):
     Represents a news article with basic metadata.
 
     Attributes:
-        model_config: Pydantic configuration
         date: Publication date/time
         url: Article URL
         title: Article title if available
@@ -425,24 +373,5 @@ class GALRecord(SchemaEvolutionMixin, BaseModel):
     @field_validator("date", mode="before")
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
-        """Parse date from ISO or GDELT format.
-
-        Args:
-            v: Date string in ISO format (with 'T') or GDELT format (YYYYMMDDHHMMSS).
-
-        Returns:
-            Parsed datetime with UTC timezone.
-
-        Raises:
-            ValueError: If date format is invalid.
-        """
-        if isinstance(v, datetime):
-            return v
-        if isinstance(v, str):
-            # ISO format with 'T'
-            if "T" in v:
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            # GDELT format (YYYYMMDDHHMMSS)
-            return datetime.strptime(v, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        msg = f"Invalid date format: {v}"
-        raise ValueError(msg)
+        """Parse date from ISO or GDELT format."""
+        return _parse_gdelt_date(v)

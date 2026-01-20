@@ -1,8 +1,8 @@
 """Graph datasets endpoint for GDELT data.
 
 This module provides the GraphEndpoint class for querying GDELT's graph datasets
-including GQG (Quotation Graph), GEG (Event Graph), GFG (Facebook Graph),
-GGG (Google Graph), GEMG (Emotion Graph), and GAL (Activity Log).
+including GQG (Quotation Graph), GEG (Entity Graph), GFG (Frontpage Graph),
+GGG (Geographic Graph), GEMG (Embedded Metadata Graph), and GAL (Article List).
 """
 
 from __future__ import annotations
@@ -73,7 +73,7 @@ class GraphEndpoint:
         ...         for record in result:
         ...             print(record.quotes)
 
-        Stream Event Graph records:
+        Stream Entity Graph records:
 
         >>> async def stream_example():
         ...     async with FileSource() as file_source:
@@ -156,7 +156,7 @@ class GraphEndpoint:
         self,
         filter_obj: GEGFilter,
     ) -> FetchResult[GEGRecord]:
-        """Query Global Event Graph records.
+        """Query Global Entity Graph records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
@@ -171,13 +171,13 @@ class GraphEndpoint:
         self,
         filter_obj: GEGFilter,
     ) -> AsyncIterator[GEGRecord]:
-        """Stream Global Event Graph records.
+        """Stream Global Entity Graph records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
 
         Yields:
-            GEGRecord: Individual event graph records.
+            GEGRecord: Individual entity graph records.
         """
         async for url, data in self._fetcher.fetch_graph_files("geg", filter_obj.date_range):
             try:
@@ -198,7 +198,7 @@ class GraphEndpoint:
         self,
         filter_obj: GFGFilter,
     ) -> FetchResult[GFGRecord]:
-        """Query Global Facebook Graph records.
+        """Query Global Frontpage Graph records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
@@ -213,13 +213,13 @@ class GraphEndpoint:
         self,
         filter_obj: GFGFilter,
     ) -> AsyncIterator[GFGRecord]:
-        """Stream Global Facebook Graph records.
+        """Stream Global Frontpage Graph records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
 
         Yields:
-            GFGRecord: Individual Facebook graph records.
+            GFGRecord: Individual Frontpage graph records.
         """
         async for url, data in self._fetcher.fetch_graph_files("gfg", filter_obj.date_range):
             try:
@@ -240,7 +240,7 @@ class GraphEndpoint:
         self,
         filter_obj: GGGFilter,
     ) -> FetchResult[GGGRecord]:
-        """Query Global Google Graph records.
+        """Query Global Geographic Graph records.
 
         Args:
             filter_obj: Filter specifying date range.
@@ -255,13 +255,13 @@ class GraphEndpoint:
         self,
         filter_obj: GGGFilter,
     ) -> AsyncIterator[GGGRecord]:
-        """Stream Global Google Graph records.
+        """Stream Global Geographic Graph records.
 
         Args:
             filter_obj: Filter specifying date range.
 
         Yields:
-            GGGRecord: Individual Google graph records.
+            GGGRecord: Individual Geographic graph records.
         """
         async for url, data in self._fetcher.fetch_graph_files("ggg", filter_obj.date_range):
             try:
@@ -280,7 +280,7 @@ class GraphEndpoint:
         self,
         filter_obj: GEMGFilter,
     ) -> FetchResult[GEMGRecord]:
-        """Query Global Emotion Graph records.
+        """Query Global Embedded Metadata Graph records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
@@ -295,13 +295,13 @@ class GraphEndpoint:
         self,
         filter_obj: GEMGFilter,
     ) -> AsyncIterator[GEMGRecord]:
-        """Stream Global Emotion Graph records.
+        """Stream Global Embedded Metadata Graph records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
 
         Yields:
-            GEMGRecord: Individual emotion graph records.
+            GEMGRecord: Individual embedded metadata graph records.
         """
         async for url, data in self._fetcher.fetch_graph_files("gemg", filter_obj.date_range):
             try:
@@ -322,7 +322,7 @@ class GraphEndpoint:
         self,
         filter_obj: GALFilter,
     ) -> FetchResult[GALRecord]:
-        """Query Global Activity Log records.
+        """Query Global Article List records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
@@ -337,13 +337,13 @@ class GraphEndpoint:
         self,
         filter_obj: GALFilter,
     ) -> AsyncIterator[GALRecord]:
-        """Stream Global Activity Log records.
+        """Stream Global Article List records.
 
         Args:
             filter_obj: Filter specifying date range and optional language filter.
 
         Yields:
-            GALRecord: Individual activity log records.
+            GALRecord: Individual article list records.
         """
         async for url, data in self._fetcher.fetch_graph_files("gal", filter_obj.date_range):
             try:

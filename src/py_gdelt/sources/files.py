@@ -39,6 +39,9 @@ TRANSLATION_FILE_LIST_URL: Final[str] = (
 )
 LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
 
+# Decompression limit to prevent gzip bombs
+MAX_DECOMPRESSED_SIZE: Final[int] = 500 * 1024 * 1024  # 500MB limit
+
 # File type patterns
 FILE_TYPE_PATTERNS: Final[dict[str, str]] = {
     "export": ".export.CSV.zip",
@@ -479,8 +482,12 @@ class FileSource:
 
         Returns:
             Decompressed content
+
+        Raises:
+            DataError: If decompressed size exceeds limit
         """
         result = io.BytesIO()
+        total_size = 0
 
         with gzip.GzipFile(fileobj=io.BytesIO(compressed_data)) as gz:
             # Read in chunks to avoid loading huge files into memory
@@ -490,6 +497,10 @@ class FileSource:
                 chunk = gz.read(chunk_size)
                 if not chunk:
                     break
+                total_size += len(chunk)
+                if total_size > MAX_DECOMPRESSED_SIZE:
+                    msg = f"Decompressed size exceeds {MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB limit"
+                    raise DataError(msg)
                 result.write(chunk)
 
         return result.getvalue()

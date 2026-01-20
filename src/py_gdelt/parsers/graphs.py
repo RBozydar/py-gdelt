@@ -77,19 +77,35 @@ def _parse_jsonl(data: bytes, model_cls: type[T]) -> Iterator[T]:
     Yields:
         Validated Pydantic model instances.
     """
-    # Decompress if needed
-    decompressed = _decompress_if_needed(data)
+    # Use streaming approach to reduce memory usage
+    if data.startswith(b"\x1f\x8b"):
+        # Gzipped data - use gzip.open for streaming decompression
+        fileobj = io.BytesIO(data)
+        with gzip.open(fileobj, "rt", encoding="utf-8", errors="replace") as reader:
+            yield from _parse_lines(reader, model_cls)
+    else:
+        # Plain text - use StringIO for line iteration
+        with io.StringIO(data.decode("utf-8", errors="replace")) as reader:
+            yield from _parse_lines(reader, model_cls)
 
-    # Decode as UTF-8
-    text = decompressed.decode("utf-8", errors="replace")
 
-    # Parse each line
-    for line_num, line in enumerate(text.splitlines(), start=1):
-        if not line.strip():
+def _parse_lines(reader: io.TextIOBase, model_cls: type[T]) -> Iterator[T]:
+    """Parse lines from a text reader into Pydantic models.
+
+    Args:
+        reader: Text IO reader to read lines from.
+        model_cls: Pydantic model class to validate against.
+
+    Yields:
+        Validated Pydantic model instances.
+    """
+    for line_num, raw_line in enumerate(reader, start=1):
+        stripped = raw_line.rstrip("\n\r")
+        if not stripped:
             continue
 
         try:
-            obj = json.loads(line)
+            obj = json.loads(stripped)
             yield model_cls.model_validate(obj)
         except json.JSONDecodeError as e:
             logger.warning("Malformed JSON at line %d: %s", line_num, e)
