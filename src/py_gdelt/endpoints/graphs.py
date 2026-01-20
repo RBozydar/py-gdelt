@@ -82,7 +82,8 @@ class GraphEndpoint:
         ...             date_range=DateRange(start=date(2025, 1, 20))
         ...         )
         ...         async for record in endpoint.stream_geg(filter_obj):
-        ...             print(record.event_id, record.source_event_id)
+        ...             for entity in record.entities:
+        ...                 print(entity.name, entity.entity_type)
     """
 
     def __init__(
