@@ -75,7 +75,7 @@ def _parse_jsonl(data: bytes, model_cls: type[T]) -> Iterator[T]:
         model_cls: Pydantic model class to validate against.
 
     Yields:
-        Validated Pydantic model instances.
+        T: Validated Pydantic model instances.
     """
     # Use streaming approach to reduce memory usage
     if data.startswith(b"\x1f\x8b"):
@@ -97,7 +97,7 @@ def _parse_lines(reader: io.TextIOBase, model_cls: type[T]) -> Iterator[T]:
         model_cls: Pydantic model class to validate against.
 
     Yields:
-        Validated Pydantic model instances.
+        T: Validated Pydantic model instances.
     """
     for line_num, raw_line in enumerate(reader, start=1):
         stripped = raw_line.rstrip("\n\r")
