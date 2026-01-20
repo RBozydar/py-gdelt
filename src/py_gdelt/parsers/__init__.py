@@ -12,6 +12,14 @@ Available parsers:
 
 from py_gdelt.parsers.events import EventsParser
 from py_gdelt.parsers.gkg import GKGParser
+from py_gdelt.parsers.graphs import (
+    parse_gal,
+    parse_geg,
+    parse_gemg,
+    parse_gfg,
+    parse_ggg,
+    parse_gqg,
+)
 from py_gdelt.parsers.mentions import MentionsParser
 from py_gdelt.parsers.ngrams import NGramsParser
 
@@ -21,4 +29,10 @@ __all__ = [
     "GKGParser",
     "MentionsParser",
     "NGramsParser",
+    "parse_gal",
+    "parse_geg",
+    "parse_gemg",
+    "parse_gfg",
+    "parse_ggg",
+    "parse_gqg",
 ]

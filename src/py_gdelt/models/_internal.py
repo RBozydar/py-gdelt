@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 __all__ = [
     "_RawEvent",
+    "_RawGFGRecord",
     "_RawGKG",
     "_RawMention",
     "_RawNGram",
@@ -214,6 +215,25 @@ class _RawGKG:
     translation_info: str | None = None
     extras_xml: str | None = None
     is_translated: bool = False
+
+
+@dataclass(slots=True)
+class _RawGFGRecord:
+    """Internal representation for GDELT Global Frontpage Graph.
+
+    Represents a single GFG record (TSV format) containing a hyperlink
+    from a frontpage to another URL.
+
+    All fields are strings as parsed from TAB-delimited files. Type conversion
+    happens when converting to the public GFGRecord Pydantic model.
+    """
+
+    date: str
+    from_frontpage_url: str
+    link_url: str
+    link_text: str
+    page_position: str
+    lang: str
 
 
 @dataclass(slots=True)

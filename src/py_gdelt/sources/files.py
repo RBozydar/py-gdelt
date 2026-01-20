@@ -26,7 +26,7 @@ from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
 
 
-__all__ = ["FileSource", "FileType"]
+__all__ = ["FileSource", "FileType", "GraphFileType"]
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +45,17 @@ FILE_TYPE_PATTERNS: Final[dict[str, str]] = {
     "mentions": ".mentions.CSV.zip",
     "gkg": ".gkg.csv.zip",
     "ngrams": ".webngrams.json.gz",
+    "gqg": ".gqg.json.gz",
+    "geg": ".geg.json.gz",
+    "gfg": ".gfg.csv.gz",
+    "ggg": ".ggg.json.gz",
+    "gemg": ".gemg.json.gz",
+    "gal": ".gal.json.gz",
 }
 
 # Type alias for file types
-FileType = Literal["export", "mentions", "gkg", "ngrams"]
+FileType = Literal["export", "mentions", "gkg", "ngrams", "gqg", "geg", "gfg", "ggg", "gemg", "gal"]
+GraphFileType = Literal["gqg", "geg", "gfg", "ggg", "gemg", "gal"]
 
 
 class FileSource:
@@ -211,23 +218,43 @@ class FileSource:
         pattern = FILE_TYPE_PATTERNS[file_type]
         urls: list[str] = []
 
-        # Generate URLs for 15-minute intervals
+        # GFG is hourly, others are 15-minute
+        delta = timedelta(hours=1) if file_type == "gfg" else timedelta(minutes=15)
+
+        # Generate URLs for time intervals
         current = start_date
-        delta = timedelta(minutes=15)
 
         while current <= end_date:
-            timestamp = current.strftime("%Y%m%d%H%M%S")
+            # GFG is hourly - normalize minutes to 00
+            if file_type == "gfg":
+                # Round down to hour
+                timestamp = current.strftime("%Y%m%d%H") + "0000"
+            else:
+                timestamp = current.strftime("%Y%m%d%H%M%S")
 
             # Build URL based on file type
-            if file_type == "ngrams":
-                url = f"http://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
+            # Graph datasets and ngrams use gdeltv3
+            if file_type in ("ngrams", "gqg", "geg", "gfg", "ggg", "gemg", "gal"):
+                # Graph datasets have their own subdirectory
+                if file_type == "ngrams":
+                    url = f"http://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
+                else:
+                    url = f"http://data.gdeltproject.org/gdeltv3/{file_type}/{timestamp}{pattern}"
             else:
                 url = f"http://data.gdeltproject.org/gdeltv2/{timestamp}{pattern}"
 
             urls.append(url)
 
-            # Handle translation files
-            if include_translation and file_type != "ngrams":
+            # Handle translation files (not supported for graph datasets)
+            if include_translation and file_type not in (
+                "ngrams",
+                "gqg",
+                "geg",
+                "gfg",
+                "ggg",
+                "gemg",
+                "gal",
+            ):
                 trans_url = url.replace(pattern, f".translation{pattern}")
                 urls.append(trans_url)
 

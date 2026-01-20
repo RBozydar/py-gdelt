@@ -17,6 +17,7 @@ from py_gdelt.endpoints.doc import DocEndpoint
 from py_gdelt.endpoints.events import EventsEndpoint
 from py_gdelt.endpoints.geo import GeoEndpoint, GeoPoint, GeoResult
 from py_gdelt.endpoints.gkg import GKGEndpoint
+from py_gdelt.endpoints.graphs import GraphEndpoint
 from py_gdelt.endpoints.mentions import MentionsEndpoint
 from py_gdelt.endpoints.ngrams import NGramsEndpoint
 from py_gdelt.endpoints.tv import (
@@ -43,6 +44,7 @@ __all__ = [
     "GeoEndpoint",
     "GeoPoint",
     "GeoResult",
+    "GraphEndpoint",
     "MentionsEndpoint",
     "NGramsEndpoint",
     "TVAIEndpoint",

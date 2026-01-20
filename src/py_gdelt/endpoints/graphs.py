@@ -1,0 +1,359 @@
+"""Graph datasets endpoint for GDELT data.
+
+This module provides the GraphEndpoint class for querying GDELT's graph datasets
+including GQG (Quotation Graph), GEG (Event Graph), GFG (Facebook Graph),
+GGG (Google Graph), GEMG (Emotion Graph), and GAL (Activity Log).
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, Literal
+
+from py_gdelt.models.common import FetchResult
+from py_gdelt.parsers import graphs as graph_parsers
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from py_gdelt.filters import (
+        GALFilter,
+        GEGFilter,
+        GEMGFilter,
+        GFGFilter,
+        GGGFilter,
+        GQGFilter,
+    )
+    from py_gdelt.models.graphs import (
+        GALRecord,
+        GEGRecord,
+        GEMGRecord,
+        GFGRecord,
+        GGGRecord,
+        GQGRecord,
+    )
+    from py_gdelt.sources.bigquery import BigQuerySource
+    from py_gdelt.sources.fetcher import DataFetcher
+    from py_gdelt.sources.files import FileSource
+
+__all__ = ["GraphEndpoint"]
+
+logger = logging.getLogger(__name__)
+
+
+class GraphEndpoint:
+    """Endpoint for GDELT Graph datasets.
+
+    Provides type-safe access to all six graph datasets with per-dataset
+    query and stream methods that preserve return types. Graph datasets are
+    sourced exclusively from files (no BigQuery fallback available).
+
+    Args:
+        file_source: FileSource instance for downloading GDELT graph files.
+        bigquery_source: Optional BigQuerySource (unused for graph datasets).
+        fallback_enabled: Whether to fallback to BigQuery (unused for graphs).
+        error_policy: How to handle errors - 'raise', 'warn', or 'skip'.
+
+    Example:
+        Query Global Quotation Graph records:
+
+        >>> from datetime import date
+        >>> from py_gdelt.filters import GQGFilter, DateRange
+        >>> from py_gdelt.endpoints.graphs import GraphEndpoint
+        >>> from py_gdelt.sources.files import FileSource
+        >>>
+        >>> async def main():
+        ...     async with FileSource() as file_source:
+        ...         endpoint = GraphEndpoint(file_source=file_source)
+        ...         filter_obj = GQGFilter(
+        ...             date_range=DateRange(start=date(2025, 1, 20))
+        ...         )
+        ...         result = await endpoint.query_gqg(filter_obj)
+        ...         for record in result:
+        ...             print(record.quotes)
+
+        Stream Event Graph records:
+
+        >>> async def stream_example():
+        ...     async with FileSource() as file_source:
+        ...         endpoint = GraphEndpoint(file_source=file_source)
+        ...         filter_obj = GEGFilter(
+        ...             date_range=DateRange(start=date(2025, 1, 20))
+        ...         )
+        ...         async for record in endpoint.stream_geg(filter_obj):
+        ...             print(record.event_id, record.source_event_id)
+    """
+
+    def __init__(
+        self,
+        file_source: FileSource,
+        bigquery_source: BigQuerySource | None = None,
+        *,
+        fallback_enabled: bool = True,
+        error_policy: Literal["raise", "warn", "skip"] = "warn",
+    ) -> None:
+        from py_gdelt.sources.fetcher import DataFetcher
+
+        self._fetcher: DataFetcher = DataFetcher(
+            file_source=file_source,
+            bigquery_source=bigquery_source,
+            fallback_enabled=fallback_enabled,
+            error_policy=error_policy,
+        )
+        self._error_policy = error_policy
+
+        logger.debug(
+            "GraphEndpoint initialized (error_policy=%s)",
+            error_policy,
+        )
+
+    # --- GQG (Global Quotation Graph) ---
+
+    async def query_gqg(
+        self,
+        filter_obj: GQGFilter,
+    ) -> FetchResult[GQGRecord]:
+        """Query Global Quotation Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Returns:
+            FetchResult containing GQGRecord instances.
+        """
+        records = [record async for record in self.stream_gqg(filter_obj)]
+        return FetchResult(data=records, failed=[])
+
+    async def stream_gqg(
+        self,
+        filter_obj: GQGFilter,
+    ) -> AsyncIterator[GQGRecord]:
+        """Stream Global Quotation Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Yields:
+            GQGRecord: Individual quotation graph records.
+        """
+        async for url, data in self._fetcher.fetch_graph_files("gqg", filter_obj.date_range):
+            try:
+                for record in graph_parsers.parse_gqg(data):
+                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                        continue
+                    yield record
+            except Exception as e:
+                if self._error_policy == "raise":
+                    raise
+                if self._error_policy == "warn":
+                    logger.warning("Error parsing %s: %s", url, e)
+                # skip: continue silently
+
+    # --- GEG (Global Event Graph) ---
+
+    async def query_geg(
+        self,
+        filter_obj: GEGFilter,
+    ) -> FetchResult[GEGRecord]:
+        """Query Global Event Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Returns:
+            FetchResult containing GEGRecord instances.
+        """
+        records = [record async for record in self.stream_geg(filter_obj)]
+        return FetchResult(data=records, failed=[])
+
+    async def stream_geg(
+        self,
+        filter_obj: GEGFilter,
+    ) -> AsyncIterator[GEGRecord]:
+        """Stream Global Event Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Yields:
+            GEGRecord: Individual event graph records.
+        """
+        async for url, data in self._fetcher.fetch_graph_files("geg", filter_obj.date_range):
+            try:
+                for record in graph_parsers.parse_geg(data):
+                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                        continue
+                    yield record
+            except Exception as e:
+                if self._error_policy == "raise":
+                    raise
+                if self._error_policy == "warn":
+                    logger.warning("Error parsing %s: %s", url, e)
+                # skip: continue silently
+
+    # --- GFG (Global Facebook Graph) ---
+
+    async def query_gfg(
+        self,
+        filter_obj: GFGFilter,
+    ) -> FetchResult[GFGRecord]:
+        """Query Global Facebook Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Returns:
+            FetchResult containing GFGRecord instances.
+        """
+        records = [record async for record in self.stream_gfg(filter_obj)]
+        return FetchResult(data=records, failed=[])
+
+    async def stream_gfg(
+        self,
+        filter_obj: GFGFilter,
+    ) -> AsyncIterator[GFGRecord]:
+        """Stream Global Facebook Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Yields:
+            GFGRecord: Individual Facebook graph records.
+        """
+        async for url, data in self._fetcher.fetch_graph_files("gfg", filter_obj.date_range):
+            try:
+                for record in graph_parsers.parse_gfg(data):
+                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                        continue
+                    yield record
+            except Exception as e:
+                if self._error_policy == "raise":
+                    raise
+                if self._error_policy == "warn":
+                    logger.warning("Error parsing %s: %s", url, e)
+                # skip: continue silently
+
+    # --- GGG (Global Google Graph) ---
+
+    async def query_ggg(
+        self,
+        filter_obj: GGGFilter,
+    ) -> FetchResult[GGGRecord]:
+        """Query Global Google Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range.
+
+        Returns:
+            FetchResult containing GGGRecord instances.
+        """
+        records = [record async for record in self.stream_ggg(filter_obj)]
+        return FetchResult(data=records, failed=[])
+
+    async def stream_ggg(
+        self,
+        filter_obj: GGGFilter,
+    ) -> AsyncIterator[GGGRecord]:
+        """Stream Global Google Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range.
+
+        Yields:
+            GGGRecord: Individual Google graph records.
+        """
+        async for url, data in self._fetcher.fetch_graph_files("ggg", filter_obj.date_range):
+            try:
+                for record in graph_parsers.parse_ggg(data):
+                    yield record
+            except Exception as e:
+                if self._error_policy == "raise":
+                    raise
+                if self._error_policy == "warn":
+                    logger.warning("Error parsing %s: %s", url, e)
+                # skip: continue silently
+
+    # --- GEMG (Global Emotion Graph) ---
+
+    async def query_gemg(
+        self,
+        filter_obj: GEMGFilter,
+    ) -> FetchResult[GEMGRecord]:
+        """Query Global Emotion Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Returns:
+            FetchResult containing GEMGRecord instances.
+        """
+        records = [record async for record in self.stream_gemg(filter_obj)]
+        return FetchResult(data=records, failed=[])
+
+    async def stream_gemg(
+        self,
+        filter_obj: GEMGFilter,
+    ) -> AsyncIterator[GEMGRecord]:
+        """Stream Global Emotion Graph records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Yields:
+            GEMGRecord: Individual emotion graph records.
+        """
+        async for url, data in self._fetcher.fetch_graph_files("gemg", filter_obj.date_range):
+            try:
+                for record in graph_parsers.parse_gemg(data):
+                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                        continue
+                    yield record
+            except Exception as e:
+                if self._error_policy == "raise":
+                    raise
+                if self._error_policy == "warn":
+                    logger.warning("Error parsing %s: %s", url, e)
+                # skip: continue silently
+
+    # --- GAL (Global Activity Log) ---
+
+    async def query_gal(
+        self,
+        filter_obj: GALFilter,
+    ) -> FetchResult[GALRecord]:
+        """Query Global Activity Log records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Returns:
+            FetchResult containing GALRecord instances.
+        """
+        records = [record async for record in self.stream_gal(filter_obj)]
+        return FetchResult(data=records, failed=[])
+
+    async def stream_gal(
+        self,
+        filter_obj: GALFilter,
+    ) -> AsyncIterator[GALRecord]:
+        """Stream Global Activity Log records.
+
+        Args:
+            filter_obj: Filter specifying date range and optional language filter.
+
+        Yields:
+            GALRecord: Individual activity log records.
+        """
+        async for url, data in self._fetcher.fetch_graph_files("gal", filter_obj.date_range):
+            try:
+                for record in graph_parsers.parse_gal(data):
+                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                        continue
+                    yield record
+            except Exception as e:
+                if self._error_policy == "raise":
+                    raise
+                if self._error_policy == "warn":
+                    logger.warning("Error parsing %s: %s", url, e)
+                # skip: continue silently

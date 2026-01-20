@@ -60,6 +60,53 @@ Data models represent GDELT records and results.
       show_root_heading: true
       heading_level: 3
 
+## Graph Models
+
+::: py_gdelt.models.Entity
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.GALRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.GEGRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.GEMGRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.GFGRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.GGGRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.GQGRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.MetaTag
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.Quote
+    options:
+      show_root_heading: true
+      heading_level: 3
+
 ## Common Models
 
 ::: py_gdelt.models.Location

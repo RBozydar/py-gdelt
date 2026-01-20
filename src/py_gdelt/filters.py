@@ -8,7 +8,7 @@ across all GDELT data sources including Events, Mentions, GKG, DOC, GEO, and TV 
 from __future__ import annotations
 
 from datetime import date, datetime  # noqa: TC003 - Pydantic needs runtime access
-from typing import Literal
+from typing import Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -19,7 +19,13 @@ __all__ = [
     "DateRange",
     "DocFilter",
     "EventFilter",
+    "GALFilter",
+    "GEGFilter",
+    "GEMGFilter",
+    "GFGFilter",
+    "GGGFilter",
     "GKGFilter",
+    "GQGFilter",
     "GeoFilter",
     "NGramsFilter",
     "TVFilter",
@@ -292,5 +298,95 @@ class NGramsFilter(BaseModel):
             and self.min_position > self.max_position
         ):
             msg = "min_position must be <= max_position"
+            raise ValueError(msg)
+        return self
+
+
+class GQGFilter(BaseModel):
+    """Filter for Global Quotation Graph queries (max 7 days)."""
+
+    date_range: DateRange
+    languages: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        """Ensure date range does not exceed 7 days."""
+        if self.date_range.days > 7:
+            msg = "GQG max date range: 7 days"
+            raise ValueError(msg)
+        return self
+
+
+class GEGFilter(BaseModel):
+    """Filter for Global Entity Graph queries (max 7 days)."""
+
+    date_range: DateRange
+    languages: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        """Ensure date range does not exceed 7 days."""
+        if self.date_range.days > 7:
+            msg = "GEG max date range: 7 days"
+            raise ValueError(msg)
+        return self
+
+
+class GFGFilter(BaseModel):
+    """Filter for Global Frontpage Graph queries (max 30 days)."""
+
+    date_range: DateRange
+    languages: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        """Ensure date range does not exceed 30 days."""
+        if self.date_range.days > 30:
+            msg = "GFG max date range: 30 days"
+            raise ValueError(msg)
+        return self
+
+
+class GGGFilter(BaseModel):
+    """Filter for Global Geographic Graph queries (max 7 days)."""
+
+    date_range: DateRange
+    languages: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        """Ensure date range does not exceed 7 days."""
+        if self.date_range.days > 7:
+            msg = "GGG max date range: 7 days"
+            raise ValueError(msg)
+        return self
+
+
+class GEMGFilter(BaseModel):
+    """Filter for Global Embedded Metadata Graph queries (max 7 days)."""
+
+    date_range: DateRange
+    languages: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        """Ensure date range does not exceed 7 days."""
+        if self.date_range.days > 7:
+            msg = "GEMG max date range: 7 days"
+            raise ValueError(msg)
+        return self
+
+
+class GALFilter(BaseModel):
+    """Filter for Article List queries (max 7 days)."""
+
+    date_range: DateRange
+    languages: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        """Ensure date range does not exceed 7 days."""
+        if self.date_range.days > 7:
+            msg = "GAL max date range: 7 days"
             raise ValueError(msg)
         return self
