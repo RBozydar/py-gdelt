@@ -11,6 +11,7 @@ import heapq
 import logging
 import math
 import threading
+from collections import Counter
 from datetime import date, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -158,7 +159,26 @@ def _top_n(counts: dict[str, int], n: int) -> list[dict[str, Any]]:
     Returns:
         List of dicts with 'name' and 'count' keys, sorted by count descending.
     """
-    return [{"name": k, "count": v} for k, v in sorted(counts.items(), key=lambda x: -x[1])[:n]]
+    top_items = heapq.nlargest(n, counts.items(), key=lambda x: x[1])
+    return [{"name": k, "count": v} for k, v in top_items]
+
+
+MAX_UNIQUE_ENTITIES = 10_000
+
+
+def _bounded_increment(counts: dict[str, int], key: str, limit: int = MAX_UNIQUE_ENTITIES) -> None:
+    """Increment count for a key, but stop accepting new keys after limit.
+
+    Args:
+        counts: Dictionary mapping items to counts.
+        key: Key to increment.
+        limit: Maximum number of unique keys to track.
+    """
+    if key in counts:
+        counts[key] += 1
+    elif len(counts) < limit:
+        counts[key] = 1
+    # Silently drop new keys beyond limit
 
 
 @mcp.tool()
@@ -237,10 +257,10 @@ async def gdelt_events(
             "mildly_conflictual": 0,
             "cooperative": 0,
         }
-        events_by_day: dict[str, int] = {}
-        events_by_type: dict[str, int] = {}
-        actor1_countries: dict[str, int] = {}
-        actor2_countries: dict[str, int] = {}
+        events_by_day: Counter[str] = Counter()
+        events_by_type: Counter[str] = Counter()
+        actor1_countries: Counter[str] = Counter()
+        actor2_countries: Counter[str] = Counter()
 
         # Reservoir sampling for extreme events (5 most negative, 5 most positive)
         most_negative_heap: list[tuple[float, int, dict[str, Any]]] = []
@@ -273,57 +293,64 @@ async def gdelt_events(
 
             # Update daily counts
             date_str = event.date.isoformat()
-            events_by_day[date_str] = events_by_day.get(date_str, 0) + 1
+            events_by_day[date_str] += 1
 
             # Update event type counts
-            events_by_type[event.event_code] = events_by_type.get(event.event_code, 0) + 1
+            events_by_type[event.event_code] += 1
 
             # Update actor country counts
             if event.actor1 and event.actor1.country_code:
-                country = event.actor1.country_code
-                actor1_countries[country] = actor1_countries.get(country, 0) + 1
+                actor1_countries[event.actor1.country_code] += 1
 
             if event.actor2 and event.actor2.country_code:
-                country = event.actor2.country_code
-                actor2_countries[country] = actor2_countries.get(country, 0) + 1
+                actor2_countries[event.actor2.country_code] += 1
 
-            # Reservoir sampling for extreme events
-            cameo_entry = cameo.get(event.event_code)
-            event_dict = {
-                "global_event_id": event.global_event_id,
-                "date": event.date.isoformat(),
-                "actor1_country": event.actor1.country_code if event.actor1 else None,
-                "actor1_name": event.actor1.name if event.actor1 else None,
-                "actor2_country": event.actor2.country_code if event.actor2 else None,
-                "actor2_name": event.actor2.name if event.actor2 else None,
-                "event_code": event.event_code,
-                "event_name": cameo_entry.name if cameo_entry else None,
-                "goldstein_scale": event.goldstein_scale,
-                "avg_tone": event.avg_tone,
-                "source_url": event.source_url,
-            }
+            # Reservoir sampling for extreme events - only create dict if needed
+            goldstein = event.goldstein_scale
 
-            # Keep 5 most negative (use max heap with negated values)
-            _heap_counter += 1
-            if len(most_negative_heap) < 5:
-                heapq.heappush(
-                    most_negative_heap, (-event.goldstein_scale, _heap_counter, event_dict)
-                )
-            elif event.goldstein_scale < -most_negative_heap[0][0]:
-                heapq.heapreplace(
-                    most_negative_heap, (-event.goldstein_scale, _heap_counter, event_dict)
-                )
+            # Check if this event might be stored BEFORE creating dict
+            will_store_negative = (
+                len(most_negative_heap) < 5 or goldstein < -most_negative_heap[0][0]
+            )
+            will_store_positive = (
+                len(most_positive_heap) < 5 or goldstein > most_positive_heap[0][0]
+            )
 
-            # Keep 5 most positive (use min heap)
-            _heap_counter += 1
-            if len(most_positive_heap) < 5:
-                heapq.heappush(
-                    most_positive_heap, (event.goldstein_scale, _heap_counter, event_dict)
-                )
-            elif event.goldstein_scale > most_positive_heap[0][0]:
-                heapq.heapreplace(
-                    most_positive_heap, (event.goldstein_scale, _heap_counter, event_dict)
-                )
+            if will_store_negative or will_store_positive:
+                cameo_entry = cameo.get(event.event_code)
+                event_dict = {
+                    "global_event_id": event.global_event_id,
+                    "date": event.date.isoformat(),
+                    "actor1_country": event.actor1.country_code if event.actor1 else None,
+                    "actor1_name": event.actor1.name if event.actor1 else None,
+                    "actor2_country": event.actor2.country_code if event.actor2 else None,
+                    "actor2_name": event.actor2.name if event.actor2 else None,
+                    "event_code": event.event_code,
+                    "event_name": cameo_entry.name if cameo_entry else None,
+                    "goldstein_scale": goldstein,
+                    "avg_tone": event.avg_tone,
+                    "source_url": event.source_url,
+                }
+
+                # Keep 5 most negative (use max heap with negated values)
+                _heap_counter += 1
+                if will_store_negative:
+                    if len(most_negative_heap) < 5:
+                        heapq.heappush(most_negative_heap, (-goldstein, _heap_counter, event_dict))
+                    else:
+                        heapq.heapreplace(
+                            most_negative_heap, (-goldstein, _heap_counter, event_dict)
+                        )
+
+                # Keep 5 most positive (use min heap)
+                _heap_counter += 1
+                if will_store_positive:
+                    if len(most_positive_heap) < 5:
+                        heapq.heappush(most_positive_heap, (goldstein, _heap_counter, event_dict))
+                    else:
+                        heapq.heapreplace(
+                            most_positive_heap, (goldstein, _heap_counter, event_dict)
+                        )
 
         # Calculate summary statistics
         goldstein_mean = goldstein_sum / total_events if total_events > 0 else 0.0
@@ -454,17 +481,17 @@ async def gdelt_gkg(
 
             total_records += 1
 
-            # Aggregate themes
+            # Aggregate themes (themes are naturally bounded ~59k, but use helper for consistency)
             for theme in record.themes:
-                theme_counts[theme.name] = theme_counts.get(theme.name, 0) + 1
+                _bounded_increment(theme_counts, theme.name)
 
-            # Aggregate persons
+            # Aggregate persons (UNBOUNDED - use limit)
             for person in record.persons:
-                person_counts[person.name] = person_counts.get(person.name, 0) + 1
+                _bounded_increment(person_counts, person.name)
 
-            # Aggregate organizations
+            # Aggregate organizations (UNBOUNDED - use limit)
             for org in record.organizations:
-                org_counts[org.name] = org_counts.get(org.name, 0) + 1
+                _bounded_increment(org_counts, org.name)
 
             # Aggregate tone
             if record.tone:
@@ -539,7 +566,7 @@ async def gdelt_actors(
                     "source_count": 0,
                     "target_count": 0,
                     "goldstein_sum": 0.0,
-                    "event_codes": {},
+                    "event_codes": Counter(),
                 }
             return actor_stats[actor]
 
@@ -557,8 +584,7 @@ async def gdelt_actors(
                 stats = get_or_create_stats(actor)
                 stats["source_count"] += 1
                 stats["goldstein_sum"] += event.goldstein_scale
-                code = event.event_code
-                stats["event_codes"][code] = stats["event_codes"].get(code, 0) + 1
+                stats["event_codes"][event.event_code] += 1
 
         # Process target events (country as actor2) - filter1 stream already done
         if relationship in ("target", "both"):
@@ -574,8 +600,7 @@ async def gdelt_actors(
                 stats = get_or_create_stats(actor)
                 stats["target_count"] += 1
                 stats["goldstein_sum"] += event.goldstein_scale
-                code = event.event_code
-                stats["event_codes"][code] = stats["event_codes"].get(code, 0) + 1
+                stats["event_codes"][event.event_code] += 1
 
         # Convert to results list (same format as before)
         results: list[dict[str, Any]] = []

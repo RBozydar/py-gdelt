@@ -188,10 +188,3 @@ class TestThreadSafety:
 
         assert hasattr(server, "_cameo_lock")
         assert isinstance(server._cameo_lock, type(threading.Lock()))
-
-    def test_heap_counter_exists(self) -> None:
-        """Test that _heap_counter module variable exists."""
-        from py_gdelt.mcp_server import server
-
-        assert hasattr(server, "_heap_counter")
-        assert isinstance(server._heap_counter, int)
