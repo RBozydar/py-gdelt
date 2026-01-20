@@ -140,17 +140,51 @@ class InvalidCodeError(ValidationError):
         message: Error description
         code: The invalid code value
         code_type: Type of code (e.g., "cameo", "theme", "country", "fips")
+        suggestions: Optional list of suggested valid codes
+        help_url: Optional URL to reference documentation
     """
 
-    def __init__(self, message: str, code: str, code_type: str) -> None:
+    def __init__(
+        self,
+        message: str,
+        code: str,
+        code_type: str,
+        suggestions: list[str] | None = None,
+        help_url: str | None = None,
+    ) -> None:
         super().__init__(message)
         self.code = code
         self.code_type = code_type
+        self.suggestions = suggestions or []
+        self.help_url = help_url
 
     def __str__(self) -> str:
-        """Return string representation including code details."""
+        """Return string representation including code details and guidance."""
         base_message = super().__str__()
-        return f"{base_message} (code={self.code!r}, type={self.code_type!r})"
+
+        # Always include code and code_type in the base representation (backward compatibility)
+        lines = [f"{base_message} (code={self.code!r}, type={self.code_type!r})"]
+
+        # Add country-specific help
+        if self.code_type == "country":
+            lines.extend(
+                [
+                    "",
+                    "Accepted formats:",
+                    "  - FIPS (2 chars): US, UK, IR, FR, GM, CH, RS",
+                    "  - ISO3 (3 chars): USA, GBR, IRN, FRA, DEU, CHN, RUS",
+                ]
+            )
+
+        # Add suggestions if available
+        if self.suggestions:
+            lines.extend(["", f"Did you mean: {', '.join(self.suggestions)}?"])
+
+        # Add reference URL if available
+        if self.help_url:
+            lines.extend(["", f"Reference: {self.help_url}"])
+
+        return "\n".join(lines)
 
 
 class ConfigurationError(GDELTError):

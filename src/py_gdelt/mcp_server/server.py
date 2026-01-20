@@ -141,8 +141,10 @@ async def gdelt_events(
     summary statistics, distributions, and sample events.
 
     Args:
-        actor1_country: ISO3 country code for actor 1 (e.g., "USA", "RUS", "CHN")
-        actor2_country: ISO3 country code for actor 2
+        actor1_country: Country code for actor 1. Accepts both formats:
+            - FIPS (2 chars): US, UK, IR, FR, GM, CH, RS
+            - ISO3 (3 chars): USA, GBR, IRN, FRA, DEU, CHN, RUS
+        actor2_country: Country code for actor 2 (same formats as actor1)
         event_type: Type filter - "conflict" (codes 14-20), "cooperation" (01-08), or "all"
         days_back: Number of days to look back (default: 7, max: 365)
         min_goldstein: Minimum Goldstein scale (-10 to 10, negative=conflict)
@@ -440,7 +442,9 @@ async def gdelt_actors(
     Analyzes events to find which actors/countries interact with the specified country.
 
     Args:
-        country: ISO3 country code (e.g., "USA", "RUS", "CHN")
+        country: Country code. Accepts both formats:
+            - FIPS (2 chars): US, UK, IR, FR, GM, CH, RS
+            - ISO3 (3 chars): USA, GBR, IRN, FRA, DEU, CHN, RUS
         relationship: Relationship type - "source" (country as actor1), "target" (as actor2), or "both"
         days_back: Number of days to look back (default: 30, max: 365)
 
