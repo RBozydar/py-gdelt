@@ -94,7 +94,7 @@ jobs:
             - recommendations: Specific fix recommendations
 
             Focus on distinguishing between library bugs vs external service issues.
-          claude_args: '--model claude-sonnet-4-20250514 --max-turns 5 --allowed-tools "Read"'
+          claude_args: '--model claude-opus-4-5 --max-turns 5 --allowed-tools "Read"'
 
       - name: Find existing issue
         if: steps.examples.outputs.examples_failed == 'true'
