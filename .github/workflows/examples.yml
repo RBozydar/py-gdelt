@@ -70,6 +70,7 @@ jobs:
       - name: Analyze failures with Claude
         if: steps.examples.outputs.examples_failed == 'true'
         id: claude_analysis
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -93,7 +94,7 @@ jobs:
             - recommendations: Specific fix recommendations
 
             Focus on distinguishing between library bugs vs external service issues.
-          claude_args: '--model claude-sonnet-4-20250514 --max-turns 3 --allowed-tools "Read"'
+          claude_args: '--model claude-sonnet-4-20250514 --max-turns 5 --allowed-tools "Read"'
 
       - name: Find existing issue
         if: steps.examples.outputs.examples_failed == 'true'
