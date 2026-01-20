@@ -247,7 +247,6 @@ ignore = [
 
 # MCP server has different requirements than library code
 "src/py_gdelt/mcp_server/*.py" = [
-  "T201",     # print statements OK in example_usage.py
   "PLW0603",  # Global statement needed for singleton pattern
   "SLF001",   # Private member access needed for _initialize
   "PLR0912",  # Complex aggregation logic requires many branches
