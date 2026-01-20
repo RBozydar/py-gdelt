@@ -225,6 +225,13 @@ ignore = [
   "PLC0415",  # Lazy imports OK in examples
 ]
 
+# MCP server needs broad exception handling for API boundary
+"src/py_gdelt/mcp_server/server.py" = [
+  "BLE001",   # Blind except OK - catching exceptions at MCP API boundary
+  "TRY300",   # try/return pattern OK for MCP tool functions
+  "TRY301",   # Raise in except OK for parameter validation
+]
+
 "notebooks/**/*.ipynb" = [
   "T201",     # print expected in notebooks
   "SIM102",   # Collapsible if OK in notebooks
