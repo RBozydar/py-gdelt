@@ -66,7 +66,7 @@ jobs:
             - suggested_fix: Actionable fix approach
 
             Focus on actionable insights. Reference specific model classes and lookup files.
-          claude_args: '--model claude-sonnet-4-20250514 --max-turns 5 --allowed-tools "Read"'
+          claude_args: '--model claude-opus-4-5 --max-turns 5 --allowed-tools "Read"'
 
       - name: Find existing drift issue
         if: steps.check.outputs.drift_detected == 'true'
