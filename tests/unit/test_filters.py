@@ -157,13 +157,13 @@ class TestGKGFilter:
         assert gf.include_translated is False
 
     def test_invalid_theme_raises_error(self) -> None:
-        """Test that invalid theme raises InvalidCodeError."""
+        """Test that invalid theme format raises InvalidCodeError."""
         with pytest.raises(InvalidCodeError) as exc_info:
             GKGFilter(
                 date_range=DateRange(start=date(2024, 1, 1)),
-                themes=["INVALID_THEME"],
+                themes=["invalid-theme"],  # lowercase with dash is invalid format
             )
-        assert exc_info.value.code == "INVALID_THEME"
+        assert exc_info.value.code == "invalid-theme"
         assert exc_info.value.code_type == "GKG theme"
 
     def test_theme_list_validation(self) -> None:
@@ -171,9 +171,9 @@ class TestGKGFilter:
         with pytest.raises(InvalidCodeError) as exc_info:
             GKGFilter(
                 date_range=DateRange(start=date(2024, 1, 1)),
-                themes=["ENV_CLIMATECHANGE", "INVALID_THEME", "HEALTH_PANDEMIC"],
+                themes=["ENV_CLIMATECHANGE", "invalid-theme", "HEALTH_PANDEMIC"],  # invalid format
             )
-        assert exc_info.value.code == "INVALID_THEME"
+        assert exc_info.value.code == "invalid-theme"
 
     def test_country_normalized_to_uppercase(self) -> None:
         """Test that country code is normalized to uppercase."""
