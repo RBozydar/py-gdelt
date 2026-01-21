@@ -409,24 +409,29 @@ class TestTVGKGFilter:
         assert tvgf.themes == ["ENV_CLIMATECHANGE", "HEALTH_PANDEMIC"]
         assert tvgf.station == "CNN"
 
-    def test_invalid_theme_raises_error(self) -> None:
-        """Test that invalid theme raises InvalidCodeError."""
+    def test_invalid_theme_format_raises_error(self) -> None:
+        """Test that invalid theme format raises InvalidCodeError.
+
+        Note: GKGThemes.validate() uses relaxed validation - it accepts any
+        well-formed theme (uppercase with underscores) even if unknown, because
+        GDELT has 59,000+ themes. Only invalid FORMAT triggers an error.
+        """
         with pytest.raises(InvalidCodeError) as exc_info:
             TVGKGFilter(
                 date_range=DateRange(start=date(2024, 1, 1)),
-                themes=["INVALID_THEME"],
+                themes=["invalid-theme"],  # lowercase with dash = invalid format
             )
-        assert exc_info.value.code == "INVALID_THEME"
+        assert exc_info.value.code == "invalid-theme"
         assert exc_info.value.code_type == "GKG theme"
 
     def test_theme_list_validation(self) -> None:
-        """Test that all themes in list are validated."""
+        """Test that all themes in list are validated for format."""
         with pytest.raises(InvalidCodeError) as exc_info:
             TVGKGFilter(
                 date_range=DateRange(start=date(2024, 1, 1)),
-                themes=["ENV_CLIMATECHANGE", "INVALID_THEME", "HEALTH_PANDEMIC"],
+                themes=["ENV_CLIMATECHANGE", "bad format!", "HEALTH_PANDEMIC"],
             )
-        assert exc_info.value.code == "INVALID_THEME"
+        assert exc_info.value.code == "bad format!"
 
     def test_station_normalized_to_uppercase(self) -> None:
         """Test that station name is normalized to uppercase."""
