@@ -178,6 +178,44 @@ class TestCAMEOCodes:
         assert "INVALID" in str(exc_info.value)
         assert "cameo" in str(exc_info.value)
 
+    def test_get_goldstein_category_highly_conflictual(self) -> None:
+        """Test get_goldstein_category returns highly_conflictual for scores < -5."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(-10.0) == "highly_conflictual"
+        assert cameo.get_goldstein_category(-7.5) == "highly_conflictual"
+        assert cameo.get_goldstein_category(-5.1) == "highly_conflictual"
+
+    def test_get_goldstein_category_moderately_conflictual(self) -> None:
+        """Test get_goldstein_category returns moderately_conflictual for -5 <= score < -2."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(-5.0) == "moderately_conflictual"
+        assert cameo.get_goldstein_category(-3.5) == "moderately_conflictual"
+        assert cameo.get_goldstein_category(-2.1) == "moderately_conflictual"
+
+    def test_get_goldstein_category_mildly_conflictual(self) -> None:
+        """Test get_goldstein_category returns mildly_conflictual for -2 <= score < 0."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(-2.0) == "mildly_conflictual"
+        assert cameo.get_goldstein_category(-1.0) == "mildly_conflictual"
+        assert cameo.get_goldstein_category(-0.1) == "mildly_conflictual"
+
+    def test_get_goldstein_category_cooperative(self) -> None:
+        """Test get_goldstein_category returns cooperative for scores >= 0."""
+        cameo = CAMEOCodes()
+        assert cameo.get_goldstein_category(0.0) == "cooperative"
+        assert cameo.get_goldstein_category(5.0) == "cooperative"
+        assert cameo.get_goldstein_category(10.0) == "cooperative"
+
+    def test_get_goldstein_category_boundary_values(self) -> None:
+        """Test get_goldstein_category at exact boundary values."""
+        cameo = CAMEOCodes()
+        # Boundary at -5: -5.0 is moderately_conflictual, -5.01 is highly_conflictual
+        assert cameo.get_goldstein_category(-5.0) == "moderately_conflictual"
+        # Boundary at -2: -2.0 is mildly_conflictual, -2.01 is moderately_conflictual
+        assert cameo.get_goldstein_category(-2.0) == "mildly_conflictual"
+        # Boundary at 0: 0.0 is cooperative, -0.01 is mildly_conflictual
+        assert cameo.get_goldstein_category(0.0) == "cooperative"
+
 
 class TestGKGThemes:
     """Tests for GKGThemes class."""
@@ -276,11 +314,11 @@ class TestGKGThemes:
         themes.validate("ENV_CLIMATECHANGE")  # Should not raise
 
     def test_validate_invalid_theme_raises_invalid_code_error(self) -> None:
-        """Test validate raises InvalidCodeError for invalid theme."""
+        """Test validate raises InvalidCodeError for invalid theme format."""
         themes = GKGThemes()
         with pytest.raises(InvalidCodeError) as exc_info:
-            themes.validate("INVALID_THEME")
-        assert exc_info.value.code == "INVALID_THEME"
+            themes.validate("invalid-theme-format")  # lowercase with dashes
+        assert exc_info.value.code == "invalid-theme-format"
         assert exc_info.value.code_type == "theme"
 
 
@@ -445,7 +483,7 @@ class TestLookups:
         lookups = Lookups()
         lookups.validate_theme("ENV_CLIMATECHANGE")  # Should not raise
         with pytest.raises(InvalidCodeError):
-            lookups.validate_theme("INVALID")
+            lookups.validate_theme("invalid-theme")  # lowercase with dash
 
     def test_validate_country_delegates_to_countries(self) -> None:
         """Test validate_country delegates to Countries.validate."""
@@ -464,3 +502,133 @@ class TestLookups:
         assert lookups.themes.get_category("HEALTH_PANDEMIC") == "Health"
         # Test countries access
         assert lookups.countries.fips_to_iso3("US") == "USA"
+
+
+class TestCountriesNormalize:
+    """Tests for Countries.normalize() method."""
+
+    def test_normalize_fips_code(self) -> None:
+        """Test normalizing valid FIPS codes returns unchanged."""
+        countries = Countries()
+        assert countries.normalize("US") == "US"
+        assert countries.normalize("IR") == "IR"
+        assert countries.normalize("UK") == "UK"
+
+    def test_normalize_iso3_code(self) -> None:
+        """Test normalizing ISO3 codes converts to FIPS."""
+        countries = Countries()
+        assert countries.normalize("USA") == "US"
+        assert countries.normalize("IRN") == "IR"
+        assert countries.normalize("GBR") == "UK"
+        assert countries.normalize("DEU") == "GM"
+
+    def test_normalize_case_insensitive(self) -> None:
+        """Test normalization is case insensitive."""
+        countries = Countries()
+        assert countries.normalize("usa") == "US"
+        assert countries.normalize("irn") == "IR"
+        assert countries.normalize("Gbr") == "UK"
+
+    def test_normalize_invalid_raises_with_suggestions(self) -> None:
+        """Test invalid code raises InvalidCodeError with suggestions."""
+        countries = Countries()
+        with pytest.raises(InvalidCodeError) as exc_info:
+            countries.normalize("IRAN")
+        error = exc_info.value
+        assert error.code == "IRAN"
+        assert error.code_type == "country"
+        assert len(error.suggestions) > 0
+        assert error.help_url is not None
+
+    def test_normalize_invalid_shows_accepted_formats(self) -> None:
+        """Test error message shows accepted formats for country codes."""
+        countries = Countries()
+        with pytest.raises(InvalidCodeError) as exc_info:
+            countries.normalize("INVALID")
+        error_str = str(exc_info.value)
+        assert "FIPS" in error_str
+        assert "ISO3" in error_str
+
+
+class TestCountriesSuggest:
+    """Tests for Countries.suggest() method."""
+
+    def test_suggest_by_name(self) -> None:
+        """Test suggestions by country name."""
+        countries = Countries()
+        suggestions = countries.suggest("IRAN")
+        assert len(suggestions) > 0
+        assert any("IR" in s for s in suggestions)
+
+    def test_suggest_by_partial_code(self) -> None:
+        """Test suggestions by partial code match."""
+        countries = Countries()
+        suggestions = countries.suggest("US")
+        assert len(suggestions) > 0
+
+    def test_suggest_limit(self) -> None:
+        """Test suggestion limit is respected."""
+        countries = Countries()
+        suggestions = countries.suggest("A", limit=2)
+        assert len(suggestions) <= 2
+
+
+class TestIranCountryCodes:
+    """Specific tests for Iran (the originally reported issue)."""
+
+    def test_iran_fips_code_exists(self) -> None:
+        """Test Iran FIPS code (IR) exists in countries data."""
+        countries = Countries()
+        assert "IR" in countries
+        entry = countries["IR"]
+        assert entry.name == "Iran"
+        assert entry.iso3 == "IRN"
+
+    def test_iran_iso3_to_fips(self) -> None:
+        """Test converting Iran ISO3 to FIPS."""
+        countries = Countries()
+        assert countries.iso_to_fips("IRN") == "IR"
+
+    def test_iran_fips_to_iso3(self) -> None:
+        """Test converting Iran FIPS to ISO3."""
+        countries = Countries()
+        assert countries.fips_to_iso3("IR") == "IRN"
+
+    def test_iran_normalize_both_formats(self) -> None:
+        """Test normalize accepts both IR and IRN for Iran."""
+        countries = Countries()
+        assert countries.normalize("IR") == "IR"
+        assert countries.normalize("IRN") == "IR"
+
+
+class TestGKGThemesRelaxedValidation:
+    """Tests for relaxed GKG theme validation."""
+
+    def test_validate_known_theme(self) -> None:
+        """Test known themes pass validation."""
+        themes = GKGThemes()
+        themes.validate("ENV_CLIMATECHANGE")  # Should not raise
+
+    def test_validate_unknown_wellformed_theme(self) -> None:
+        """Test unknown but well-formed themes pass validation."""
+        themes = GKGThemes()
+        # These are valid patterns even if not in our limited list
+        themes.validate("SOME_UNKNOWN_THEME")  # Should not raise
+        themes.validate("WB_12345_SOMETHING")  # Should not raise
+        themes.validate("TAX_POLICY")  # Should not raise
+
+    def test_validate_invalid_format_raises(self) -> None:
+        """Test invalid format themes raise InvalidCodeError."""
+        themes = GKGThemes()
+        with pytest.raises(InvalidCodeError):
+            themes.validate("invalid-theme")  # lowercase and dash
+        with pytest.raises(InvalidCodeError):
+            themes.validate("123_STARTS_WITH_NUMBER")
+        with pytest.raises(InvalidCodeError):
+            themes.validate("")
+
+    def test_validate_case_normalization(self) -> None:
+        """Test validation normalizes case."""
+        themes = GKGThemes()
+        # Known theme in different case should work
+        themes.validate("env_climatechange")  # Should not raise (normalized to upper)

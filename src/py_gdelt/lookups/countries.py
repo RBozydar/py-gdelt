@@ -173,3 +173,81 @@ class Countries:
 
         msg = f"Invalid country code: {code!r}"
         raise InvalidCodeError(msg, code=code, code_type="country")
+
+    def normalize(self, code: str) -> str:
+        """
+        Normalize country code to FIPS format.
+
+        Accepts both FIPS (2-char) and ISO3 (3-char) codes and returns
+        the FIPS code for GDELT API compatibility.
+
+        Args:
+            code: Country code (FIPS or ISO3)
+
+        Returns:
+            FIPS code (2 characters) for GDELT API compatibility
+
+        Raises:
+            InvalidCodeError: If code is not valid
+        """
+        code_upper = code.upper()
+
+        # Already FIPS and valid
+        if code_upper in self._countries_data:
+            return code_upper
+
+        # Try ISO3 conversion
+        if len(code_upper) == 3:
+            fips = self._iso_to_fips_mapping.get(code_upper)
+            if fips:
+                return fips
+
+        # Build helpful error with suggestions
+        suggestions = self.suggest(code_upper)
+        msg = f"Invalid country code: {code!r}"
+        raise InvalidCodeError(
+            msg,
+            code=code,
+            code_type="country",
+            suggestions=suggestions,
+            help_url="http://data.gdeltproject.org/api/v2/guides/LOOKUP-COUNTRIES.TXT",
+        )
+
+    def suggest(self, code: str, limit: int = 3) -> list[str]:
+        """
+        Suggest similar country codes based on input.
+
+        Uses fuzzy matching to find codes with similar prefixes or names.
+
+        Args:
+            code: The invalid code to find suggestions for
+            limit: Maximum number of suggestions to return
+
+        Returns:
+            List of suggestions in format "FIPS (Name)"
+        """
+        code_upper = code.upper()
+        suggestions = []
+
+        # Strategy 1: Exact prefix match on FIPS or ISO3 (highest priority)
+        for fips, entry in self._countries_data.items():
+            if fips.startswith(code_upper) or entry.iso3.startswith(code_upper):
+                suggestions.append(f"{fips} ({entry.name})")
+                if len(suggestions) >= limit:
+                    return suggestions
+
+        # Strategy 2: Contains match in country name
+        for fips, entry in self._countries_data.items():
+            if code_upper in entry.name.upper():
+                suggestions.append(f"{fips} ({entry.name})")
+                if len(suggestions) >= limit:
+                    return suggestions
+
+        # Strategy 3: Partial match (code is substring of FIPS/ISO3)
+        for fips, entry in self._countries_data.items():
+            if code_upper in fips or code_upper in entry.iso3:
+                suggestions.append(f"{fips} ({entry.name})")
+                if len(suggestions) >= limit:
+                    return suggestions
+
+        return suggestions

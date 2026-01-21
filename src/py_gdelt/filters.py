@@ -78,19 +78,13 @@ class EventFilter(BaseModel):
     @field_validator("actor1_country", "actor2_country", "action_country", mode="before")
     @classmethod
     def validate_country_code(cls, v: str | None) -> str | None:
-        """Validate and normalize country codes."""
+        """Validate and normalize country codes (accepts FIPS or ISO3)."""
         if v is None:
             return None
-        # Import here to avoid circular imports
         from py_gdelt.lookups.countries import Countries
 
         countries = Countries()
-        try:
-            countries.validate(v.upper())
-        except InvalidCodeError:
-            msg = f"Invalid country code: {v!r}"
-            raise InvalidCodeError(msg, code=v, code_type="country") from None
-        return v.upper()
+        return countries.normalize(v)  # Returns FIPS, raises InvalidCodeError if invalid
 
     @field_validator("event_code", "event_root_code", "event_base_code", mode="before")
     @classmethod
@@ -152,18 +146,13 @@ class GKGFilter(BaseModel):
     @field_validator("country", mode="before")
     @classmethod
     def validate_country(cls, v: str | None) -> str | None:
-        """Validate and normalize country code."""
+        """Validate and normalize country code (accepts FIPS or ISO3)."""
         if v is None:
             return None
         from py_gdelt.lookups.countries import Countries
 
         countries = Countries()
-        try:
-            countries.validate(v.upper())
-        except InvalidCodeError:
-            msg = f"Invalid country code: {v!r}"
-            raise InvalidCodeError(msg, code=v, code_type="country") from None
-        return v.upper()
+        return countries.normalize(v)  # Returns FIPS, raises InvalidCodeError if invalid
 
 
 class DocFilter(BaseModel):
@@ -198,18 +187,13 @@ class DocFilter(BaseModel):
     @field_validator("source_country", mode="before")
     @classmethod
     def validate_source_country(cls, v: str | None) -> str | None:
-        """Validate and normalize source country code."""
+        """Validate and normalize source country code (accepts FIPS or ISO3)."""
         if v is None:
             return None
         from py_gdelt.lookups.countries import Countries
 
         countries = Countries()
-        try:
-            countries.validate(v.upper())
-        except InvalidCodeError:
-            msg = f"Invalid country code: {v!r}"
-            raise InvalidCodeError(msg, code=v, code_type="country") from None
-        return v.upper()
+        return countries.normalize(v)  # Returns FIPS, raises InvalidCodeError if invalid
 
 
 class GeoFilter(BaseModel):
