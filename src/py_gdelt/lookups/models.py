@@ -98,14 +98,16 @@ class GKGThemeEntry(BaseModel):
     Knowledge Graph based on topical and thematic analysis.
 
     Attributes:
-        category: Theme category or classification
-        description: Detailed description of what this theme represents
+        category: Theme category or classification.
+        description: Detailed description of what this theme represents.
+        count: Usage frequency count across GDELT corpus.
     """
 
     model_config = {"frozen": True}
 
     category: str
     description: str
+    count: int
 
 
 class TagCountEntry(BaseModel):

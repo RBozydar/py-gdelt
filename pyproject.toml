@@ -250,6 +250,12 @@ ignore = [
   "SIM110",   # Explicit for loops OK for clarity
 ]
 
+# Conversion scripts are CLI tools
+"scripts/*.py" = [
+  "T201",     # print statements expected in CLI scripts
+  "INP001",   # Implicit namespace package OK for scripts
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["py_gdelt"]
 section-order = [

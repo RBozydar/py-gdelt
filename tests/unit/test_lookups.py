@@ -234,7 +234,8 @@ class TestGKGThemes:
         themes = GKGThemes()
         entry = themes["ENV_CLIMATECHANGE"]
         assert entry.category == "Environment"
-        assert entry.description == "Climate change and global warming"
+        assert entry.description == "Climate Change"
+        assert entry.count > 0
 
     def test_getitem_invalid_theme_raises_key_error(self) -> None:
         """Test that invalid theme raises KeyError."""
