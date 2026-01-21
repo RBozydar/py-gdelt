@@ -9,7 +9,9 @@ Based on schema discovery from real GDELT VGKG data (2026-01-20).
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
+
+from typing_extensions import TypedDict
 
 from pydantic import BaseModel, Field
 
