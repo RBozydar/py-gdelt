@@ -524,7 +524,7 @@ class GDELTClient:
             ...     )
             ...     records = await client.tv_gkg.query(filter_obj)
         """
-        if self._file_source is None or self._http_client is None:
+        if self._file_source is None:
             msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
             raise RuntimeError(msg)
         return TVGKGEndpoint(
