@@ -377,6 +377,7 @@ omit = [
   "tests/*",
   "examples/*",
   "*/__main__.py",
+  "src/py_gdelt/mcp_server/example_usage.py",  # Example file, not library code
 ]
 
 [tool.coverage.report]
@@ -414,6 +415,7 @@ require-return-section-when-returning-nothing = false
 check-return-types = false  # Covered by mypy
 arg-type-hints-in-docstring = false  # Using type hints in signatures
 skip-checking-raises = true  # Allow Raises sections to document delegated/inherited exceptions
+check-class-attributes = false  # Pydantic model_config is internal, not user-facing
 
 [tool.interrogate]
 ignore-init-method = true

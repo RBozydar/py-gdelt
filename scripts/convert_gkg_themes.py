@@ -59,13 +59,14 @@ TAX_CATEGORY_MAP: dict[str, str] = {
 # Known Prefix Categories
 # =============================================================================
 
+# Note: Some categories have multiple prefixes (e.g., MIL_ and MILITARY_ both exist
+# in the GDELT data). These map to the same category name intentionally.
 PREFIX_CATEGORY_MAP: dict[str, str] = {
     "ENV": "Environment",
     "ECON": "Economy",
     "HEALTH": "Health",
     "SOC": "Social",
     "GOV": "Government",
-    "MIL": "Military",
     "TECH": "Technology",
     "MEDIA": "Media",
     "NATURAL": "Natural Disaster",
@@ -74,7 +75,6 @@ PREFIX_CATEGORY_MAP: dict[str, str] = {
     "UNGP": "UN Guiding Principles",
     "CRISISLEX": "CrisisLex",
     "MOVEMENT": "Movement",
-    "CRIME": "Crime",
     "UNREST": "Unrest",
     "REL": "Religion",
     "SELF": "Self",
@@ -94,13 +94,16 @@ PREFIX_CATEGORY_MAP: dict[str, str] = {
     "INFO": "Information",
     "INTERNET": "Internet",
     "AID": "Aid",
-    "CRM": "Crime",
-    "MED": "Medical",
     "GENERAL": "General",
-    "POLITICAL": "Political",
-    "MILITARY": "Military",
-    "MEDICAL": "Medical",
     "WMD": "Weapons of Mass Destruction",
+    # Variant prefixes mapping to same category (both forms exist in GDELT data)
+    "MIL": "Military",
+    "MILITARY": "Military",
+    "MED": "Medical",
+    "MEDICAL": "Medical",
+    "CRIME": "Crime",
+    "CRM": "Crime",
+    "POLITICAL": "Political",
     # Additional prefixes for ambiguous themes
     "SLFID": "State-Level Fragility Indicators",
     "USPEC": "US Policy Uncertainty",
@@ -435,6 +438,9 @@ def identify_ambiguous_themes(themes: dict[str, dict]) -> list[str]:
             continue
 
         # Check for repeated words (parsing artifacts)
+        # Threshold 0.5 = flag if unique words are less than half of total words
+        # e.g., "Disease Disease Disease" -> 1 unique / 3 total = 0.33 < 0.5
+        # This catches cases where word splitting went wrong
         words = desc.lower().split()
         if len(words) >= 2 and len(set(words)) < len(words) * 0.5:
             ambiguous.append(theme)
