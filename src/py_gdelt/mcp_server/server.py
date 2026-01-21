@@ -201,6 +201,10 @@ async def gdelt_events(
         min_goldstein: Minimum Goldstein scale (-10 to 10, negative=conflict)
         max_goldstein: Maximum Goldstein scale (-10 to 10, positive=cooperation)
 
+    Note:
+        Goldstein filtering is applied client-side after streaming. For narrow
+        Goldstein ranges, consider using shorter date ranges for efficiency.
+
     Returns:
         Aggregated event summary containing:
             - summary: total_events, date_range, goldstein_mean, goldstein_std
@@ -701,11 +705,12 @@ async def gdelt_trends(
             results = []
             for date_str, tones in sorted(date_tones.items()):
                 avg_tone = sum(tones) / len(tones) if tones else 0.0
-                # Format date as YYYY-MM-DD (only if date_str is long enough)
-                if len(date_str) == 8:
-                    formatted_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
-                else:
-                    formatted_date = date_str
+                # Format date as YYYY-MM-DD if we have full YYYYMMDD
+                formatted_date = (
+                    f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
+                    if len(date_str) >= 8
+                    else date_str
+                )
                 results.append({"date": formatted_date, "value": avg_tone})
 
         logger.info("Returning %d trend points", len(results))
