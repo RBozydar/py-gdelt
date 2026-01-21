@@ -133,3 +133,58 @@ class TestMCPServerImport:
         assert hasattr(server, "gdelt_trends")
         assert hasattr(server, "gdelt_doc")
         assert hasattr(server, "gdelt_cameo_lookup")
+
+    def test_server_has_all_exports(self) -> None:
+        """Test that server.py has __all__ defined."""
+        from py_gdelt.mcp_server import server
+
+        assert hasattr(server, "__all__")
+        assert "mcp" in server.__all__
+        assert "get_client" in server.__all__
+        assert "get_cameo_codes" in server.__all__
+
+
+@pytest.mark.skipif(not MCP_AVAILABLE, reason="mcp package not installed")
+class TestPydanticModels:
+    """Tests for MCP server Pydantic models."""
+
+    def test_name_count_model(self) -> None:
+        """Test NameCount model creation and serialization."""
+        from py_gdelt.mcp_server.server import NameCount
+
+        nc = NameCount(name="test_theme", count=42)
+        assert nc.name == "test_theme"
+        assert nc.count == 42
+        assert nc.model_dump() == {"name": "test_theme", "count": 42}
+
+    def test_event_code_count_model(self) -> None:
+        """Test EventCodeCount model creation and serialization."""
+        from py_gdelt.mcp_server.server import EventCodeCount
+
+        ecc = EventCodeCount(code="14", count=10, name="Protest")
+        assert ecc.code == "14"
+        assert ecc.count == 10
+        assert ecc.name == "Protest"
+        assert ecc.model_dump() == {"code": "14", "count": 10, "name": "Protest"}
+
+    def test_event_code_count_with_none_name(self) -> None:
+        """Test EventCodeCount model with None name."""
+        from py_gdelt.mcp_server.server import EventCodeCount
+
+        ecc = EventCodeCount(code="99", count=5, name=None)
+        assert ecc.name is None
+        assert ecc.model_dump() == {"code": "99", "count": 5, "name": None}
+
+
+@pytest.mark.skipif(not MCP_AVAILABLE, reason="mcp package not installed")
+class TestThreadSafety:
+    """Tests for thread-safe initialization."""
+
+    def test_cameo_lock_exists(self) -> None:
+        """Test that _cameo_lock is a threading.Lock."""
+        import threading
+
+        from py_gdelt.mcp_server import server
+
+        assert hasattr(server, "_cameo_lock")
+        assert isinstance(server._cameo_lock, type(threading.Lock()))
