@@ -20,6 +20,7 @@ from py_gdelt.filters import (
     GeoFilter,
     GKGFilter,
     TVFilter,
+    TVGKGFilter,
 )
 
 
@@ -393,3 +394,50 @@ class TestTVFilter:
         assert tf.start_datetime == datetime(2024, 1, 1, 12, 0)
         assert tf.end_datetime == datetime(2024, 1, 2, 12, 0)
         assert tf.timespan is None
+
+
+class TestTVGKGFilter:
+    """Tests for TVGKGFilter model."""
+
+    def test_valid_filter_with_themes(self) -> None:
+        """Test creating a valid TV-GKG filter with themes."""
+        tvgf = TVGKGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            themes=["ENV_CLIMATECHANGE", "HEALTH_PANDEMIC"],
+            station="CNN",
+        )
+        assert tvgf.themes == ["ENV_CLIMATECHANGE", "HEALTH_PANDEMIC"]
+        assert tvgf.station == "CNN"
+
+    def test_invalid_theme_raises_error(self) -> None:
+        """Test that invalid theme raises InvalidCodeError."""
+        with pytest.raises(InvalidCodeError) as exc_info:
+            TVGKGFilter(
+                date_range=DateRange(start=date(2024, 1, 1)),
+                themes=["INVALID_THEME"],
+            )
+        assert exc_info.value.code == "INVALID_THEME"
+        assert exc_info.value.code_type == "GKG theme"
+
+    def test_theme_list_validation(self) -> None:
+        """Test that all themes in list are validated."""
+        with pytest.raises(InvalidCodeError) as exc_info:
+            TVGKGFilter(
+                date_range=DateRange(start=date(2024, 1, 1)),
+                themes=["ENV_CLIMATECHANGE", "INVALID_THEME", "HEALTH_PANDEMIC"],
+            )
+        assert exc_info.value.code == "INVALID_THEME"
+
+    def test_station_normalized_to_uppercase(self) -> None:
+        """Test that station name is normalized to uppercase."""
+        tvgf = TVGKGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            station="cnn",
+        )
+        assert tvgf.station == "CNN"
+
+    def test_optional_fields_default_to_none(self) -> None:
+        """Test that optional fields default to None."""
+        tvgf = TVGKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        assert tvgf.themes is None
+        assert tvgf.station is None

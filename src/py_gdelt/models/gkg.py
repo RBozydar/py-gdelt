@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field
 
@@ -19,10 +19,26 @@ __all__ = [
     "Amount",
     "GKGRecord",
     "Quotation",
+    "TVGKGRecord",
+    "TimecodeMapping",
 ]
 
 
 logger = logging.getLogger(__name__)
+
+
+class TimecodeMapping(NamedTuple):
+    """Character offset to video timecode mapping (lightweight).
+
+    Used in TV-GKG to map text positions to video timestamps.
+
+    Attributes:
+        char_offset: Character offset in the transcript.
+        timecode: Video timecode (e.g., "00:01:23").
+    """
+
+    char_offset: int
+    timecode: str
 
 
 class Quotation(BaseModel):
@@ -478,3 +494,140 @@ def _parse_amounts(amounts_str: str) -> list[Amount]:
             logger.warning("Failed to parse amount '%s': %s", amount_triple, e)
 
     return result
+
+
+def _parse_semicolon_delimited(raw: str | None) -> list[str]:
+    """Parse semicolon-delimited field into list.
+
+    Args:
+        raw: Semicolon-delimited string like "item1;item2;item3".
+
+    Returns:
+        List of stripped non-empty items.
+    """
+    if not raw:
+        return []
+    return [item.strip() for item in raw.split(";") if item.strip()]
+
+
+def _parse_tone_simple(raw: str | None) -> float | None:
+    """Parse tone field (first value is average tone).
+
+    Args:
+        raw: Comma-separated tone values, first value is average tone.
+
+    Returns:
+        Average tone as float, or None if parsing fails.
+    """
+    if not raw:
+        return None
+    try:
+        # Tone field format: "avg,pos,neg,polarity,activity,self,group"
+        parts = raw.split(",")
+        return float(parts[0]) if parts[0] else None
+    except (ValueError, IndexError):
+        return None
+
+
+class TVGKGRecord(BaseModel):
+    """TV-GKG record with timecode mapping support.
+
+    Uses composition instead of inheritance from GKGRecord.
+    Reuses GKG parsing logic but creates independent model.
+
+    Note:
+        The following GKG fields are always empty in TV-GKG:
+        - sharing_image, related_images, social_image_embeds, social_video_embeds
+        - quotations, all_names, dates, amounts, translation_info
+
+    Special field:
+        - timecode_mappings: Parsed from CHARTIMECODEOFFSETTOC in extras
+
+    Attributes:
+        gkg_record_id: Unique record identifier.
+        date: Timestamp of the analysis.
+        source_identifier: Source collection identifier.
+        document_identifier: URL or identifier of the source document.
+        themes: List of detected themes.
+        locations: List of detected locations.
+        persons: List of detected persons.
+        organizations: List of detected organizations.
+        tone: Average tone score.
+        extras: Raw extras field content.
+        timecode_mappings: Parsed character offset to timecode mappings.
+    """
+
+    gkg_record_id: str
+    date: datetime
+    source_identifier: str
+    document_identifier: str
+    themes: list[str] = Field(default_factory=list)
+    locations: list[str] = Field(default_factory=list)
+    persons: list[str] = Field(default_factory=list)
+    organizations: list[str] = Field(default_factory=list)
+    tone: float | None = None
+    extras: str = ""
+    timecode_mappings: list[TimecodeMapping] = Field(default_factory=list)
+
+    @classmethod
+    def from_raw(cls, raw: _RawGKG) -> TVGKGRecord:
+        """Convert raw GKG to TV-GKG with timecode extraction.
+
+        Args:
+            raw: Internal raw GKG representation.
+
+        Returns:
+            Validated TVGKGRecord instance.
+
+        Raises:
+            ValueError: If date parsing fails.
+        """
+        timecodes = cls._parse_timecode_toc(raw.extras_xml)
+        return cls(
+            gkg_record_id=raw.gkg_record_id,
+            date=datetime.strptime(raw.date, "%Y%m%d%H%M%S").replace(tzinfo=UTC),
+            source_identifier=raw.source_common_name or "",
+            document_identifier=raw.document_identifier or "",
+            themes=_parse_semicolon_delimited(raw.themes_v1),
+            locations=_parse_semicolon_delimited(raw.locations_v1),
+            persons=_parse_semicolon_delimited(raw.persons_v1),
+            organizations=_parse_semicolon_delimited(raw.organizations_v1),
+            tone=_parse_tone_simple(raw.tone),
+            extras=raw.extras_xml or "",
+            timecode_mappings=timecodes,
+        )
+
+    @staticmethod
+    def _parse_timecode_toc(extras: str | None) -> list[TimecodeMapping]:
+        """Parse CHARTIMECODEOFFSETTOC:offset:timecode;offset:timecode;...
+
+        Real format discovered: offset:timecode pairs separated by semicolons.
+
+        Args:
+            extras: Raw extras XML/text field from GKG record.
+
+        Returns:
+            List of TimecodeMapping instances.
+        """
+        if not extras:
+            return []
+        # Look for CHARTIMECODEOFFSETTOC block in extras
+        for block in extras.split("<SPECIAL>"):
+            if block.startswith("CHARTIMECODEOFFSETTOC:"):
+                content = block[len("CHARTIMECODEOFFSETTOC:") :]
+                mappings: list[TimecodeMapping] = []
+                for raw_entry in content.split(";"):
+                    entry = raw_entry.strip()
+                    if ":" in entry:
+                        parts = entry.split(":", 1)
+                        try:
+                            mappings.append(
+                                TimecodeMapping(
+                                    char_offset=int(parts[0]),
+                                    timecode=parts[1],
+                                ),
+                            )
+                        except (ValueError, IndexError):
+                            continue
+                return mappings
+        return []
