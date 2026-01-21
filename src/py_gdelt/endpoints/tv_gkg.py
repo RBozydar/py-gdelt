@@ -10,7 +10,7 @@ import asyncio
 import logging
 import warnings
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
 import httpx
 
@@ -142,7 +142,7 @@ class TVGKGEndpoint:
             await self._file_source.__aenter__()
         return self
 
-    async def __aexit__(self, *args: Any) -> None:
+    async def __aexit__(self, *args: object) -> None:
         """Async context manager exit.
 
         Args:
