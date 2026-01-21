@@ -53,23 +53,66 @@ async with GDELTClient() as client:
 ## Data Sources Covered
 
 ### File-Based Endpoints
-- **Events** - Structured event data (who, what, when, where)
-- **Mentions** - Article mentions of events
-- **GKG** - Global Knowledge Graph (themes, entities, quotations)
-- **NGrams** - Word and phrase occurrences in articles
+- **Events** - Structured event data (who did what to whom, when, where)
+- **Mentions** - Article mentions of events over time
+- **GKG** - Global Knowledge Graph (themes, entities, tone, quotations)
+- **NGrams** - Word and phrase occurrences in articles (Jan 2020+)
+- **VGKG** 🏗️ - Visual GKG (image annotations via Cloud Vision API)
+- **TV-GKG** 🏗️ - Television GKG (closed caption analysis)
+- **TV/Radio NGrams** 🏗️ - Broadcast transcript word frequencies
 
 ### REST APIs
-- **DOC 2.0** - Article search and discovery
+- **DOC 2.0** - Full-text article search and discovery
 - **GEO 2.0** - Geographic analysis and mapping
-- **Context 2.0** - Contextual analysis (themes, entities, sentiment)
-- **TV** - Television news transcript search
-- **TVAI** - AI-enhanced TV transcript search
+- **Context 2.0** - Sentence-level contextual search
+- **TV 2.0** - Television news closed caption search
+- **TV AI 2.0** - AI-enhanced visual TV search (labels, OCR, faces)
+- **LowerThird** 🏗️ - TV chyron/lower-third text search
+- **TVV** 🏗️ - TV Visual channel inventory
+- **GKG GeoJSON v1** 🏗️ - Legacy geographic GKG API
+
+### Graph Datasets 🏗️
+- **GQG** - Global Quotation Graph (extracted quotes with context)
+- **GEG** - Global Entity Graph (NER via Cloud NLP API)
+- **GFG** - Global Frontpage Graph (homepage link tracking)
+- **GGG** - Global Geographic Graph (location co-mentions)
+- **GDG** - Global Difference Graph (article change detection)
+- **GEMG** - Global Embedded Metadata Graph (meta tags, JSON-LD)
+- **GRG** - Global Relationship Graph (subject-verb-object triples)
+- **GAL** - Article List (lightweight article metadata)
 
 ### Lookup Tables
-- **CAMEO** - Event classification codes
-- **Themes** - GDELT theme taxonomy
-- **Countries** - Country code conversions (FIPS, ISO2, ISO3)
-- **Ethnic/Religious Groups** - Group classifications
+- **CAMEO** - Event classification codes and Goldstein scale
+- **Themes** - GKG theme taxonomy
+- **Countries** - Country code conversions (FIPS ↔ ISO)
+- **Ethnic/Religious Groups** - Group classification codes
+- **GCAM** 🏗️ - 2,300+ emotional/thematic dimensions
+- **Image Tags** 🏗️ - Cloud Vision labels for DOC API
+- **Languages** 🏗️ - Supported language codes
+
+## Data Source Matrix
+
+| Data Type | API | BigQuery | Raw Files | Time Range | Fallback |
+|-----------|:---:|:--------:|:---------:|------------|:--------:|
+| **Articles (fulltext)** | DOC 2.0 | - | - | Rolling 3 months | - |
+| **Article geography** | GEO 2.0 | - | - | Rolling 7 days | - |
+| **Sentence context** | Context 2.0 | - | - | Rolling 72 hours | - |
+| **TV captions** | TV 2.0 | - | - | Jul 2009+ | - |
+| **TV visual/AI** | TV AI 2.0 | - | - | Jul 2010+ | - |
+| **TV chyrons** 🏗️ | LowerThird | - | - | Aug 2017+ | - |
+| **Events v2** | - | ✓ | ✓ | Feb 2015+ | ✓ |
+| **Events v1** | - | ✓ | ✓ | 1979 - Feb 2015 | ✓ |
+| **Mentions** | - | ✓ | ✓ | Feb 2015+ | ✓ |
+| **GKG v2** | - | ✓ | ✓ | Feb 2015+ | ✓ |
+| **GKG v1** | - | ✓ | ✓ | Apr 2013 - Feb 2015 | ✓ |
+| **Web NGrams** | - | ✓ | ✓ | Jan 2020+ | ✓ |
+| **VGKG** 🏗️ | - | ✓ | ✓ | Dec 2015+ | ✓ |
+| **TV-GKG** 🏗️ | - | ✓ | ✓ | Jul 2009+ | ✓ |
+| **GQG** 🏗️ | - | ✓ | ✓ | Jan 2020+ | ✓ |
+| **GEG** 🏗️ | - | ✓ | ✓ | Jul 2016+ | ✓ |
+| **GFG** 🏗️ | - | ✓ | ✓ | Mar 2018+ | ✓ |
+
+> 🏗️ = Work in progress - coming in future releases
 
 ## Key Concepts
 

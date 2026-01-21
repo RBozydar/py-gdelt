@@ -7,6 +7,7 @@ This module tests the BigQuery data source with a focus on:
 - Async execution: run_in_executor usage, streaming results
 """
 
+import re
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -177,9 +178,10 @@ class TestWhereClauseBuilding:
         assert len(parameters) == 7
 
         # Verify parameter types and values
+        # Note: ISO3 codes (USA, CHN) are normalized to FIPS (US, CH)
         param_dict = {p.name: p for p in parameters}
-        assert param_dict["actor1_country"].value == "USA"
-        assert param_dict["actor2_country"].value == "CHN"
+        assert param_dict["actor1_country"].value == "US"
+        assert param_dict["actor2_country"].value == "CH"
         assert param_dict["event_code"].value == "141"
         assert param_dict["min_tone"].value == -5.0
         assert param_dict["max_tone"].value == 5.0
@@ -221,6 +223,34 @@ class TestWhereClauseBuilding:
         theme_value = param_dict["theme_pattern"].value
         assert isinstance(theme_value, str)
         assert "ENV_CLIMATECHANGE" in theme_value
+
+    def test_theme_prefix_no_substring_match(self) -> None:
+        """Verify theme_prefix doesn't match substrings in the middle of themes.
+
+        The pattern (^|;)PREFIX should only match when PREFIX appears at the
+        start of the string or immediately after a semicolon delimiter.
+        This prevents "WATER" from matching "FRESHWATER".
+        """
+        filter_obj = GKGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            theme_prefix="WATER",
+        )
+
+        _, parameters = _build_where_clause_for_gkg(filter_obj)
+
+        # Verify the pattern anchors at theme boundaries
+        param_dict = {p.name: p for p in parameters}
+        pattern = param_dict["theme_prefix_pattern"].value
+        assert pattern == r"(^|;)WATER"
+
+        # Test with actual regex to confirm behavior
+        assert re.search(pattern, "WATER;OTHER")  # Should match (at start)
+        assert re.search(pattern, "WATER_SUPPLY")  # Should match (at start, prefix)
+        assert re.search(pattern, "OTHER;WATER")  # Should match (after semicolon)
+        assert re.search(pattern, "OTHER;WATER_SECURITY")  # Should match (after semicolon)
+        assert not re.search(pattern, "FRESHWATER")  # Should NOT match (in middle)
+        assert not re.search(pattern, "OTHER;FRESHWATER")  # Should NOT match (in middle)
+        assert not re.search(pattern, "DEWATER")  # Should NOT match (in middle)
 
 
 class TestBigQuerySourceInit:
@@ -521,12 +551,14 @@ class TestSecurityFeatures:
         where_clause, parameters = _build_where_clause_for_events(filter_obj)
 
         # Verify parameterization (no direct value in SQL)
+        # Note: ISO3 "USA" is normalized to FIPS "US"
         assert "USA" not in where_clause  # Value should not be in SQL string
+        assert "US" not in where_clause  # Normalized value should not be in SQL string either
         assert "@actor1_country" in where_clause  # Parameter placeholder should be present
 
         # Find the actor1_country parameter
         actor1_param = next(p for p in parameters if p.name == "actor1_country")
-        assert actor1_param.value == "USA"  # Stored safely as parameter
+        assert actor1_param.value == "US"  # Stored safely as parameter (normalized to FIPS)
 
         # Test that invalid country codes are caught by Pydantic validation
         from py_gdelt.exceptions import InvalidCodeError

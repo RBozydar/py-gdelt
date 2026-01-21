@@ -250,6 +250,55 @@ Version bumps are automated based on conventional commits:
 - `fix:` commits trigger PATCH version bump
 - `BREAKING CHANGE:` in footer triggers MAJOR version bump
 
+## Maintaining Lookup Data
+
+### Regenerating Country Codes
+
+The `countries.json` file contains FIPS-to-ISO country code mappings used by GDELT. This data is generated from the `geonamescache` package (a dev dependency).
+
+**When to regenerate:** The FIPS 10-4 standard was withdrawn by NIST in 2008, so the data is essentially frozen. Regeneration should only be needed if `geonamescache` fixes errors or adds new territories.
+
+**To regenerate `countries.json`:**
+
+```bash
+uv run python -c "
+from geonamescache import GeonamesCache
+import json
+
+gc = GeonamesCache()
+countries = gc.get_countries()
+
+continent_to_region = {
+    'AF': 'Africa', 'AS': 'Asia', 'EU': 'Europe',
+    'NA': 'North America', 'SA': 'South America',
+    'OC': 'Oceania', 'AN': 'Antarctica',
+}
+
+middle_east = ['IR', 'IZ', 'IS', 'SA', 'AE', 'KU', 'BA', 'QA', 'LE', 'SY', 'JO', 'YM', 'MU']
+
+output = {}
+for iso2, data in countries.items():
+    fips = data.get('fips')
+    if not fips:
+        continue
+    region = continent_to_region.get(data.get('continentcode'), 'Other')
+    if fips in middle_east:
+        region = 'Middle East'
+    output[fips] = {
+        'iso3': data.get('iso3'),
+        'iso2': data.get('iso'),
+        'name': data.get('name'),
+        'full_name': None,
+        'region': region,
+    }
+
+output = dict(sorted(output.items()))
+print(json.dumps(output, indent=2))
+" > src/py_gdelt/lookups/data/countries.json
+```
+
+After regeneration, run `make ci` to verify the changes don't break any tests.
+
 ## Questions?
 
 Feel free to open an issue for:

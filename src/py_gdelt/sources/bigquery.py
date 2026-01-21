@@ -20,6 +20,7 @@ Security Features:
 
 import asyncio
 import logging
+import re
 from collections.abc import AsyncIterator
 from datetime import datetime
 from pathlib import Path
@@ -366,29 +367,29 @@ def _build_where_clause_for_gkg(
     if filter_obj.themes is not None and len(filter_obj.themes) > 0:
         # Use REGEXP_CONTAINS for theme matching (themes are semicolon-delimited)
         # We build a regex pattern like: (THEME1|THEME2|THEME3)
-        theme_pattern = "|".join(filter_obj.themes)
+        theme_pattern = "|".join(re.escape(t) for t in filter_obj.themes)
         conditions.append("REGEXP_CONTAINS(V2Themes, @theme_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("theme_pattern", "STRING", theme_pattern))
 
     if filter_obj.theme_prefix is not None:
-        # Match themes starting with prefix
+        # Match themes starting with prefix (anchored to start or after semicolon delimiter)
         conditions.append("REGEXP_CONTAINS(V2Themes, @theme_prefix_pattern)")
         parameters.append(
             bigquery.ScalarQueryParameter(
                 "theme_prefix_pattern",
                 "STRING",
-                f"{filter_obj.theme_prefix}",
+                f"(^|;){re.escape(filter_obj.theme_prefix)}",
             ),
         )
 
     # Optional: Entity filters (persons, organizations)
     if filter_obj.persons is not None and len(filter_obj.persons) > 0:
-        person_pattern = "|".join(filter_obj.persons)
+        person_pattern = "|".join(re.escape(p) for p in filter_obj.persons)
         conditions.append("REGEXP_CONTAINS(V2Persons, @person_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("person_pattern", "STRING", person_pattern))
 
     if filter_obj.organizations is not None and len(filter_obj.organizations) > 0:
-        org_pattern = "|".join(filter_obj.organizations)
+        org_pattern = "|".join(re.escape(o) for o in filter_obj.organizations)
         conditions.append("REGEXP_CONTAINS(V2Organizations, @org_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("org_pattern", "STRING", org_pattern))
 
@@ -679,7 +680,7 @@ class BigQuerySource:
 
     async def query_mentions(
         self,
-        global_event_id: str,
+        global_event_id: int,
         columns: list[str] | None = None,
         date_range: DateRange | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
@@ -689,7 +690,7 @@ class BigQuerySource:
         A date range should be provided for efficient querying.
 
         Args:
-            global_event_id: Global event ID to query mentions for
+            global_event_id: Global event ID to query mentions for (INT64)
             columns: List of columns to select (defaults to all allowed columns)
             date_range: Optional date range to narrow search (recommended for performance)
 
@@ -702,7 +703,7 @@ class BigQuerySource:
 
         Example:
             >>> async for mention in source.query_mentions(
-            ...     global_event_id="123456789",
+            ...     global_event_id=123456789,
             ...     date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
             ... ):
             ...     print(mention["MentionTimeDate"], mention["MentionSourceName"])
@@ -717,7 +718,7 @@ class BigQuerySource:
         # Build WHERE clause
         conditions: list[str] = ["GLOBALEVENTID = @event_id"]
         parameters: list[bigquery.ScalarQueryParameter] = [
-            bigquery.ScalarQueryParameter("event_id", "STRING", global_event_id),
+            bigquery.ScalarQueryParameter("event_id", "INT64", global_event_id),
         ]
 
         # Add date range filter if provided (for partition pruning)

@@ -23,7 +23,7 @@ def test_build_params_basic() -> None:
 
     assert params["query"] == "test query"
     assert params["format"] == "json"
-    assert params["mode"] == "context"
+    assert params["mode"] == "artlist"
 
 
 def test_build_params_with_timespan() -> None:

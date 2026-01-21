@@ -17,6 +17,7 @@ Security Note:
 import logging
 from collections.abc import Iterator
 
+from py_gdelt.exceptions import ParseError
 from py_gdelt.models._internal import _RawGKG
 
 
@@ -51,12 +52,12 @@ class GKGParser:
             Format version: 1 for v1 (15 columns), 2 for v2.1 (27 columns).
 
         Raises:
-            ValueError: If column count doesn't match v1 (15) or v2.1 (27).
+            ParseError: If column count doesn't match v1 (15) or v2.1 (27).
         """
         line = header.decode("utf-8", errors="replace").strip()
         if not line:
             err_msg = "Empty header line, cannot detect GKG version"
-            raise ValueError(err_msg)
+            raise ParseError(err_msg)
 
         column_count = len(line.split("\t"))
 
@@ -66,7 +67,7 @@ class GKGParser:
             return 2
 
         msg = f"Unsupported GKG column count: {column_count} (expected 15 for v1 or 27 for v2.1)"
-        raise ValueError(msg)
+        raise ParseError(msg)
 
     def parse(self, data: bytes, is_translated: bool = False) -> Iterator[_RawGKG]:
         """Parse raw bytes into _RawGKG records.

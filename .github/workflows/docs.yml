@@ -13,7 +13,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure Git Credentials
         run: |
@@ -21,13 +21,13 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
         run: uv python install 3.12
 
       - name: Cache MkDocs
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           key: mkdocs-material-${{ github.ref }}
           path: .cache
@@ -35,7 +35,7 @@ jobs:
             mkdocs-material-
 
       - name: Install dependencies
-        run: uv venv && uv pip install mkdocs-material mkdocstrings[python]
+        run: uv sync --extra docs
 
       - name: Sync README to docs index
         run: |

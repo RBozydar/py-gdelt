@@ -1,0 +1,192 @@
+name: Examples Verification
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Weekly on Monday at 9 AM UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+  id-token: write  # Required for Claude OAuth
+
+jobs:
+  run-examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv sync --all-extras
+
+      - name: Run examples
+        id: examples
+        run: |
+          set +e  # Don't exit on first failure
+          failed=0
+
+          echo "=== Running examples ===" | tee output.txt
+
+          for example in examples/*.py; do
+            if [[ "$example" == *"bigquery"* ]]; then
+              echo "SKIP: $example (requires BigQuery credentials)" | tee -a output.txt
+              continue
+            fi
+
+            echo "" | tee -a output.txt
+            echo "=== Running: $example ===" | tee -a output.txt
+
+            # Run with timeout and capture exit code
+            timeout 120 uv run python "$example" 2>&1 | tee -a output.txt
+            exit_code=${PIPESTATUS[0]}
+
+            if [ $exit_code -ne 0 ]; then
+              echo "FAILED: $example (exit code: $exit_code)" | tee -a output.txt
+              failed=1
+            else
+              echo "SUCCESS: $example" | tee -a output.txt
+            fi
+          done
+
+          echo "" | tee -a output.txt
+          echo "=== Summary ===" | tee -a output.txt
+
+          if [ $failed -eq 1 ]; then
+            echo "Some examples failed!" | tee -a output.txt
+            echo "examples_failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "All examples passed!" | tee -a output.txt
+          fi
+
+      - name: Analyze failures with Claude
+        if: steps.examples.outputs.examples_failed == 'true'
+        id: claude_analysis
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Analyze the example verification output in output.txt in the current directory.
+
+            Context: This is a Python client library for GDELT. The examples/*.py files
+            demonstrate library usage and are run weekly to ensure they still work.
+
+            Common failure patterns:
+            - API changes: GDELT API response format changed
+            - Rate limiting: Too many requests
+            - Timeout: API slow or unresponsive
+            - Code bugs: Example code has issues
+            - Missing data: No data available for the queried date range
+
+            Provide your analysis as JSON with these keys:
+            - summary: Brief description of what failed
+            - failed_examples: Array of objects with {name, reason, is_transient}
+            - priority: One of "critical", "high", "medium", "low"
+            - recommendations: Specific fix recommendations
+
+            Focus on distinguishing between library bugs vs external service issues.
+          claude_args: '--model claude-opus-4-5 --max-turns 5 --allowed-tools "Read"'
+
+      - name: Find existing issue
+        if: steps.examples.outputs.examples_failed == 'true'
+        id: find_issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'examples-broken',
+              state: 'open'
+            });
+            if (issues.data.length > 0) {
+              core.setOutput('issue_number', issues.data[0].number);
+            }
+
+      - name: Update or create issue
+        if: steps.examples.outputs.examples_failed == 'true'
+        uses: actions/github-script@v8
+        env:
+          CLAUDE_RESULT: ${{ steps.claude_analysis.outputs.result }}
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('output.txt', 'utf8');
+            const issueNumber = '${{ steps.find_issue.outputs.issue_number }}';
+
+            // Parse Claude's analysis
+            let claudeAnalysis = '';
+            try {
+              const claudeResult = process.env.CLAUDE_RESULT || '';
+              // Try to extract JSON from Claude's response
+              const jsonMatch = claudeResult.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const analysis = JSON.parse(jsonMatch[0]);
+                let failedExamplesSection = '';
+                if (analysis.failed_examples && analysis.failed_examples.length > 0) {
+                  failedExamplesSection = analysis.failed_examples
+                    .map(ex => `- **${ex.name}**: ${ex.reason} ${ex.is_transient ? '_(transient)_' : '_(requires fix)_'}`)
+                    .join('\n');
+                }
+                claudeAnalysis = `### AI Analysis
+
+            **Priority:** ${analysis.priority || 'unknown'}
+
+            **Summary:** ${analysis.summary || 'No summary available'}
+
+            **Failed Examples:**
+            ${failedExamplesSection || '_None identified_'}
+
+            **Recommendations:** ${analysis.recommendations || 'Review the output manually'}
+
+            ---
+
+            `;
+              }
+            } catch (e) {
+              console.log('Could not parse Claude analysis:', e.message);
+            }
+
+            const body = `## Examples Verification Failed - ${new Date().toISOString().split('T')[0]}
+
+            ${claudeAnalysis}\`\`\`
+            ${output.substring(0, 50000)}
+            \`\`\`
+
+            ### Action Required
+            1. Review the AI analysis and failed examples above
+            2. Fix broken examples or update API calls as recommended
+            3. Close this issue when resolved
+
+            ---
+            *Auto-generated by examples workflow with Claude analysis*`;
+
+            if (issueNumber) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(issueNumber),
+                body: body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '[Examples] Verification failed',
+                body: body,
+                labels: ['examples-broken', 'needs-review']
+              });
+            }
+
+      - name: Fail workflow if examples failed
+        if: steps.examples.outputs.examples_failed == 'true'
+        run: exit 1

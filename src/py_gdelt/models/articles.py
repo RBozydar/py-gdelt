@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
+
+
+logger = logging.getLogger(__name__)
 
 
 __all__ = ["Article", "Timeline", "TimelinePoint"]
@@ -70,7 +74,7 @@ class TimelinePoint(BaseModel):
     """Single data point in a timeline."""
 
     date: str
-    value: int = Field(default=0, alias="count")
+    value: float = Field(default=0, alias="count")
 
     # Optional breakdown
     tone: float | None = None
@@ -112,17 +116,32 @@ class Timeline(BaseModel):
     @field_validator("timeline", mode="before")
     @classmethod
     def parse_timeline(cls, v: Any) -> list[TimelinePoint]:
-        """Parse timeline from various formats."""
+        """Parse timeline from various formats.
+
+        Handles both flat format and nested series format from timelinevol API:
+        - Flat: [{"date": "...", "value": ...}, ...]
+        - Nested: [{"series": "...", "data": [{"date": "...", "value": ...}]}]
+        """
         if v is None:
             return []
         if isinstance(v, list):
-            # Already a list
-            points = []
+            points: list[TimelinePoint] = []
             for item in v:
                 if isinstance(item, TimelinePoint):
                     points.append(item)
                 elif isinstance(item, dict):
-                    points.append(TimelinePoint.model_validate(item))
+                    # Check for nested series/data structure from timelinevol API
+                    if "data" in item and isinstance(item["data"], list):
+                        for dp in item["data"]:
+                            if isinstance(dp, dict):
+                                points.append(TimelinePoint.model_validate(dp))
+                            else:
+                                logger.warning(
+                                    "Skipping non-dict timeline data point: %s", type(dp).__name__
+                                )
+                    else:
+                        # Flat structure with date/value directly
+                        points.append(TimelinePoint.model_validate(item))
             return points
         return []
 
@@ -137,7 +156,7 @@ class Timeline(BaseModel):
         return [p.date for p in self.timeline]
 
     @property
-    def values(self) -> list[int]:
+    def values(self) -> list[float]:
         """Get list of values."""
         return [p.value for p in self.timeline]
 
@@ -149,7 +168,7 @@ class Timeline(BaseModel):
             "total_articles": self.total_articles,
         }
 
-    def to_series(self) -> dict[str, int]:
+    def to_series(self) -> dict[str, float]:
         """
         Convert to date:value mapping.
 

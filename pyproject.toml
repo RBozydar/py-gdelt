@@ -1,6 +1,6 @@
 [project]
 name = "gdelt-py"
-version = "0.1.3"
+version = "0.1.5"
 description = "Python client library for GDELT (Global Database of Events, Language, and Tone)"
 readme = "README.md"
 authors = [
@@ -15,6 +15,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "defusedxml>=0.7.1",
     "anyio>=4.0",
+    "urllib3>=2.6.3",
 ]
 keywords = ["gdelt", "news", "events", "data-science", "api"]
 classifiers = [
@@ -44,25 +45,29 @@ module-name = "py_gdelt"
 [project.optional-dependencies]
 bigquery = ["google-cloud-bigquery>=3.0"]
 pandas = ["pandas>=2.0"]
+mcp = ["mcp>=1.0"]
 dev = [
+    "commitizen>=3.0",
+    "geonamescache>=2.0",  # For regenerating countries.json (FIPS/ISO mappings)
     "interrogate>=1.7.0",
+    "memray>=1.19.1",
     "mypy>=1.0",
     "pip-audit>=2.0",
     "pre-commit>=3.5.0",
     "pydoclint>=0.5.0",
+    "pyright>=1.1.408",
+    "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "pytest-cov>=4.0",
     "pytest-timeout>=2.0",
-    "pytest>=8.0",
     "respx>=0.21",
     "ruff>=0.8",
-    "commitizen>=3.0",
-    "memray>=1.19.1",
 ]
 docs = [
     "mkdocs>=1.5",
     "mkdocs-material>=9.0",
     "mkdocstrings[python]>=0.24",
+    "mkdocs-llmstxt>=0.2.0",
 ]
 
 [tool.ruff]
@@ -220,6 +225,13 @@ ignore = [
   "PLC0415",  # Lazy imports OK in examples
 ]
 
+# MCP server needs broad exception handling for API boundary
+"src/py_gdelt/mcp_server/server.py" = [
+  "BLE001",   # Blind except OK - catching exceptions at MCP API boundary
+  "TRY300",   # try/return pattern OK for MCP tool functions
+  "TRY301",   # Raise in except OK for parameter validation
+]
+
 "notebooks/**/*.ipynb" = [
   "T201",     # print expected in notebooks
   "SIM102",   # Collapsible if OK in notebooks
@@ -231,6 +243,17 @@ ignore = [
   "DTZ001",   # datetime without tz OK in notebooks
   "DTZ011",   # date.today() OK in notebooks
   "B007",     # Unused loop variable OK in notebooks
+]
+
+# MCP server has different requirements than library code
+"src/py_gdelt/mcp_server/*.py" = [
+  "PLW0603",  # Global statement needed for singleton pattern
+  "SLF001",   # Private member access needed for _initialize
+  "PLR0912",  # Complex aggregation logic requires many branches
+  "PLR0915",  # Complex aggregation logic requires many statements
+  "DTZ011",   # date.today() acceptable in MCP server
+  "SIM102",   # Nested if OK for readability
+  "SIM110",   # Explicit for loops OK for clarity
 ]
 
 [tool.ruff.lint.isort]
@@ -300,6 +323,15 @@ disallow_untyped_decorators = false
 [[tool.mypy.overrides]]
 module = ["google.cloud.*", "pandas.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["mcp.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "py_gdelt.mcp_server.*"
+disallow_untyped_decorators = false  # mcp.tool() is untyped
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
@@ -327,6 +359,7 @@ addopts = [
 markers = [
     "integration: mark test as integration test (makes live API calls)",
     "slow: mark test as slow (typically integration tests)",
+    "schema_drift: mark test as schema drift detection test",
 ]
 
 [tool.coverage.run]
