@@ -628,6 +628,11 @@ class TVGKGRecord(BaseModel):
                                 ),
                             )
                         except (ValueError, IndexError):
+                            logger.debug("Failed to parse timecode entry: %r", entry)
                             continue
+                logger.debug("Parsed %d timecode mappings", len(mappings))
                 return mappings
+        # No CHARTIMECODEOFFSETTOC block found - this is normal for non-TV records
+        if "<SPECIAL>" in extras:
+            logger.debug("SPECIAL blocks present but no CHARTIMECODEOFFSETTOC found")
         return []

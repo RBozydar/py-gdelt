@@ -48,6 +48,23 @@ async with GDELTClient() as client:
 
     result = await client.events.query(event_filter)
     print(f"Found {len(result)} events")
+
+    # Query Visual GKG (image analysis)
+    from py_gdelt.filters import VGKGFilter
+    vgkg_filter = VGKGFilter(
+        date_range=DateRange(start=yesterday),
+        domain="cnn.com",
+    )
+    images = await client.vgkg.query(vgkg_filter)
+
+    # Query TV NGrams (word frequencies from TV)
+    from py_gdelt.filters import BroadcastNGramsFilter
+    tv_filter = BroadcastNGramsFilter(
+        date_range=DateRange(start=yesterday),
+        station="CNN",
+        ngram_size=1,
+    )
+    ngrams = await client.tv_ngrams.query(tv_filter)
 ```
 
 ## Data Sources Covered
@@ -57,9 +74,10 @@ async with GDELTClient() as client:
 - **Mentions** - Article mentions of events over time
 - **GKG** - Global Knowledge Graph (themes, entities, tone, quotations)
 - **NGrams** - Word and phrase occurrences in articles (Jan 2020+)
-- **VGKG** 🏗️ - Visual GKG (image annotations via Cloud Vision API)
-- **TV-GKG** 🏗️ - Television GKG (closed caption analysis)
-- **TV/Radio NGrams** 🏗️ - Broadcast transcript word frequencies
+- **VGKG** - Visual GKG (image annotations via Cloud Vision API)
+- **TV-GKG** - Television GKG (closed caption analysis from TV broadcasts)
+- **TV NGrams** - Word frequencies from TV closed captions
+- **Radio NGrams** - Word frequencies from radio transcripts
 
 ### REST APIs
 - **DOC 2.0** - Full-text article search and discovery
@@ -106,8 +124,10 @@ async with GDELTClient() as client:
 | **GKG v2** | - | ✓ | ✓ | Feb 2015+ | ✓ |
 | **GKG v1** | - | ✓ | ✓ | Apr 2013 - Feb 2015 | ✓ |
 | **Web NGrams** | - | ✓ | ✓ | Jan 2020+ | ✓ |
-| **VGKG** 🏗️ | - | ✓ | ✓ | Dec 2015+ | ✓ |
-| **TV-GKG** 🏗️ | - | ✓ | ✓ | Jul 2009+ | ✓ |
+| **VGKG** | - | ✓ | ✓ | Dec 2015+ | ✓ |
+| **TV-GKG** | - | ✓ | ✓ | Jul 2009+ | ✓ |
+| **TV NGrams** | - | - | ✓ | Jul 2009+ | - |
+| **Radio NGrams** | - | - | ✓ | 2017+ | - |
 | **GQG** 🏗️ | - | ✓ | ✓ | Jan 2020+ | ✓ |
 | **GEG** 🏗️ | - | ✓ | ✓ | Jul 2016+ | ✓ |
 | **GFG** 🏗️ | - | ✓ | ✓ | Mar 2018+ | ✓ |

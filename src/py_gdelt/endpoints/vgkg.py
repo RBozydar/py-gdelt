@@ -325,6 +325,12 @@ class VGKGEndpoint:
 
         Returns:
             List of URLs to download.
+
+        Note:
+            Unlike RadioNGramsEndpoint, URL validation is not needed here because
+            URLs are constructed entirely from trusted internal constants (BASE_URL)
+            and validated filter parameters (date_range). No external input
+            influences the URL structure, eliminating SSRF risk.
         """
         from datetime import UTC, datetime, timedelta
 
@@ -427,6 +433,11 @@ class VGKGEndpoint:
             RateLimitError: If rate limited and retries exhausted
             APIError: If downloads fail
             DataError: If file parsing fails
+
+        Note:
+            Do not call this method from within an async context (e.g., inside
+            an async function or running event loop). Use the async stream()
+            method instead. This method creates its own event loop internally.
 
         Example:
             >>> filter_obj = VGKGFilter(

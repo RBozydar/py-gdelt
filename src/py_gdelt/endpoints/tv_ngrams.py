@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from py_gdelt.config import GDELTSettings
@@ -140,6 +140,79 @@ class TVNGramsEndpoint:
         # Return FetchResult (no failed tracking for now - FileSource handles errors)
         return FetchResult(data=records, failed=[])
 
+    async def get_latest(self, station: str, ngram_size: int = 1) -> list[BroadcastNGramRecord]:
+        """Get the most recent TV NGrams records for a station.
+
+        Fetches the most recent day's data for the specified station.
+        Tries today first, then falls back to yesterday if no data is available.
+
+        Args:
+            station: TV station code (e.g., "CNN", "MSNBC", "FOXNEWS").
+            ngram_size: Size of ngrams to retrieve (1, 2, or 3). Defaults to 1.
+
+        Returns:
+            List of BroadcastNGramRecord from the most recent available data.
+
+        Raises:
+            ValueError: If station is empty.
+
+        Example:
+            >>> async with TVNGramsEndpoint() as endpoint:
+            ...     latest = await endpoint.get_latest("CNN")
+            ...     if latest:
+            ...         print(f"Top ngram: {latest[0].ngram} ({latest[0].count})")
+        """
+        if not station:
+            msg = "Station is required for TV NGrams get_latest()"
+            raise ValueError(msg)
+
+        station_upper = station.upper()
+        ngram_type = f"{ngram_size}gram"
+        records: list[BroadcastNGramRecord] = []
+
+        # Try today first, then yesterday (data may have delay)
+        for days_ago in range(3):
+            target_date = datetime.now(tz=UTC).date() - timedelta(days=days_ago)
+            date_str = target_date.strftime("%Y%m%d")
+            url = f"{self.BASE_URL}{station_upper}.{date_str}.{ngram_type}.txt.gz"
+
+            try:
+                async for _url, data in self._file_source.stream_files([url]):
+                    for raw_record in self._parser.parse(data):
+                        try:
+                            records.append(
+                                BroadcastNGramRecord.from_raw(raw_record, BroadcastSource.TV)
+                            )
+                        except Exception as e:  # noqa: BLE001
+                            logger.warning("Failed to parse TV NGrams record: %s", e)
+
+                if records:
+                    logger.info(
+                        "Retrieved %d TV NGrams records for %s from %s",
+                        len(records),
+                        station_upper,
+                        target_date,
+                    )
+                    return records
+
+            except Exception as e:  # noqa: BLE001
+                logger.debug("No TV NGrams data for %s on %s: %s", station_upper, target_date, e)
+
+        logger.warning("No recent TV NGrams data found for station %s", station_upper)
+        return records
+
+    def get_latest_sync(self, station: str, ngram_size: int = 1) -> list[BroadcastNGramRecord]:
+        """Synchronous wrapper for get_latest().
+
+        Args:
+            station: TV station code (e.g., "CNN", "MSNBC", "FOXNEWS").
+            ngram_size: Size of ngrams to retrieve (1, 2, or 3). Defaults to 1.
+
+        Returns:
+            List of BroadcastNGramRecord from the most recent available data.
+        """
+        return asyncio.run(self.get_latest(station, ngram_size))
+
     def stream(
         self,
         filter_obj: BroadcastNGramsFilter,
@@ -211,6 +284,12 @@ class TVNGramsEndpoint:
 
         Raises:
             ValueError: If station is not set (defensive check).
+
+        Note:
+            Unlike RadioNGramsEndpoint, URL validation is not needed here because
+            URLs are constructed entirely from trusted internal constants (BASE_URL)
+            and validated filter parameters (station from filter). No external input
+            influences the URL structure, eliminating SSRF risk.
         """
         # Defensive check - station should already be validated in stream()
         if not filter_obj.station:
@@ -292,6 +371,11 @@ class TVNGramsEndpoint:
             ValueError: If station filter is not provided
             APIError: If downloads fail
             DataError: If file parsing fails
+
+        Note:
+            Do not call this method from within an async context (e.g., inside
+            an async function or running event loop). Use the async stream()
+            method instead. This method creates its own event loop internally.
 
         Example:
             >>> from datetime import date

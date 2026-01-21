@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
@@ -139,6 +139,118 @@ class RadioNGramsEndpoint:
 
         # Return FetchResult (no failed tracking for now - FileSource handles errors)
         return FetchResult(data=records, failed=[])
+
+    async def get_latest(
+        self,
+        station: str | None = None,
+        ngram_size: int = 1,
+    ) -> list[BroadcastNGramRecord]:
+        """Get the most recent Radio NGrams records.
+
+        Fetches the most recent day's inventory and returns records from the
+        latest available files. Tries today first, then falls back to previous
+        days if no data is available.
+
+        Args:
+            station: Optional station filter (e.g., "KQED", "NPR"). If None,
+                    returns records from all stations.
+            ngram_size: Size of ngrams to retrieve (1, 2, or 3). Defaults to 1.
+
+        Returns:
+            List of BroadcastNGramRecord from the most recent available data.
+
+        Example:
+            >>> async with RadioNGramsEndpoint() as endpoint:
+            ...     # Get latest from all stations
+            ...     latest = await endpoint.get_latest()
+            ...     # Or filter by station
+            ...     latest = await endpoint.get_latest(station="NPR")
+        """
+        ngram_type = f"{ngram_size}gram"
+        records: list[BroadcastNGramRecord] = []
+
+        # Try today first, then previous days (data may have delay)
+        for days_ago in range(3):
+            target_date = datetime.now(tz=UTC).date() - timedelta(days=days_ago)
+            date_str = target_date.strftime("%Y%m%d")
+            inventory_url = f"{self.BASE_URL}{date_str}.txt"
+
+            try:
+                # Fetch inventory file
+                response = await self._file_source.client.get(inventory_url)
+                response.raise_for_status()
+
+                # Parse inventory for matching files
+                urls: list[str] = []
+                for line in response.text.strip().split("\n"):
+                    file_url = line.strip()
+                    if not file_url:
+                        continue
+
+                    # Validate URL (security check)
+                    if not file_url.startswith(self.BASE_URL):
+                        continue
+                    try:
+                        self._validate_url(file_url)
+                    except ValueError:
+                        continue
+
+                    # Filter by station if specified
+                    if station and station.upper() not in file_url.upper():
+                        continue
+
+                    # Filter by ngram size
+                    if ngram_type not in file_url:
+                        continue
+
+                    urls.append(file_url)
+
+                if not urls:
+                    logger.debug("No matching files in inventory for %s", target_date)
+                    continue
+
+                # Download and parse files
+                async for _url, data in self._file_source.stream_files(
+                    urls[:10]
+                ):  # Limit for get_latest
+                    for raw in self._parser.parse(data):
+                        try:
+                            records.append(
+                                BroadcastNGramRecord.from_raw(raw, BroadcastSource.RADIO)
+                            )
+                        except Exception as e:  # noqa: BLE001
+                            logger.warning("Failed to parse Radio NGrams record: %s", e)
+
+                if records:
+                    logger.info(
+                        "Retrieved %d Radio NGrams records from %s (station=%s)",
+                        len(records),
+                        target_date,
+                        station or "ALL",
+                    )
+                    return records
+
+            except Exception as e:  # noqa: BLE001
+                logger.debug("No Radio NGrams inventory for %s: %s", target_date, e)
+
+        logger.warning("No recent Radio NGrams data found (station=%s)", station or "ALL")
+        return records
+
+    def get_latest_sync(
+        self,
+        station: str | None = None,
+        ngram_size: int = 1,
+    ) -> list[BroadcastNGramRecord]:
+        """Synchronous wrapper for get_latest().
+
+        Args:
+            station: Optional station filter.
+            ngram_size: Size of ngrams to retrieve (1, 2, or 3). Defaults to 1.
+
+        Returns:
+            List of BroadcastNGramRecord from the most recent available data.
+        """
+        return asyncio.run(self.get_latest(station, ngram_size))
 
     async def stream(
         self,
@@ -327,6 +439,11 @@ class RadioNGramsEndpoint:
         Raises:
             APIError: If downloads fail
             DataError: If file parsing fails
+
+        Note:
+            Do not call this method from within an async context (e.g., inside
+            an async function or running event loop). Use the async stream()
+            method instead. This method creates its own event loop internally.
 
         Example:
             >>> from datetime import date
