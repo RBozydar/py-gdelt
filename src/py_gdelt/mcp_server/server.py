@@ -119,18 +119,13 @@ _client: GDELTClient | None = None
 _cameo_codes: CAMEOCodes | None = None
 
 # Thread-safe initialization locks
-_client_lock: asyncio.Lock | None = None
+_client_lock = asyncio.Lock()  # Safe: module-level initialization is atomic
 _cameo_lock = threading.Lock()
-
-# Heap stability counter for tie-breaking
-_heap_counter = 0
 
 
 async def get_client() -> GDELTClient:
     """Get or create the shared GDELT client."""
-    global _client, _client_lock
-    if _client_lock is None:
-        _client_lock = asyncio.Lock()
+    global _client
     if _client is None:
         async with _client_lock:
             if _client is None:  # Double-check after acquiring lock
@@ -245,10 +240,9 @@ async def gdelt_events(
             days_back,
         )
 
-        global _heap_counter
-
         # Initialize aggregation counters
         total_events = 0
+        heap_counter = 0  # Local counter for heap tie-breaking (resets per request)
         goldstein_sum = 0.0
         goldstein_sq_sum = 0.0
         goldstein_buckets: dict[str, int] = {
@@ -333,24 +327,22 @@ async def gdelt_events(
                 }
 
                 # Keep 5 most negative (use max heap with negated values)
-                _heap_counter += 1
+                heap_counter += 1
                 if will_store_negative:
                     if len(most_negative_heap) < 5:
-                        heapq.heappush(most_negative_heap, (-goldstein, _heap_counter, event_dict))
+                        heapq.heappush(most_negative_heap, (-goldstein, heap_counter, event_dict))
                     else:
                         heapq.heapreplace(
-                            most_negative_heap, (-goldstein, _heap_counter, event_dict)
+                            most_negative_heap, (-goldstein, heap_counter, event_dict)
                         )
 
                 # Keep 5 most positive (use min heap)
-                _heap_counter += 1
+                heap_counter += 1
                 if will_store_positive:
                     if len(most_positive_heap) < 5:
-                        heapq.heappush(most_positive_heap, (goldstein, _heap_counter, event_dict))
+                        heapq.heappush(most_positive_heap, (goldstein, heap_counter, event_dict))
                     else:
-                        heapq.heapreplace(
-                            most_positive_heap, (goldstein, _heap_counter, event_dict)
-                        )
+                        heapq.heapreplace(most_positive_heap, (goldstein, heap_counter, event_dict))
 
         # Calculate summary statistics
         goldstein_mean = goldstein_sum / total_events if total_events > 0 else 0.0
