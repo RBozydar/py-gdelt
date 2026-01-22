@@ -37,6 +37,11 @@ class TVNGramsEndpoint:
     TV NGrams provides word frequency analysis from TV closed captions.
     Data is organized by station (CNN, MSNBC, Fox News, etc.) and hour.
 
+    Important:
+        Unlike RadioNGramsEndpoint, TV NGrams queries require a station filter.
+        This is because TV NGrams files are organized per-station (e.g., CNN.20240101.1gram.txt.gz),
+        while Radio NGrams uses inventory files listing all stations per day.
+
     Args:
         settings: Configuration settings. If None, uses defaults.
         file_source: Optional shared FileSource. If None, creates owned instance.
@@ -198,6 +203,10 @@ class TVNGramsEndpoint:
                     return records
 
             except Exception as e:  # noqa: BLE001
+                # Broad catch is intentional: network errors (httpx.HTTPError,
+                # httpx.TimeoutException, etc.) or server issues should not prevent
+                # trying other dates. This is a fallback boundary - we try today,
+                # yesterday, etc. and return empty list if all fail.
                 logger.debug("No TV NGrams data for %s on %s: %s", station_upper, target_date, e)
 
         logger.warning("No recent TV NGrams data found for station %s", station_upper)
@@ -370,14 +379,16 @@ class TVNGramsEndpoint:
             BroadcastNGramRecord: Individual TV NGram records matching the filter criteria
 
         Raises:
-            ValueError: If station filter is not provided
-            APIError: If downloads fail
-            DataError: If file parsing fails
+            RuntimeError: If called from within a running event loop.
+            ValueError: If station filter is not provided.
+            APIError: If downloads fail.
+            DataError: If file parsing fails.
 
         Note:
-            Do not call this method from within an async context (e.g., inside
-            an async function or running event loop). Use the async stream()
-            method instead. This method creates its own event loop internally.
+            This method cannot be called from within an async context (e.g., inside
+            an async function or running event loop). Doing so will raise RuntimeError.
+            Use the async stream() method instead. This method creates its own event
+            loop internally.
 
         Example:
             >>> from datetime import date
@@ -395,6 +406,18 @@ class TVNGramsEndpoint:
         # stream_sync() must iterate through an async generator step-by-step.
         # asyncio.run() cannot handle async generators - it expects a coroutine
         # that returns a value, not one that yields multiple values.
+
+        # Check if we're already in an async context - this would cause issues
+        try:
+            asyncio.get_running_loop()
+            has_running_loop = True
+        except RuntimeError:
+            has_running_loop = False
+
+        if has_running_loop:
+            msg = "stream_sync() cannot be called from a running event loop. Use stream() instead."
+            raise RuntimeError(msg)
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:

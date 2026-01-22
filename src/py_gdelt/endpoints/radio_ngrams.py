@@ -233,6 +233,10 @@ class RadioNGramsEndpoint:
                     return records
 
             except Exception as e:  # noqa: BLE001
+                # Broad catch is intentional: network errors (httpx.HTTPError,
+                # httpx.TimeoutException, etc.) or server issues should not prevent
+                # trying other dates. This is a fallback boundary - we try today,
+                # yesterday, etc. and return empty list if all fail.
                 logger.debug("No Radio NGrams inventory for %s: %s", target_date, e)
 
         logger.warning("No recent Radio NGrams data found (station=%s)", station or "ALL")
@@ -377,6 +381,9 @@ class RadioNGramsEndpoint:
                     urls.append(file_url)
 
             except Exception as e:  # noqa: BLE001
+                # Broad catch is intentional: network errors (httpx.HTTPError,
+                # httpx.TimeoutException, etc.) should not prevent processing other
+                # dates in the range. We log the warning and continue to the next day.
                 logger.warning(
                     "Failed to fetch Radio NGrams inventory for %s: %s",
                     date_str,
@@ -439,13 +446,15 @@ class RadioNGramsEndpoint:
             BroadcastNGramRecord: Individual Radio NGram records matching the filter criteria
 
         Raises:
-            APIError: If downloads fail
-            DataError: If file parsing fails
+            RuntimeError: If called from within a running event loop.
+            APIError: If downloads fail.
+            DataError: If file parsing fails.
 
         Note:
-            Do not call this method from within an async context (e.g., inside
-            an async function or running event loop). Use the async stream()
-            method instead. This method creates its own event loop internally.
+            This method cannot be called from within an async context (e.g., inside
+            an async function or running event loop). Doing so will raise RuntimeError.
+            Use the async stream() method instead. This method creates its own event
+            loop internally.
 
         Example:
             >>> from datetime import date
@@ -463,6 +472,18 @@ class RadioNGramsEndpoint:
         # stream_sync() must iterate through an async generator step-by-step.
         # asyncio.run() cannot handle async generators - it expects a coroutine
         # that returns a value, not one that yields multiple values.
+
+        # Check if we're already in an async context - this would cause issues
+        try:
+            asyncio.get_running_loop()
+            has_running_loop = True
+        except RuntimeError:
+            has_running_loop = False
+
+        if has_running_loop:
+            msg = "stream_sync() cannot be called from a running event loop. Use stream() instead."
+            raise RuntimeError(msg)
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
