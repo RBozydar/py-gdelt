@@ -427,3 +427,88 @@ class AsyncIteratorMock:
         item = self.items[self.index]
         self.index += 1
         return item
+
+
+class TestGetLatest:
+    """Test get_latest() method."""
+
+    @pytest.mark.asyncio
+    async def test_get_latest_success(self) -> None:
+        """Test successful get_latest() retrieval."""
+        endpoint = TVNGramsEndpoint()
+
+        # Mock data - TV NGrams format: date, station, hour, ngram, count (5 columns)
+        test_data = b"20240115\tCNN\t14\tword1\t10\n20240115\tCNN\t14\tword2\t20"
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            return AsyncIteratorMock([("url", test_data)])
+
+        endpoint._file_source.stream_files = mock_stream_files  # type: ignore[method-assign,assignment]
+
+        records = await endpoint.get_latest("CNN")
+
+        assert len(records) == 2
+        assert all(isinstance(r, BroadcastNGramRecord) for r in records)
+        assert all(r.source == BroadcastSource.TV for r in records)
+
+    @pytest.mark.asyncio
+    async def test_get_latest_requires_station(self) -> None:
+        """Test that get_latest() requires a station parameter."""
+        endpoint = TVNGramsEndpoint()
+
+        with pytest.raises(ValueError, match="Station is required"):
+            await endpoint.get_latest("")
+
+    @pytest.mark.asyncio
+    async def test_get_latest_no_data(self) -> None:
+        """Test get_latest() when no data is available."""
+        endpoint = TVNGramsEndpoint()
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            return AsyncIteratorMock([])
+
+        endpoint._file_source.stream_files = mock_stream_files  # type: ignore[method-assign,assignment]
+
+        records = await endpoint.get_latest("CNN")
+
+        assert len(records) == 0
+
+    @pytest.mark.asyncio
+    async def test_get_latest_with_ngram_size(self) -> None:
+        """Test get_latest() with custom ngram size."""
+        endpoint = TVNGramsEndpoint()
+
+        # Mock data - TV NGrams format: date, station, hour, ngram, count (5 columns)
+        test_data = b"20240115\tCNN\t14\thello world\t5"
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            # Verify the URL contains the correct ngram size
+            assert any("2gram" in url for url in urls)
+            return AsyncIteratorMock([("url", test_data)])
+
+        endpoint._file_source.stream_files = mock_stream_files  # type: ignore[method-assign,assignment]
+
+        records = await endpoint.get_latest("CNN", ngram_size=2)
+
+        assert len(records) == 1
+
+
+class TestGetLatestSync:
+    """Test get_latest_sync() method."""
+
+    def test_get_latest_sync(self) -> None:
+        """Test synchronous get_latest_sync() wrapper."""
+        endpoint = TVNGramsEndpoint()
+
+        # Mock data - TV NGrams format: date, station, hour, ngram, count (5 columns)
+        test_data = b"20240115\tCNN\t14\tword1\t10"
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            return AsyncIteratorMock([("url", test_data)])
+
+        endpoint._file_source.stream_files = mock_stream_files  # type: ignore[method-assign,assignment]
+
+        records = endpoint.get_latest_sync("CNN")
+
+        assert len(records) == 1
+        assert isinstance(records[0], BroadcastNGramRecord)

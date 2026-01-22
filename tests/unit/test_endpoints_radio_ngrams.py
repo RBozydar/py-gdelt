@@ -732,6 +732,226 @@ class TestEdgeCases:
         assert any("20240101" in url for url in urls)
 
 
+class TestGetLatest:
+    """Test get_latest() method."""
+
+    @pytest.mark.asyncio
+    async def test_get_latest_success(self) -> None:
+        """Test successful get_latest() retrieval."""
+        # Mock inventory response
+        inventory_content = (
+            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
+        )
+
+        mock_inventory_response = MagicMock()
+        mock_inventory_response.text = inventory_content
+        mock_inventory_response.raise_for_status = MagicMock()
+
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_inventory_response)
+
+        mock_file_source = MagicMock()
+        type(mock_file_source).client = property(lambda self: mock_client)
+
+        # Mock stream_files to return sample data
+        test_data = b"20240115\tKQED\t09\tword1\t10\tMorning Edition\n20240115\tKQED\t10\tword2\t20\tAfternoon News"
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            return AsyncIteratorMock([("url", test_data)])
+
+        mock_file_source.stream_files = mock_stream_files
+
+        endpoint = RadioNGramsEndpoint(file_source=mock_file_source)
+
+        records = await endpoint.get_latest(station="KQED")
+
+        assert len(records) == 2
+        assert all(isinstance(r, BroadcastNGramRecord) for r in records)
+        assert all(r.source == BroadcastSource.RADIO for r in records)
+        assert records[0].ngram == "word1"
+        assert records[0].show == "Morning Edition"
+
+    @pytest.mark.asyncio
+    async def test_get_latest_no_station_filter(self) -> None:
+        """Test get_latest() without station filter returns all stations."""
+        inventory_content = (
+            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
+            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/NPR.20240115.1gram.txt.gz\n"
+        )
+
+        mock_inventory_response = MagicMock()
+        mock_inventory_response.text = inventory_content
+        mock_inventory_response.raise_for_status = MagicMock()
+
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_inventory_response)
+
+        mock_file_source = MagicMock()
+        type(mock_file_source).client = property(lambda self: mock_client)
+
+        test_data = b"20240115\tKQED\t09\tword1\t10\tMorning Edition"
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            return AsyncIteratorMock([("url", test_data)])
+
+        mock_file_source.stream_files = mock_stream_files
+
+        endpoint = RadioNGramsEndpoint(file_source=mock_file_source)
+
+        records = await endpoint.get_latest()  # No station filter
+
+        assert len(records) >= 1
+
+    @pytest.mark.asyncio
+    async def test_get_latest_no_data(self) -> None:
+        """Test get_latest() when no data is available."""
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(side_effect=Exception("Not found"))
+
+        mock_file_source = MagicMock()
+        type(mock_file_source).client = property(lambda self: mock_client)
+
+        endpoint = RadioNGramsEndpoint(file_source=mock_file_source)
+
+        records = await endpoint.get_latest(station="KQED")
+
+        assert len(records) == 0
+
+    @pytest.mark.asyncio
+    async def test_get_latest_with_ngram_size(self) -> None:
+        """Test get_latest() with custom ngram size."""
+        inventory_content = (
+            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.2gram.txt.gz\n"
+        )
+
+        mock_inventory_response = MagicMock()
+        mock_inventory_response.text = inventory_content
+        mock_inventory_response.raise_for_status = MagicMock()
+
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_inventory_response)
+
+        mock_file_source = MagicMock()
+        type(mock_file_source).client = property(lambda self: mock_client)
+
+        test_data = b"20240115\tKQED\t09\thello world\t5\tMorning Edition"
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            return AsyncIteratorMock([("url", test_data)])
+
+        mock_file_source.stream_files = mock_stream_files
+
+        endpoint = RadioNGramsEndpoint(file_source=mock_file_source)
+
+        records = await endpoint.get_latest(ngram_size=2)
+
+        assert len(records) == 1
+
+
+class TestGetLatestSync:
+    """Test get_latest_sync() method."""
+
+    def test_get_latest_sync(self) -> None:
+        """Test synchronous get_latest_sync() wrapper."""
+        inventory_content = (
+            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
+        )
+
+        mock_inventory_response = MagicMock()
+        mock_inventory_response.text = inventory_content
+        mock_inventory_response.raise_for_status = MagicMock()
+
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_inventory_response)
+
+        mock_file_source = MagicMock()
+        type(mock_file_source).client = property(lambda self: mock_client)
+
+        test_data = b"20240115\tKQED\t09\tword1\t10\tMorning Edition"
+
+        def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            return AsyncIteratorMock([("url", test_data)])
+
+        mock_file_source.stream_files = mock_stream_files
+
+        endpoint = RadioNGramsEndpoint(file_source=mock_file_source)
+
+        records = endpoint.get_latest_sync(station="KQED")
+
+        assert len(records) == 1
+        assert isinstance(records[0], BroadcastNGramRecord)
+        assert records[0].source == BroadcastSource.RADIO
+
+
+class TestQuerySync:
+    """Test query_sync() method."""
+
+    def test_query_sync(self) -> None:
+        """Test synchronous query_sync() wrapper."""
+        from py_gdelt.models.common import FetchResult
+
+        mock_file_source = MagicMock()
+        mock_file_source.stream_files = MagicMock(
+            return_value=AsyncIteratorMock(
+                [
+                    (
+                        "mock_url",
+                        b"20240115\tKQED\t09\tclimate\t15\tMorning Edition",
+                    )
+                ]
+            )
+        )
+
+        endpoint = RadioNGramsEndpoint(file_source=mock_file_source)
+        endpoint._build_urls = AsyncMock(return_value=["mock_url"])
+
+        filter_obj = BroadcastNGramsFilter(
+            date_range=DateRange(start=date(2024, 1, 15)),
+            station="KQED",
+            ngram_size=1,
+        )
+
+        result = endpoint.query_sync(filter_obj)
+
+        assert isinstance(result, FetchResult)
+        assert len(result.data) == 1
+        assert result.data[0].ngram == "climate"
+
+
+class TestStreamSync:
+    """Test stream_sync() method."""
+
+    def test_stream_sync(self) -> None:
+        """Test synchronous stream_sync() wrapper."""
+        mock_file_source = MagicMock()
+        mock_file_source.stream_files = MagicMock(
+            return_value=AsyncIteratorMock(
+                [
+                    (
+                        "mock_url",
+                        b"20240115\tKQED\t09\tclimate\t15\tMorning Edition\n20240115\tKQED\t09\thealth\t22\tMorning Edition",
+                    )
+                ]
+            )
+        )
+
+        endpoint = RadioNGramsEndpoint(file_source=mock_file_source)
+        endpoint._build_urls = AsyncMock(return_value=["mock_url"])
+
+        filter_obj = BroadcastNGramsFilter(
+            date_range=DateRange(start=date(2024, 1, 15)),
+            station="KQED",
+            ngram_size=1,
+        )
+
+        records = list(endpoint.stream_sync(filter_obj))
+
+        assert len(records) == 2
+        assert all(isinstance(r, BroadcastNGramRecord) for r in records)
+        assert records[0].ngram == "climate"
+        assert records[1].ngram == "health"
+
+
 # Helper class for async iteration in tests
 class AsyncIteratorMock:
     """Mock async iterator for testing."""
