@@ -310,11 +310,14 @@ class NGramsEndpoint:
             >>> for record in endpoint.stream_sync(filter_obj):
             ...     print(f"{record.ngram}: {record.url}")
         """
-        # Create a new event loop for the sync wrapper
+        # Manual event loop management is required for async generators.
+        # Unlike query_sync() which uses asyncio.run() for a single coroutine,
+        # stream_sync() must iterate through an async generator step-by-step.
+        # asyncio.run() cannot handle async generators - it expects a coroutine
+        # that returns a value, not one that yields multiple values.
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            # Run the async generator and yield results
             async_gen = self.stream(filter_obj)
             while True:
                 try:

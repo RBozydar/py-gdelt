@@ -12,7 +12,7 @@ import warnings
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Final
 
-import httpx
+from pydantic import ValidationError
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.models.common import FetchResult
@@ -96,28 +96,9 @@ class TVGKGEndpoint:
             self._file_source = FileSource(settings=self.settings)
             self._owns_sources = True
 
-        self._client = self._create_client()
-        self._owns_client = True
-
         self._parser = GKGParser()
 
         logger.debug("TVGKGEndpoint initialized")
-
-    def _create_client(self) -> httpx.AsyncClient:
-        """Create a new HTTP client with proper configuration.
-
-        Returns:
-            Configured httpx.AsyncClient with timeouts and redirect following.
-        """
-        return httpx.AsyncClient(
-            timeout=httpx.Timeout(
-                connect=10.0,
-                read=30.0,
-                write=10.0,
-                pool=5.0,
-            ),
-            follow_redirects=True,
-        )
 
     async def close(self) -> None:
         """Close resources if we own them.
@@ -125,9 +106,6 @@ class TVGKGEndpoint:
         Only closes resources that were created by this instance.
         Shared resources are not closed to allow reuse.
         """
-        if self._owns_client and self._client is not None:
-            await self._client.aclose()
-
         if self._owns_sources:
             await self._file_source.__aexit__(None, None, None)
 
@@ -212,7 +190,7 @@ class TVGKGEndpoint:
             for raw in self._parser.parse(data):
                 try:
                     record = TVGKGRecord.from_raw(raw)
-                except Exception as e:  # noqa: BLE001
+                except (ValueError, ValidationError) as e:
                     logger.warning("Failed to parse TV-GKG record: %s - Skipping", e)
                     continue
 
@@ -308,7 +286,8 @@ class TVGKGEndpoint:
             Due to the 48-hour embargo, "latest" means the most recent
             data that has cleared the embargo period.
         """
-        response = await self._client.get(TV_GKG_LAST_UPDATE_URL)
+        # Use FileSource's shared client for the lastupdate.txt fetch
+        response = await self._file_source.client.get(TV_GKG_LAST_UPDATE_URL)
         response.raise_for_status()
 
         gkg_url = None
@@ -327,7 +306,7 @@ class TVGKGEndpoint:
             for raw in self._parser.parse(data):
                 try:
                     records.append(TVGKGRecord.from_raw(raw))
-                except Exception as e:  # noqa: BLE001
+                except (ValueError, ValidationError) as e:
                     logger.warning("Failed to parse TV-GKG record: %s - Skipping", e)
 
         return records
@@ -392,7 +371,11 @@ class TVGKGEndpoint:
             >>> for record in endpoint.stream_sync(filter_obj):
             ...     print(f"{record.gkg_record_id}: {record.themes}")
         """
-        # Create a new event loop for the sync wrapper
+        # Manual event loop management is required for async generators.
+        # Unlike query_sync() which uses asyncio.run() for a single coroutine,
+        # stream_sync() must iterate through an async generator step-by-step.
+        # asyncio.run() cannot handle async generators - it expects a coroutine
+        # that returns a value, not one that yields multiple values.
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:

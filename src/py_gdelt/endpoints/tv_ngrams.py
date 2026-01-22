@@ -11,6 +11,8 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
+from pydantic import ValidationError
+
 from py_gdelt.config import GDELTSettings
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.ngrams import BroadcastNGramRecord, BroadcastSource
@@ -183,7 +185,7 @@ class TVNGramsEndpoint:
                             records.append(
                                 BroadcastNGramRecord.from_raw(raw_record, BroadcastSource.TV)
                             )
-                        except Exception as e:  # noqa: BLE001
+                        except (ValueError, ValidationError) as e:
                             logger.warning("Failed to parse TV NGrams record: %s", e)
 
                 if records:
@@ -268,7 +270,7 @@ class TVNGramsEndpoint:
             for raw in self._parser.parse(data):
                 try:
                     yield BroadcastNGramRecord.from_raw(raw, BroadcastSource.TV)
-                except Exception as e:  # noqa: BLE001
+                except (ValueError, ValidationError) as e:
                     logger.warning("Failed to parse TV NGram record: %s - Skipping", e)
                     continue
 
@@ -388,7 +390,11 @@ class TVNGramsEndpoint:
             >>> for record in endpoint.stream_sync(filter_obj):
             ...     print(f"{record.ngram}: {record.count}")
         """
-        # Create a new event loop for the sync wrapper
+        # Manual event loop management is required for async generators.
+        # Unlike query_sync() which uses asyncio.run() for a single coroutine,
+        # stream_sync() must iterate through an async generator step-by-step.
+        # asyncio.run() cannot handle async generators - it expects a coroutine
+        # that returns a value, not one that yields multiple values.
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:

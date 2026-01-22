@@ -29,7 +29,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Final
 
-import httpx
+from pydantic import ValidationError
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.models.common import FetchResult
@@ -123,27 +123,8 @@ class VGKGEndpoint:
             self._file_source = FileSource(settings=self.settings)
             self._owns_sources = True
 
-        self._client = self._create_client()
-        self._owns_client = True
-
         # Create parser instance
         self._parser = VGKGParser()
-
-    def _create_client(self) -> httpx.AsyncClient:
-        """Create a new HTTP client with proper configuration.
-
-        Returns:
-            Configured httpx.AsyncClient with timeouts and redirect following.
-        """
-        return httpx.AsyncClient(
-            timeout=httpx.Timeout(
-                connect=10.0,
-                read=30.0,
-                write=10.0,
-                pool=5.0,
-            ),
-            follow_redirects=True,
-        )
 
     async def close(self) -> None:
         """Close resources if we own them.
@@ -151,9 +132,6 @@ class VGKGEndpoint:
         Only closes resources that were created by this instance.
         Shared resources are not closed to allow reuse.
         """
-        if self._owns_client and self._client is not None:
-            await self._client.aclose()
-
         if self._owns_sources:
             # FileSource uses context manager protocol, manually call __aexit__
             await self._file_source.__aexit__(None, None, None)
@@ -257,7 +235,7 @@ class VGKGEndpoint:
                 # Convert _RawVGKG to VGKGRecord (type conversion happens here)
                 try:
                     record = VGKGRecord.from_raw(raw_record)
-                except Exception as e:  # noqa: BLE001
+                except (ValueError, ValidationError) as e:
                     logger.warning("Failed to parse VGKG record: %s - Skipping", e)
                     continue
 
@@ -286,8 +264,8 @@ class VGKGEndpoint:
             ...         print(f"Latest update: {latest[0].date}")
             ...         print(f"Total records: {len(latest)}")
         """
-        # Fetch lastupdate.txt
-        response = await self._client.get(VGKG_LAST_UPDATE_URL)
+        # Fetch lastupdate.txt using FileSource's shared client
+        response = await self._file_source.client.get(VGKG_LAST_UPDATE_URL)
         response.raise_for_status()
 
         # Parse to find VGKG file URL (format: size hash url)
@@ -308,7 +286,7 @@ class VGKGEndpoint:
             for raw_record in self._parser.parse(data):
                 try:
                     records.append(VGKGRecord.from_raw(raw_record))
-                except Exception as e:  # noqa: BLE001
+                except (ValueError, ValidationError) as e:
                     logger.warning("Failed to parse VGKG record: %s - Skipping", e)
 
         logger.info("Retrieved %d records from latest VGKG update", len(records))
@@ -447,11 +425,14 @@ class VGKGEndpoint:
             >>> for record in endpoint.stream_sync(filter_obj):
             ...     print(f"{record.image_url}: {len(record.labels)} labels")
         """
-        # Create a new event loop for the sync wrapper
+        # Manual event loop management is required for async generators.
+        # Unlike query_sync() which uses asyncio.run() for a single coroutine,
+        # stream_sync() must iterate through an async generator step-by-step.
+        # asyncio.run() cannot handle async generators - it expects a coroutine
+        # that returns a value, not one that yields multiple values.
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            # Run the async generator and yield results
             async_gen = self.stream(filter_obj)
             while True:
                 try:

@@ -84,8 +84,6 @@ class TestTVGKGEndpointInit:
 
         assert endpoint._file_source is not None
         assert endpoint._owns_sources is True
-        assert endpoint._client is not None
-        assert endpoint._owns_client is True
         assert endpoint._parser is not None
         assert endpoint.settings is not None
 
@@ -95,8 +93,6 @@ class TestTVGKGEndpointInit:
 
         assert endpoint._file_source is mock_file_source
         assert endpoint._owns_sources is False
-        assert endpoint._client is not None
-        assert endpoint._owns_client is True
         assert endpoint._parser is not None
 
     @pytest.mark.asyncio
@@ -106,9 +102,6 @@ class TestTVGKGEndpointInit:
 
         async with endpoint as ep:
             assert ep is endpoint
-
-        # Client should be closed after exit (if owned)
-        assert endpoint._client is not None
 
 
 class TestTVGKGEndpointURLBuilding:
@@ -402,13 +395,13 @@ class TestTVGKGEndpointGetLatest:
         """Test successful retrieval of latest TV-GKG records."""
         endpoint = TVGKGEndpoint(file_source=mock_file_source)
 
-        # Mock the client's get method
+        # Mock the FileSource client's get method
         mock_client = AsyncMock()
         lastupdate_response = MagicMock()
         lastupdate_response.text = "1024 abc123 http://test.url/20240101120000.gkg.csv.gz"
         lastupdate_response.raise_for_status = MagicMock()
         mock_client.get = AsyncMock(return_value=lastupdate_response)
-        endpoint._client = mock_client
+        mock_file_source.client = mock_client
 
         # Mock stream_files
         async def mock_stream_files(urls: list[str]) -> AsyncIterator[tuple[str, bytes]]:
@@ -460,13 +453,13 @@ class TestTVGKGEndpointGetLatest:
         """Test get_latest when no GKG file is in lastupdate.txt."""
         endpoint = TVGKGEndpoint(file_source=mock_file_source)
 
-        # Mock the client's get method
+        # Mock the FileSource client's get method
         mock_client = AsyncMock()
         lastupdate_response = MagicMock()
         lastupdate_response.text = "1024 abc123 http://test.url/20240101120000.export.csv"
         lastupdate_response.raise_for_status = MagicMock()
         mock_client.get = AsyncMock(return_value=lastupdate_response)
-        endpoint._client = mock_client
+        mock_file_source.client = mock_client
 
         records = await endpoint.get_latest()
 
@@ -592,13 +585,13 @@ class TestTVGKGEndpointSyncWrappers:
         """Test get_latest_sync wrapper returns list of TVGKGRecords."""
         endpoint = TVGKGEndpoint(file_source=mock_file_source)
 
-        # Mock the client's get method
+        # Mock the FileSource client's get method
         mock_client = AsyncMock()
         lastupdate_response = MagicMock()
         lastupdate_response.text = "1024 abc123 http://test.url/20240101120000.gkg.csv.gz"
         lastupdate_response.raise_for_status = MagicMock()
         mock_client.get = AsyncMock(return_value=lastupdate_response)
-        endpoint._client = mock_client
+        mock_file_source.client = mock_client
 
         # Mock stream_files
         async def mock_stream_files(urls: list[str]) -> AsyncIterator[tuple[str, bytes]]:

@@ -63,13 +63,11 @@ class TestVGKGEndpointInit:
     """Test VGKGEndpoint initialization."""
 
     def test_init_without_arguments(self) -> None:
-        """Test initialization without arguments (creates owned FileSource and client)."""
+        """Test initialization without arguments (creates owned FileSource)."""
         endpoint = VGKGEndpoint()
 
         assert endpoint._file_source is not None
         assert endpoint._owns_sources is True
-        assert endpoint._client is not None
-        assert endpoint._owns_client is True
         assert endpoint._parser is not None
         assert endpoint.settings is not None
 
@@ -79,8 +77,6 @@ class TestVGKGEndpointInit:
 
         assert endpoint._file_source is mock_file_source
         assert endpoint._owns_sources is False
-        assert endpoint._client is not None
-        assert endpoint._owns_client is True
         assert endpoint._parser is not None
 
     @pytest.mark.asyncio
@@ -90,9 +86,6 @@ class TestVGKGEndpointInit:
 
         async with endpoint as ep:
             assert ep is endpoint
-
-        # Client should be closed after exit (if owned)
-        assert endpoint._client is not None
 
 
 class TestVGKGEndpointURLBuilding:
@@ -240,13 +233,13 @@ class TestVGKGEndpointGetLatest:
         """Test successful retrieval of latest VGKG records."""
         endpoint = VGKGEndpoint(file_source=mock_file_source)
 
-        # Mock the client's get method
+        # Mock the FileSource client's get method
         mock_client = AsyncMock()
         lastupdate_response = MagicMock()
         lastupdate_response.text = "1024 abc123 http://test.url/20240101120000.vgkg.csv.gz"
         lastupdate_response.raise_for_status = MagicMock()
         mock_client.get = AsyncMock(return_value=lastupdate_response)
-        endpoint._client = mock_client
+        mock_file_source.client = mock_client
 
         # Mock stream_files
         async def mock_stream_files(urls: list[str]) -> AsyncIterator[tuple[str, bytes]]:
@@ -283,51 +276,45 @@ class TestVGKGEndpointGetLatest:
         """Test get_latest when no VGKG file is in lastupdate.txt."""
         endpoint = VGKGEndpoint(file_source=mock_file_source)
 
-        # Mock the client's get method
+        # Mock the FileSource client's get method
         mock_client = AsyncMock()
         lastupdate_response = MagicMock()
         lastupdate_response.text = "1024 abc123 http://test.url/20240101120000.export.csv"
         lastupdate_response.raise_for_status = MagicMock()
         mock_client.get = AsyncMock(return_value=lastupdate_response)
-        endpoint._client = mock_client
+        mock_file_source.client = mock_client
 
         records = await endpoint.get_latest()
 
         assert len(records) == 0
 
     @pytest.mark.asyncio
-    async def test_get_latest_reuses_client(
+    async def test_get_latest_uses_file_source_client(
         self,
         mock_file_source: MagicMock,
     ) -> None:
-        """Test that get_latest reuses the stored client, not creating temporary ones."""
+        """Test that get_latest uses FileSource client instead of creating its own."""
         endpoint = VGKGEndpoint(file_source=mock_file_source)
 
-        # Store reference to original client
-        original_client = endpoint._client
-
-        # Mock the client's get method
+        # Mock the FileSource client's get method
         mock_client = AsyncMock()
         lastupdate_response = MagicMock()
         lastupdate_response.text = "1024 abc123 http://test.url/20240101120000.vgkg.csv.gz"
         lastupdate_response.raise_for_status = MagicMock()
         mock_client.get = AsyncMock(return_value=lastupdate_response)
-        endpoint._client = mock_client
+        mock_file_source.client = mock_client
 
         # Mock stream_files to return empty
         async def mock_stream_files(urls: list[str]) -> AsyncIterator[tuple[str, bytes]]:
-            if False:  # Never yield
-                yield ("", b"")
+            return
+            yield  # type: ignore[misc]
 
         mock_file_source.stream_files = mock_stream_files
 
         await endpoint.get_latest()
 
-        # Verify the mock client was called (proving we used the stored client)
+        # Verify the FileSource client was called
         mock_client.get.assert_called_once()
-
-        # Verify we didn't replace the client
-        assert endpoint._client is mock_client
 
 
 class TestVGKGEndpointSyncWrappers:
@@ -415,13 +402,13 @@ class TestVGKGEndpointSyncWrappers:
         """Test get_latest_sync wrapper returns list of VGKGRecords."""
         endpoint = VGKGEndpoint(file_source=mock_file_source)
 
-        # Mock the client's get method
+        # Mock the FileSource client's get method
         mock_client = AsyncMock()
         lastupdate_response = MagicMock()
         lastupdate_response.text = "1024 abc123 http://test.url/20240101120000.vgkg.csv.gz"
         lastupdate_response.raise_for_status = MagicMock()
         mock_client.get = AsyncMock(return_value=lastupdate_response)
-        endpoint._client = mock_client
+        mock_file_source.client = mock_client
 
         # Mock stream_files
         async def mock_stream_files(urls: list[str]) -> AsyncIterator[tuple[str, bytes]]:
