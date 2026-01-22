@@ -521,6 +521,7 @@ async def gdelt_actors(
     country: str,
     relationship: str = "both",
     days_back: int = 30,
+    max_results: int = 50,
 ) -> list[dict[str, Any]]:
     """Map actor relationships - who interacts with a given country.
 
@@ -532,6 +533,7 @@ async def gdelt_actors(
             - ISO3 (3 chars): USA, GBR, IRN, FRA, DEU, CHN, RUS
         relationship: Relationship type - "source" (country as actor1), "target" (as actor2), or "both"
         days_back: Number of days to look back (default: 30, max: 365)
+        max_results: Maximum number of actor relationships to return (default: 50)
 
     Returns:
         List of actor relationships with interaction counts, avg Goldstein scale, and top event types
@@ -635,8 +637,10 @@ async def gdelt_actors(
         # Sort by interaction count and limit
         results.sort(key=lambda x: x["interaction_count"], reverse=True)
 
-        logger.info("Returning %d actor relationships for %s", len(results), country)
-        return results[:50]  # Limit to top 50
+        logger.info(
+            "Returning %d actor relationships for %s", min(len(results), max_results), country
+        )
+        return results[:max_results]
     except Exception as e:
         return [{"error": f"GDELT API error: {e!s}"}]
 
