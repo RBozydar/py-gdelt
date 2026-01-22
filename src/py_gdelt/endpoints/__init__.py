@@ -19,6 +19,7 @@ from py_gdelt.endpoints.geo import GeoEndpoint, GeoPoint, GeoResult
 from py_gdelt.endpoints.gkg import GKGEndpoint
 from py_gdelt.endpoints.mentions import MentionsEndpoint
 from py_gdelt.endpoints.ngrams import NGramsEndpoint
+from py_gdelt.endpoints.radio_ngrams import RadioNGramsEndpoint
 from py_gdelt.endpoints.tv import (
     TVAIEndpoint,
     TVClip,
@@ -28,6 +29,9 @@ from py_gdelt.endpoints.tv import (
     TVTimeline,
     TVTimelinePoint,
 )
+from py_gdelt.endpoints.tv_gkg import TVGKGEndpoint
+from py_gdelt.endpoints.tv_ngrams import TVNGramsEndpoint
+from py_gdelt.endpoints.vgkg import VGKGEndpoint
 
 
 __all__ = [
@@ -45,11 +49,15 @@ __all__ = [
     "GeoResult",
     "MentionsEndpoint",
     "NGramsEndpoint",
+    "RadioNGramsEndpoint",
     "TVAIEndpoint",
     "TVClip",
     "TVEndpoint",
+    "TVGKGEndpoint",
+    "TVNGramsEndpoint",
     "TVStationChart",
     "TVStationData",
     "TVTimeline",
     "TVTimelinePoint",
+    "VGKGEndpoint",
 ]

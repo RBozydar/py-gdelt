@@ -1,4 +1,4 @@
-.PHONY: help fmt lint typecheck test coverage doc-coverage ci verify install clean commit bump-version changelog integration integration-schema-drift integration-bigquery
+.PHONY: help fmt lint typecheck test coverage doc-coverage ci verify install clean commit bump-version changelog integration integration-schema-drift integration-bigquery integration-new-datasets
 
 help:  ## Show this help message
 	@echo "Available targets:"
@@ -69,3 +69,6 @@ integration-schema-drift:  ## Run schema drift detection tests
 
 integration-bigquery:  ## Run BigQuery integration tests (requires GDELT_BIGQUERY_PROJECT)
 	uv run pytest tests/integration/test_bigquery.py -v
+
+integration-new-datasets:  ## Run schema discovery tests for new datasets (VGKG, TV-GKG, TV NGrams, Radio NGrams)
+	uv run pytest tests/integration/test_new_datasets_schema_discovery.py -v -s

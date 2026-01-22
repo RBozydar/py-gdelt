@@ -3,16 +3,31 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from datetime import date as date_type
+from enum import Enum
+from typing import TYPE_CHECKING, TypeAlias
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 if TYPE_CHECKING:
-    from py_gdelt.models._internal import _RawNGram
+    from py_gdelt.models._internal import _RawBroadcastNGram, _RawNGram
 
 
-__all__ = ["NGramRecord"]
+__all__ = [
+    "BroadcastNGramRecord",
+    "BroadcastSource",
+    "NGramRecord",
+    "RadioNGramRecord",
+    "TVNGramRecord",
+]
+
+
+class BroadcastSource(str, Enum):
+    """Source type for broadcast NGrams."""
+
+    TV = "tv"
+    RADIO = "radio"
 
 
 class NGramRecord(BaseModel):
@@ -81,3 +96,58 @@ class NGramRecord(BaseModel):
             True if position >= 70 (last 30% of article)
         """
         return self.position >= 70
+
+
+class BroadcastNGramRecord(BaseModel):
+    """Broadcast NGram frequency record (TV or Radio).
+
+    Unified model for both TV and Radio NGrams since schemas are compatible.
+    TV NGrams: 5 columns (DATE, STATION, HOUR, WORD, COUNT)
+    Radio NGrams: 6 columns (DATE, STATION, HOUR, NGRAM, COUNT, SHOW)
+
+    Attributes:
+        date: Date of the broadcast.
+        station: Station identifier (e.g., CNN, KQED).
+        hour: Hour of broadcast (0-23).
+        ngram: Word or phrase.
+        count: Frequency count.
+        show: Show name (Radio only, None for TV).
+        source: Indicates origin (tv or radio).
+    """
+
+    date: date_type
+    station: str
+    hour: int = Field(ge=0, le=23)
+    ngram: str
+    count: int = Field(ge=0)
+    show: str | None = None
+    source: BroadcastSource
+
+    @classmethod
+    def from_raw(cls, raw: _RawBroadcastNGram, source: BroadcastSource) -> BroadcastNGramRecord:
+        """Convert internal _RawBroadcastNGram to public model.
+
+        Args:
+            raw: Internal raw broadcast ngram representation.
+            source: Source type (TV or Radio).
+
+        Returns:
+            Validated BroadcastNGramRecord instance.
+
+        Raises:
+            ValueError: If date parsing or type conversion fails.
+        """
+        return cls(
+            date=datetime.strptime(raw.date, "%Y%m%d").replace(tzinfo=UTC).date(),
+            station=raw.station,
+            hour=int(raw.hour),
+            ngram=raw.ngram,
+            count=int(raw.count),
+            show=raw.show if raw.show else None,
+            source=source,
+        )
+
+
+# Type aliases for clarity in endpoint signatures
+TVNGramRecord: TypeAlias = BroadcastNGramRecord
+RadioNGramRecord: TypeAlias = BroadcastNGramRecord

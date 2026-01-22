@@ -8,7 +8,7 @@ across all GDELT data sources including Events, Mentions, GKG, DOC, GEO, and TV 
 from __future__ import annotations
 
 from datetime import date, datetime  # noqa: TC003 - Pydantic needs runtime access
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -16,13 +16,18 @@ from py_gdelt.exceptions import InvalidCodeError
 
 
 __all__ = [
+    "BroadcastNGramsFilter",
     "DateRange",
     "DocFilter",
     "EventFilter",
     "GKGFilter",
     "GeoFilter",
     "NGramsFilter",
+    "RadioNGramsFilter",
     "TVFilter",
+    "TVGKGFilter",
+    "TVNGramsFilter",
+    "VGKGFilter",
 ]
 
 
@@ -278,3 +283,73 @@ class NGramsFilter(BaseModel):
             msg = "min_position must be <= max_position"
             raise ValueError(msg)
         return self
+
+
+class VGKGFilter(BaseModel):
+    """Filter for VGKG (Visual GKG) queries."""
+
+    date_range: DateRange
+    domain: str | None = None  # Filter by source domain
+    min_label_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    @field_validator("domain")
+    @classmethod
+    def validate_domain(cls, v: str | None) -> str | None:
+        """Normalize domain to lowercase."""
+        return v.lower() if v else None
+
+
+class TVGKGFilter(BaseModel):
+    """Filter for TV-GKG (Television Global Knowledge Graph) queries.
+
+    Note:
+        TV-GKG uses standard GKG 2.0 format but has a 48-hour embargo.
+        The embargo is handled in the endpoint layer, not the filter.
+    """
+
+    date_range: DateRange
+    themes: list[str] | None = None
+    station: str | None = None  # TV station filter
+
+    @field_validator("themes", mode="before")
+    @classmethod
+    def validate_themes(cls, v: list[str] | None) -> list[str] | None:
+        """Validate GKG theme codes."""
+        if v is None:
+            return None
+        from py_gdelt.lookups.themes import GKGThemes
+
+        themes = GKGThemes()
+        for theme in v:
+            try:
+                themes.validate(theme)
+            except InvalidCodeError:
+                msg = f"Invalid GKG theme: {theme!r}"
+                raise InvalidCodeError(msg, code=theme, code_type="GKG theme") from None
+        return v
+
+    @field_validator("station")
+    @classmethod
+    def validate_station(cls, v: str | None) -> str | None:
+        """Normalize station name to uppercase."""
+        return v.upper() if v else None
+
+
+class BroadcastNGramsFilter(BaseModel):
+    """Filter for TV/Radio NGrams queries."""
+
+    date_range: DateRange
+    station: str | None = None
+    show: str | None = None  # Radio only
+    ngram_size: int = Field(default=1, ge=1, le=5)  # 1-5 grams
+
+    @field_validator("station")
+    @classmethod
+    def validate_station(cls, v: str | None) -> str | None:
+        """Normalize station name to uppercase."""
+        return v.upper() if v else None
+
+
+# Type aliases for clarity
+TVNGramsFilter: TypeAlias = BroadcastNGramsFilter
+RadioNGramsFilter: TypeAlias = BroadcastNGramsFilter
