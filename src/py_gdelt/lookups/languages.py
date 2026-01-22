@@ -49,6 +49,14 @@ class Languages:
         _ = self._languages_data
         return self._keys_lower.get(code.lower()) if self._keys_lower else None
 
+    def __len__(self) -> int:
+        """Return the number of languages in the lookup.
+
+        Returns:
+            Number of languages.
+        """
+        return len(self._languages_data)
+
     def __contains__(self, code: str) -> bool:
         """Check if language code exists.
 

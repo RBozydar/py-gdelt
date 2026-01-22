@@ -48,7 +48,7 @@ class GKGThemes:
 
     def __contains__(self, theme: str) -> bool:
         """
-        Check if theme exists.
+        Check if theme exists (case-insensitive).
 
         Args:
             theme: GKG theme code to check
@@ -56,11 +56,11 @@ class GKGThemes:
         Returns:
             True if theme exists, False otherwise
         """
-        return theme in self._themes_data
+        return theme.upper() in self._themes_data
 
     def __getitem__(self, theme: str) -> GKGThemeEntry:
         """
-        Get full entry for theme.
+        Get full entry for theme (case-insensitive).
 
         Args:
             theme: GKG theme code (e.g., "ENV_CLIMATECHANGE")
@@ -71,11 +71,22 @@ class GKGThemes:
         Raises:
             KeyError: If theme is not found
         """
-        return self._themes_data[theme]
+        theme_upper = theme.upper()
+        if theme_upper not in self._themes_data:
+            raise KeyError(theme)
+        return self._themes_data[theme_upper]
+
+    def __len__(self) -> int:
+        """Return the number of themes in the lookup.
+
+        Returns:
+            Number of themes.
+        """
+        return len(self._themes_data)
 
     def get(self, theme: str) -> GKGThemeEntry | None:
         """
-        Get entry for theme, or None if not found.
+        Get entry for theme, or None if not found (case-insensitive).
 
         Args:
             theme: GKG theme code (e.g., "ENV_CLIMATECHANGE")
@@ -83,7 +94,7 @@ class GKGThemes:
         Returns:
             GKG theme entry, or None if theme not found
         """
-        return self._themes_data.get(theme)
+        return self._themes_data.get(theme.upper())
 
     def search(self, query: str) -> list[str]:
         """

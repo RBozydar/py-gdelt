@@ -51,6 +51,14 @@ class GCAMLookup:
         _ = self._gcam_data
         return self._keys_lower.get(variable.lower()) if self._keys_lower else None
 
+    def __len__(self) -> int:
+        """Return the number of GCAM variables in the lookup.
+
+        Returns:
+            Number of GCAM variables.
+        """
+        return len(self._gcam_data)
+
     def __contains__(self, key: str) -> bool:
         """Check if GCAM variable exists (case-insensitive).
 
@@ -60,8 +68,7 @@ class GCAMLookup:
         Returns:
             True if variable exists, False otherwise
         """
-        _ = self._gcam_data
-        return key.lower() in (self._keys_lower or {})
+        return self._normalize_key(key) is not None
 
     def __getitem__(self, key: str) -> GCAMEntry:
         """Get full entry for GCAM variable (case-insensitive).

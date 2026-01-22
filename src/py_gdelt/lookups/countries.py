@@ -44,6 +44,14 @@ class Countries:
             }
         return self._iso_to_fips_map
 
+    def __len__(self) -> int:
+        """Return the number of countries in the lookup.
+
+        Returns:
+            Number of countries.
+        """
+        return len(self._countries_data)
+
     def __contains__(self, code: str) -> bool:
         """
         Check if country code exists.

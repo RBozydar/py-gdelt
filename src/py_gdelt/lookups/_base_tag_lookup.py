@@ -15,10 +15,6 @@ class BaseTagLookup(ABC):
     Provides common functionality for tag-based lookup classes including
     case-insensitive search, validation, and suggestion features.
     Subclasses must define _json_filename, _help_url, and _code_type.
-
-    Attributes:
-        _data: Cached tag data dictionary (loaded lazily).
-        _keys_lower: Cached lowercase-to-canonical key mapping (loaded lazily).
     """
 
     @property
@@ -78,6 +74,14 @@ class BaseTagLookup(ABC):
         """
         _ = self._tags_data
         return self._keys_lower.get(tag.lower()) if self._keys_lower else None
+
+    def __len__(self) -> int:
+        """Return the number of tags in the lookup.
+
+        Returns:
+            Number of tags.
+        """
+        return len(self._tags_data)
 
     def __contains__(self, tag: str) -> bool:
         """Check if tag exists.
