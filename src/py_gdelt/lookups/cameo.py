@@ -5,11 +5,12 @@ This module provides the CAMEOCodes class for working with Conflict and Mediatio
 Event Observations (CAMEO) event codes used throughout GDELT data.
 """
 
-import json
-from importlib.resources import files
-from typing import Any, Final
+from __future__ import annotations
+
+from typing import Final
 
 from py_gdelt.exceptions import InvalidCodeError
+from py_gdelt.lookups._utils import load_lookup_json
 from py_gdelt.lookups.models import CAMEOCodeEntry, GoldsteinEntry
 
 
@@ -42,16 +43,11 @@ class CAMEOCodes:
         self._codes: dict[str, CAMEOCodeEntry] | None = None
         self._goldstein: dict[str, GoldsteinEntry] | None = None
 
-    def _load_json(self, filename: str) -> dict[str, dict[str, Any]]:
-        """Load JSON data from package resources."""
-        data_path = files("py_gdelt.lookups.data").joinpath(filename)
-        return json.loads(data_path.read_text())  # type: ignore[no-any-return]
-
     @property
     def _codes_data(self) -> dict[str, CAMEOCodeEntry]:
         """Lazy load CAMEO codes data."""
         if self._codes is None:
-            raw_data = self._load_json("cameo_codes.json")
+            raw_data = load_lookup_json("cameo_codes.json")
             self._codes = {code: CAMEOCodeEntry(**data) for code, data in raw_data.items()}
         return self._codes
 
@@ -59,7 +55,7 @@ class CAMEOCodes:
     def _goldstein_data(self) -> dict[str, GoldsteinEntry]:
         """Lazy load Goldstein scale data."""
         if self._goldstein is None:
-            raw_data = self._load_json("cameo_goldstein.json")
+            raw_data = load_lookup_json("cameo_goldstein.json")
             self._goldstein = {code: GoldsteinEntry(**data) for code, data in raw_data.items()}
         return self._goldstein
 
@@ -215,16 +211,55 @@ class CAMEOCodes:
 
         return None
 
-    def validate(self, code: str) -> None:
-        """
-        Validate CAMEO code, raising exception if invalid.
+    def suggest(self, code: str, limit: int = 3) -> list[str]:
+        """Suggest similar CAMEO codes based on input.
+
+        Uses fuzzy matching to find codes with similar prefixes or names.
 
         Args:
-            code: CAMEO code to validate
+            code: The invalid code to find suggestions for.
+            limit: Maximum number of suggestions to return.
+
+        Returns:
+            List of suggestions in format "code (Name)".
+        """
+        suggestions: list[str] = []
+
+        # Strategy 1: Prefix match on code
+        for cameo_code, entry in self._codes_data.items():
+            if cameo_code.startswith(code):
+                suggestions.append(f"{cameo_code} ({entry.name})")
+                if len(suggestions) >= limit:
+                    return suggestions
+
+        # Strategy 2: Contains match in name
+        code_lower = code.lower()
+        for cameo_code, entry in self._codes_data.items():
+            if (
+                code_lower in entry.name.lower()
+                and f"{cameo_code} ({entry.name})" not in suggestions
+            ):
+                suggestions.append(f"{cameo_code} ({entry.name})")
+                if len(suggestions) >= limit:
+                    return suggestions
+
+        return suggestions
+
+    def validate(self, code: str) -> None:
+        """Validate CAMEO code, raising exception if invalid.
+
+        Args:
+            code: CAMEO code to validate.
 
         Raises:
-            InvalidCodeError: If code is not valid
+            InvalidCodeError: If code is not valid, with helpful suggestions.
         """
         if code not in self._codes_data:
+            suggestions = self.suggest(code, limit=3)
             msg = f"Invalid CAMEO code: {code!r}"
-            raise InvalidCodeError(msg, code=code, code_type="cameo")
+            raise InvalidCodeError(
+                msg,
+                code=code,
+                code_type="cameo",
+                suggestions=suggestions,
+            )

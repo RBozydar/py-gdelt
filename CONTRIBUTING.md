@@ -261,40 +261,7 @@ The `countries.json` file contains FIPS-to-ISO country code mappings used by GDE
 **To regenerate `countries.json`:**
 
 ```bash
-uv run python -c "
-from geonamescache import GeonamesCache
-import json
-
-gc = GeonamesCache()
-countries = gc.get_countries()
-
-continent_to_region = {
-    'AF': 'Africa', 'AS': 'Asia', 'EU': 'Europe',
-    'NA': 'North America', 'SA': 'South America',
-    'OC': 'Oceania', 'AN': 'Antarctica',
-}
-
-middle_east = ['IR', 'IZ', 'IS', 'SA', 'AE', 'KU', 'BA', 'QA', 'LE', 'SY', 'JO', 'YM', 'MU']
-
-output = {}
-for iso2, data in countries.items():
-    fips = data.get('fips')
-    if not fips:
-        continue
-    region = continent_to_region.get(data.get('continentcode'), 'Other')
-    if fips in middle_east:
-        region = 'Middle East'
-    output[fips] = {
-        'iso3': data.get('iso3'),
-        'iso2': data.get('iso'),
-        'name': data.get('name'),
-        'full_name': None,
-        'region': region,
-    }
-
-output = dict(sorted(output.items()))
-print(json.dumps(output, indent=2))
-" > src/py_gdelt/lookups/data/countries.json
+uv run python scripts/regenerate_countries.py
 ```
 
 After regeneration, run `make ci` to verify the changes don't break any tests.
