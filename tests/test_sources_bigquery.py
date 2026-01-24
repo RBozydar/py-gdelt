@@ -178,9 +178,10 @@ class TestWhereClauseBuilding:
         assert len(parameters) == 7
 
         # Verify parameter types and values
+        # Note: ISO3 codes (USA, CHN) are normalized to FIPS (US, CH)
         param_dict = {p.name: p for p in parameters}
-        assert param_dict["actor1_country"].value == "USA"
-        assert param_dict["actor2_country"].value == "CHN"
+        assert param_dict["actor1_country"].value == "US"
+        assert param_dict["actor2_country"].value == "CH"
         assert param_dict["event_code"].value == "141"
         assert param_dict["min_tone"].value == -5.0
         assert param_dict["max_tone"].value == 5.0
@@ -550,12 +551,14 @@ class TestSecurityFeatures:
         where_clause, parameters = _build_where_clause_for_events(filter_obj)
 
         # Verify parameterization (no direct value in SQL)
+        # Note: ISO3 "USA" is normalized to FIPS "US"
         assert "USA" not in where_clause  # Value should not be in SQL string
+        assert "US" not in where_clause  # Normalized value should not be in SQL string either
         assert "@actor1_country" in where_clause  # Parameter placeholder should be present
 
         # Find the actor1_country parameter
         actor1_param = next(p for p in parameters if p.name == "actor1_country")
-        assert actor1_param.value == "USA"  # Stored safely as parameter
+        assert actor1_param.value == "US"  # Stored safely as parameter (normalized to FIPS)
 
         # Test that invalid country codes are caught by Pydantic validation
         from py_gdelt.exceptions import InvalidCodeError

@@ -12,11 +12,13 @@ from dataclasses import dataclass
 
 
 __all__ = [
+    "_RawBroadcastNGram",
     "_RawEvent",
     "_RawGFGRecord",
     "_RawGKG",
     "_RawMention",
     "_RawNGram",
+    "_RawVGKG",
 ]
 
 
@@ -218,6 +220,30 @@ class _RawGKG:
 
 
 @dataclass(slots=True)
+class _RawBroadcastNGram:
+    """Internal representation for Broadcast NGrams (TV and Radio).
+
+    Represents a single word or phrase occurrence in TV/Radio broadcast transcripts
+    with frequency counts and metadata about the station, time, and show.
+
+    TV NGrams has 5 columns: DATE, STATION, HOUR, WORD, COUNT
+    Radio NGrams has 6 columns: DATE, STATION, HOUR, NGRAM, COUNT, SHOW
+
+    Unified format uses 'show' as optional (empty string for TV).
+
+    All fields are strings as parsed from TAB-delimited files. Type conversion
+    happens when converting to the public BroadcastNGram Pydantic model.
+    """
+
+    date: str
+    station: str
+    hour: str
+    ngram: str
+    count: str
+    show: str = ""
+
+
+@dataclass(slots=True)
 class _RawGFGRecord:
     """Internal representation for GDELT Global Frontpage Graph.
 
@@ -255,3 +281,48 @@ class _RawNGram:
     pre_context: str
     post_context: str
     url: str
+
+
+@dataclass(slots=True)
+class _RawVGKG:
+    """Internal representation for GDELT VGKG (Visual Global Knowledge Graph).
+
+    Represents a single VGKG record containing Google Cloud Vision API analysis
+    of images extracted from news articles. Schema verified from real GDELT data
+    on 2026-01-20.
+
+    All fields are strings as parsed from TAB-delimited files. Complex nested
+    fields (labels, logos, faces) use <FIELD> and <RECORD> delimiters and are
+    kept as raw strings for parsing during Pydantic model conversion.
+
+    Nested delimiter format:
+        - <FIELD> separates fields within a record
+        - <RECORD> separates multiple records in a column
+
+    Attributes:
+        date: YYYYMMDDHHMMSS timestamp.
+        document_identifier: Source article URL.
+        image_url: Analyzed image URL.
+        labels: Label<FIELD>Confidence<FIELD>MID<RECORD> delimited string.
+        logos: Same format as labels.
+        web_entities: Same format as labels.
+        safe_search: adult<FIELD>spoof<FIELD>medical<FIELD>violence (integers -1 to 4).
+        faces: confidence<FIELD>roll<FIELD>pan<FIELD>tilt<FIELD>detection_confidence<FIELD>bbox<RECORD> delimited string.
+        ocr_text: Plain text from OCR.
+        landmark_annotations: Same format as labels.
+        domain: Domain name.
+        raw_json: Full Cloud Vision API JSON (14-30KB).
+    """
+
+    date: str  # [0] YYYYMMDDHHMMSS
+    document_identifier: str  # [1] Source article URL
+    image_url: str  # [2] Analyzed image URL
+    labels: str  # [3] Label<FIELD>Confidence<FIELD>MID<RECORD>...
+    logos: str  # [4] Same format as labels
+    web_entities: str  # [5] Same format as labels
+    safe_search: str  # [6] adult<FIELD>spoof<FIELD>medical<FIELD>violence (integers -1 to 4)
+    faces: str  # [7] confidence<FIELD>roll<FIELD>pan<FIELD>tilt<FIELD>detection_confidence<FIELD>bbox<RECORD>...
+    ocr_text: str  # [8] Plain text from OCR
+    landmark_annotations: str  # [9] Same format as labels
+    domain: str  # [10] Domain name
+    raw_json: str  # [11] Full Cloud Vision API JSON (14-30KB)

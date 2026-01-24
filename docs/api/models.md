@@ -53,9 +53,61 @@ Data models represent GDELT records and results.
       show_root_heading: true
       heading_level: 3
 
+::: py_gdelt.models.TVGKGRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.TimecodeMapping
+    options:
+      show_root_heading: true
+      heading_level: 3
+
 ## NGrams Models
 
 ::: py_gdelt.models.NGramRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.BroadcastNGramRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.BroadcastSource
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.TVNGramRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.RadioNGramRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+## VGKG Models
+
+::: py_gdelt.models.VGKGRecord
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.VisionLabelDict
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.SafeSearchDict
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.models.FaceAnnotationDict
     options:
       show_root_heading: true
       heading_level: 3

@@ -250,6 +250,22 @@ Version bumps are automated based on conventional commits:
 - `fix:` commits trigger PATCH version bump
 - `BREAKING CHANGE:` in footer triggers MAJOR version bump
 
+## Maintaining Lookup Data
+
+### Regenerating Country Codes
+
+The `countries.json` file contains FIPS-to-ISO country code mappings used by GDELT. This data is generated from the `geonamescache` package (a dev dependency).
+
+**When to regenerate:** The FIPS 10-4 standard was withdrawn by NIST in 2008, so the data is essentially frozen. Regeneration should only be needed if `geonamescache` fixes errors or adds new territories.
+
+**To regenerate `countries.json`:**
+
+```bash
+uv run python scripts/regenerate_countries.py
+```
+
+After regeneration, run `make ci` to verify the changes don't break any tests.
+
 ## Questions?
 
 Feel free to open an issue for:
