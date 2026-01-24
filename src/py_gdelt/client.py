@@ -561,8 +561,6 @@ class GDELTClient:
             raise RuntimeError(msg)
         return GraphEndpoint(
             file_source=self._file_source,
-            bigquery_source=self._bigquery_source,
-            fallback_enabled=self.settings.fallback_to_bigquery,
         )
 
     @cached_property

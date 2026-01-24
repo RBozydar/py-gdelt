@@ -33,7 +33,6 @@ if TYPE_CHECKING:
         GGGRecord,
         GQGRecord,
     )
-    from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.fetcher import DataFetcher
     from py_gdelt.sources.files import FileSource
 
@@ -51,8 +50,6 @@ class GraphEndpoint:
 
     Args:
         file_source: FileSource instance for downloading GDELT graph files.
-        bigquery_source: Optional BigQuerySource (unused for graph datasets).
-        fallback_enabled: Whether to fallback to BigQuery (unused for graphs).
         error_policy: How to handle errors - 'raise', 'warn', or 'skip'.
 
     Example:
@@ -89,17 +86,15 @@ class GraphEndpoint:
     def __init__(
         self,
         file_source: FileSource,
-        bigquery_source: BigQuerySource | None = None,
         *,
-        fallback_enabled: bool = True,
         error_policy: Literal["raise", "warn", "skip"] = "warn",
     ) -> None:
         from py_gdelt.sources.fetcher import DataFetcher
 
         self._fetcher: DataFetcher = DataFetcher(
             file_source=file_source,
-            bigquery_source=bigquery_source,
-            fallback_enabled=fallback_enabled,
+            bigquery_source=None,
+            fallback_enabled=False,
             error_policy=error_policy,
         )
         self._error_policy = error_policy
@@ -108,6 +103,22 @@ class GraphEndpoint:
             "GraphEndpoint initialized (error_policy=%s)",
             error_policy,
         )
+
+    def _handle_parse_error(self, url: str, error: Exception) -> None:
+        """Handle parsing errors according to error policy.
+
+        Args:
+            url: The URL being parsed when the error occurred.
+            error: The exception that was raised.
+
+        Raises:
+            Exception: Re-raises the error if error_policy is 'raise'.
+        """
+        if self._error_policy == "raise":
+            raise error
+        if self._error_policy == "warn":
+            logger.warning("Error parsing %s: %s", url, error)
+        # skip: continue silently
 
     # --- GQG (Global Quotation Graph) ---
 
@@ -144,14 +155,10 @@ class GraphEndpoint:
                     if filter_obj.languages and record.lang not in filter_obj.languages:
                         continue
                     yield record
-            except Exception as e:
-                if self._error_policy == "raise":
-                    raise
-                if self._error_policy == "warn":
-                    logger.warning("Error parsing %s: %s", url, e)
-                # skip: continue silently
+            except Exception as e:  # noqa: BLE001
+                self._handle_parse_error(url, e)
 
-    # --- GEG (Global Event Graph) ---
+    # --- GEG (Global Entity Graph) ---
 
     async def query_geg(
         self,
@@ -186,14 +193,10 @@ class GraphEndpoint:
                     if filter_obj.languages and record.lang not in filter_obj.languages:
                         continue
                     yield record
-            except Exception as e:
-                if self._error_policy == "raise":
-                    raise
-                if self._error_policy == "warn":
-                    logger.warning("Error parsing %s: %s", url, e)
-                # skip: continue silently
+            except Exception as e:  # noqa: BLE001
+                self._handle_parse_error(url, e)
 
-    # --- GFG (Global Facebook Graph) ---
+    # --- GFG (Global Frontpage Graph) ---
 
     async def query_gfg(
         self,
@@ -228,14 +231,10 @@ class GraphEndpoint:
                     if filter_obj.languages and record.lang not in filter_obj.languages:
                         continue
                     yield record
-            except Exception as e:
-                if self._error_policy == "raise":
-                    raise
-                if self._error_policy == "warn":
-                    logger.warning("Error parsing %s: %s", url, e)
-                # skip: continue silently
+            except Exception as e:  # noqa: BLE001
+                self._handle_parse_error(url, e)
 
-    # --- GGG (Global Google Graph) ---
+    # --- GGG (Global Geographic Graph) ---
 
     async def query_ggg(
         self,
@@ -268,14 +267,10 @@ class GraphEndpoint:
             try:
                 for record in graph_parsers.parse_ggg(data):
                     yield record
-            except Exception as e:
-                if self._error_policy == "raise":
-                    raise
-                if self._error_policy == "warn":
-                    logger.warning("Error parsing %s: %s", url, e)
-                # skip: continue silently
+            except Exception as e:  # noqa: BLE001
+                self._handle_parse_error(url, e)
 
-    # --- GEMG (Global Emotion Graph) ---
+    # --- GEMG (Global Embedded Metadata Graph) ---
 
     async def query_gemg(
         self,
@@ -310,14 +305,10 @@ class GraphEndpoint:
                     if filter_obj.languages and record.lang not in filter_obj.languages:
                         continue
                     yield record
-            except Exception as e:
-                if self._error_policy == "raise":
-                    raise
-                if self._error_policy == "warn":
-                    logger.warning("Error parsing %s: %s", url, e)
-                # skip: continue silently
+            except Exception as e:  # noqa: BLE001
+                self._handle_parse_error(url, e)
 
-    # --- GAL (Global Activity Log) ---
+    # --- GAL (Global Article List) ---
 
     async def query_gal(
         self,
@@ -352,9 +343,5 @@ class GraphEndpoint:
                     if filter_obj.languages and record.lang not in filter_obj.languages:
                         continue
                     yield record
-            except Exception as e:
-                if self._error_policy == "raise":
-                    raise
-                if self._error_policy == "warn":
-                    logger.warning("Error parsing %s: %s", url, e)
-                # skip: continue silently
+            except Exception as e:  # noqa: BLE001
+                self._handle_parse_error(url, e)

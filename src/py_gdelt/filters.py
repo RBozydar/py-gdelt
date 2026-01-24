@@ -407,7 +407,12 @@ class GFGFilter(BaseModel):
 
 
 class GGGFilter(BaseModel):
-    """Filter for Global Geographic Graph queries (max 7 days)."""
+    """Filter for Global Geographic Graph queries (max 7 days).
+
+    Note:
+        Unlike other graph filters, GGGFilter does not have a ``languages`` field
+        because GGG records contain geographic data without language metadata.
+    """
 
     date_range: DateRange
 

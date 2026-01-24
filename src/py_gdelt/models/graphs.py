@@ -17,7 +17,7 @@ import warnings
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 if TYPE_CHECKING:
@@ -74,6 +74,8 @@ class SchemaEvolutionMixin(BaseModel):
     This mixin uses model_validator to detect unknown fields and issue warnings
     to help users identify when GDELT adds new fields to their data formats.
     """
+
+    model_config = ConfigDict(extra="ignore")
 
     # Cache for known fields per model class
     _known_fields_cache: ClassVar[dict[type, set[str]]] = {}
@@ -132,8 +134,6 @@ class Quote(SchemaEvolutionMixin, BaseModel):
         post: Text after the quote
     """
 
-    model_config = {"extra": "ignore"}
-
     pre: str
     quote: str
     post: str
@@ -150,8 +150,6 @@ class GQGRecord(SchemaEvolutionMixin, BaseModel):
         lang: Language code
         quotes: List of extracted quotations with context
     """
-
-    model_config = {"extra": "ignore"}
 
     date: datetime
     url: str
@@ -178,7 +176,7 @@ class Entity(SchemaEvolutionMixin, BaseModel):
         knowledge_graph_mid: Google Knowledge Graph MID if available
     """
 
-    model_config = {"extra": "ignore", "populate_by_name": True}
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     name: str
     entity_type: str = Field(alias="type")
@@ -199,7 +197,7 @@ class GEGRecord(SchemaEvolutionMixin, BaseModel):
         entities: List of extracted entities
     """
 
-    model_config = {"extra": "ignore", "populate_by_name": True}
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     date: datetime
     url: str
@@ -226,8 +224,6 @@ class GFGRecord(SchemaEvolutionMixin, BaseModel):
         page_position: Position of link on page
         lang: Language code
     """
-
-    model_config = {"extra": "ignore"}
 
     date: datetime
     from_frontpage_url: str
@@ -281,8 +277,6 @@ class GGGRecord(SchemaEvolutionMixin, BaseModel):
         context: Surrounding text context
     """
 
-    model_config = {"extra": "ignore"}
-
     date: datetime
     url: str
     location_name: str
@@ -308,7 +302,7 @@ class MetaTag(SchemaEvolutionMixin, BaseModel):
         value: Tag value
     """
 
-    model_config = {"extra": "ignore", "populate_by_name": True}
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     key: str
     tag_type: str = Field(alias="type")
@@ -329,7 +323,7 @@ class GEMGRecord(SchemaEvolutionMixin, BaseModel):
         jsonld: List of JSON-LD strings
     """
 
-    model_config = {"extra": "ignore", "populate_by_name": True}
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     date: datetime
     url: str
@@ -359,8 +353,6 @@ class GALRecord(SchemaEvolutionMixin, BaseModel):
         author: Article author if available
         lang: Language code
     """
-
-    model_config = {"extra": "ignore"}
 
     date: datetime
     url: str

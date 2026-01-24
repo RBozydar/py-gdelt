@@ -506,25 +506,6 @@ class FileSource:
         return result.getvalue()
 
     @staticmethod
-    def _upgrade_to_https(url: str) -> str:
-        """Upgrade HTTP URL to HTTPS.
-
-        Note:
-            This method is currently unused because data.gdeltproject.org only
-            supports HTTP (SSL cert is for *.storage.googleapis.com). Kept for
-            potential future use if GDELT fixes their SSL certificate.
-
-        Args:
-            url: URL to upgrade
-
-        Returns:
-            HTTPS version of URL
-        """
-        if url.startswith("http://"):
-            return url.replace("http://", "https://", 1)
-        return url
-
-    @staticmethod
     def _extract_date_from_url(url: str) -> datetime | None:
         """Extract date from GDELT URL timestamp.
 

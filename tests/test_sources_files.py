@@ -704,20 +704,6 @@ class TestStreamFiles:
 class TestHelperMethods:
     """Test helper and utility methods."""
 
-    def test_upgrade_to_https(self) -> None:
-        """Test HTTP to HTTPS upgrade."""
-        http_url = "http://data.gdeltproject.org/gdeltv2/file.zip"
-        https_url = FileSource._upgrade_to_https(http_url)
-
-        assert https_url == "https://data.gdeltproject.org/gdeltv2/file.zip"
-
-    def test_upgrade_to_https_already_https(self) -> None:
-        """Test HTTPS URL is not modified."""
-        https_url = "https://data.gdeltproject.org/gdeltv2/file.zip"
-        result = FileSource._upgrade_to_https(https_url)
-
-        assert result == https_url
-
     def test_extract_date_from_url(self) -> None:
         """Test extracting date from GDELT URL."""
         url = "http://data.gdeltproject.org/gdeltv2/20240115123000.export.CSV.zip"
