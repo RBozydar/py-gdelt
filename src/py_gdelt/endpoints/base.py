@@ -111,7 +111,7 @@ class BaseEndpoint(ABC):
         """
         return self
 
-    async def __aexit__(self, *args: Any) -> None:
+    async def __aexit__(self, *args: object) -> None:
         """Async context manager exit - close client.
 
         Args:

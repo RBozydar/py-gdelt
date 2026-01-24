@@ -68,9 +68,13 @@ from py_gdelt.endpoints import (
     LowerThirdEndpoint,
     MentionsEndpoint,
     NGramsEndpoint,
+    RadioNGramsEndpoint,
     TVAIEndpoint,
     TVEndpoint,
+    TVGKGEndpoint,
+    TVNGramsEndpoint,
     TVVEndpoint,
+    VGKGEndpoint,
 )
 from py_gdelt.lookups import Lookups
 from py_gdelt.sources import BigQuerySource, FileSource
@@ -415,6 +419,118 @@ class GDELTClient:
             msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
             raise RuntimeError(msg)
         return NGramsEndpoint(
+            settings=self.settings,
+            file_source=self._file_source,
+        )
+
+    @cached_property
+    def tv_ngrams(self) -> TVNGramsEndpoint:
+        """Access the TV NGrams endpoint.
+
+        Provides methods for querying word frequency from TV broadcast closed captions.
+
+        Returns:
+            TVNGramsEndpoint instance.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     filter_obj = BroadcastNGramsFilter(
+            ...         date_range=DateRange(start=date(2024, 1, 1)),
+            ...         station="CNN"
+            ...     )
+            ...     records = await client.tv_ngrams.query(filter_obj)
+        """
+        if self._file_source is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return TVNGramsEndpoint(
+            settings=self.settings,
+            file_source=self._file_source,
+        )
+
+    @cached_property
+    def radio_ngrams(self) -> RadioNGramsEndpoint:
+        """Access the Radio NGrams endpoint.
+
+        Provides methods for querying word frequency from radio broadcast transcripts.
+
+        Returns:
+            RadioNGramsEndpoint instance.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     filter_obj = BroadcastNGramsFilter(
+            ...         date_range=DateRange(start=date(2024, 1, 1)),
+            ...         station="NPR"
+            ...     )
+            ...     records = await client.radio_ngrams.query(filter_obj)
+        """
+        if self._file_source is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return RadioNGramsEndpoint(
+            settings=self.settings,
+            file_source=self._file_source,
+        )
+
+    @cached_property
+    def vgkg(self) -> VGKGEndpoint:
+        """Access the VGKG (Visual Global Knowledge Graph) endpoint.
+
+        Provides methods for querying Google Cloud Vision API analysis of news images.
+
+        Returns:
+            VGKGEndpoint instance.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     filter_obj = VGKGFilter(
+            ...         date_range=DateRange(start=date(2024, 1, 1)),
+            ...         domain="cnn.com"
+            ...     )
+            ...     records = await client.vgkg.query(filter_obj)
+        """
+        if self._file_source is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return VGKGEndpoint(
+            settings=self.settings,
+            file_source=self._file_source,
+        )
+
+    @cached_property
+    def tv_gkg(self) -> TVGKGEndpoint:
+        """Access the TV GKG (TV Global Knowledge Graph) endpoint.
+
+        Provides methods for querying GKG data from TV broadcast closed captions.
+
+        Returns:
+            TVGKGEndpoint instance.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     filter_obj = TVGKGFilter(
+            ...         date_range=DateRange(start=date(2024, 1, 1)),
+            ...         station="CNN"
+            ...     )
+            ...     records = await client.tv_gkg.query(filter_obj)
+        """
+        if self._file_source is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return TVGKGEndpoint(
             settings=self.settings,
             file_source=self._file_source,
         )

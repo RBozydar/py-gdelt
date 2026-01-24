@@ -67,8 +67,8 @@ class GKGGeoJSONFeature(BaseModel):
             Tuple of (longitude, latitude) or None if not a Point.
         """
         if self.geometry.get("type") == "Point":
-            coords = self.geometry.get("coordinates", [])
-            if len(coords) >= 2:
+            coords = self.geometry.get("coordinates")
+            if isinstance(coords, list) and len(coords) >= 2:
                 return (coords[0], coords[1])
         return None
 
