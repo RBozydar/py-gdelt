@@ -29,7 +29,7 @@ Example:
 
 from __future__ import annotations
 
-from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel
@@ -40,7 +40,6 @@ from py_gdelt.endpoints.tv import (
     TVStationData,
     TVTimeline,
     TVTimelinePoint,
-    _parse_date,
 )
 from py_gdelt.filters import LowerThirdFilter
 
@@ -49,6 +48,30 @@ __all__ = [
     "LowerThirdClip",
     "LowerThirdEndpoint",
 ]
+
+
+def _parse_date(date_str: str | None) -> datetime | None:
+    """Parse GDELT date string to datetime.
+
+    Handles both GDELT's native YYYYMMDDHHMMSS format and ISO 8601 format.
+
+    Args:
+        date_str: Date string in GDELT or ISO format.
+
+    Returns:
+        Parsed datetime object, or None if input is None or invalid.
+    """
+    if not date_str:
+        return None
+    try:
+        # Try YYYYMMDDHHMMSS format
+        if len(date_str) == 14:
+            return datetime.strptime(date_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+        # Try ISO format - add UTC if naive
+        result = datetime.fromisoformat(date_str)
+        return result if result.tzinfo else result.replace(tzinfo=UTC)
+    except ValueError:
+        return None
 
 
 class LowerThirdClip(BaseModel):
@@ -160,6 +183,7 @@ class LowerThirdEndpoint(BaseEndpoint):
         Raises:
             APIError: If the API request fails.
             RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
         """
         query_filter = LowerThirdFilter(
             query=query,
@@ -183,9 +207,10 @@ class LowerThirdEndpoint(BaseEndpoint):
 
         Raises:
             APIError: If the API request fails.
+            RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
         """
         params = self._build_params(query_filter)
-        params["mode"] = "ClipGallery"
         url = await self._build_url()
 
         data = await self._get_json(url, params=params)
@@ -223,6 +248,8 @@ class LowerThirdEndpoint(BaseEndpoint):
 
         Raises:
             APIError: If the API request fails.
+            RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
         """
         query_filter = LowerThirdFilter(
             query=query,
@@ -269,6 +296,8 @@ class LowerThirdEndpoint(BaseEndpoint):
 
         Raises:
             APIError: If the API request fails.
+            RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
         """
         query_filter = LowerThirdFilter(
             query=query,

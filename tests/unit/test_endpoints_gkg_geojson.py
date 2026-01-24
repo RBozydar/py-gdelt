@@ -262,8 +262,8 @@ async def test_query_with_filter() -> None:
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_to_raw_geojson() -> None:
-    """Test to_raw_geojson method returns raw dict."""
+async def test_to_geojson() -> None:
+    """Test to_geojson method returns raw dict."""
     geojson_response = {
         "type": "FeatureCollection",
         "features": [
@@ -280,7 +280,7 @@ async def test_to_raw_geojson() -> None:
 
     endpoint = GKGGeoJSONEndpoint()
     async with endpoint:
-        result = await endpoint.to_raw_geojson("PROTEST")
+        result = await endpoint.to_geojson("PROTEST")
         # Result should be a raw dict, not a Pydantic model
         assert isinstance(result, dict)
         assert result["type"] == "FeatureCollection"

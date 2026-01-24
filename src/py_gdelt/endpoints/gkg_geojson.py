@@ -20,7 +20,7 @@ Example:
     Get raw GeoJSON for mapping libraries:
 
         async with GKGGeoJSONEndpoint() as gkg:
-            geojson = await gkg.to_raw_geojson("CLIMATE", timespan=120)
+            geojson = await gkg.to_geojson("CLIMATE", timespan=120)
             # Pass directly to folium, geopandas, etc.
 """
 
@@ -151,6 +151,8 @@ class GKGGeoJSONEndpoint(BaseEndpoint):
         Raises:
             ValueError: If timespan exceeds 1440 minutes.
             APIError: If the API request fails.
+            RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
 
         Example:
             result = await gkg.search("CLIMATE", timespan=120)
@@ -170,13 +172,15 @@ class GKGGeoJSONEndpoint(BaseEndpoint):
 
         Raises:
             APIError: If the API request fails.
+            RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
         """
         url = await self._build_url()
         params = self._build_params(query_filter)
         data = await self._get_json(url, params=params)
         return GKGGeoJSONResult.model_validate(data)
 
-    async def to_raw_geojson(
+    async def to_geojson(
         self,
         query: str,
         *,
@@ -196,6 +200,8 @@ class GKGGeoJSONEndpoint(BaseEndpoint):
 
         Raises:
             APIError: If the API request fails.
+            RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
         """
         query_filter = GKGGeoJSONFilter(query=query, timespan=timespan)
         url = await self._build_url()

@@ -115,6 +115,8 @@ class TVVEndpoint(BaseEndpoint):
 
         Raises:
             APIError: If the API request fails.
+            RateLimitError: If rate limit is exceeded.
+            APIUnavailableError: If the API is temporarily unavailable.
 
         Example:
             channels = await tvv.get_inventory()
