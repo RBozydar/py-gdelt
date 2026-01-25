@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
+
+from py_gdelt.utils.dates import try_parse_gdelt_datetime
 
 
 logger = logging.getLogger(__name__)
@@ -51,12 +53,7 @@ class Article(BaseModel):
         Returns:
             datetime object or None if parsing fails
         """
-        if not self.seendate:
-            return None
-        try:
-            return datetime.strptime(self.seendate, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        except ValueError:
-            return None
+        return try_parse_gdelt_datetime(self.seendate)
 
     @property
     def is_english(self) -> bool:
@@ -84,19 +81,7 @@ class TimelinePoint(BaseModel):
     @property
     def parsed_date(self) -> datetime | None:
         """Parse date string to datetime."""
-        if not self.date:
-            return None
-        try:
-            # Try various formats
-            for fmt in ("%Y-%m-%d", "%Y%m%d", "%Y-%m-%dT%H:%M:%S"):
-                try:
-                    return datetime.strptime(self.date, fmt).replace(tzinfo=UTC)
-                except ValueError:
-                    continue
-        except Exception:  # noqa: BLE001
-            return None
-        else:
-            return None
+        return try_parse_gdelt_datetime(self.date)
 
 
 class Timeline(BaseModel):

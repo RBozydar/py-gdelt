@@ -29,7 +29,7 @@ Example:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import Any, Literal
 
 from pydantic import BaseModel
@@ -42,36 +42,13 @@ from py_gdelt.endpoints.tv import (
     TVTimelinePoint,
 )
 from py_gdelt.filters import LowerThirdFilter
+from py_gdelt.utils.dates import try_parse_gdelt_datetime
 
 
 __all__ = [
     "LowerThirdClip",
     "LowerThirdEndpoint",
 ]
-
-
-def _parse_date(date_str: str | None) -> datetime | None:
-    """Parse GDELT date string to datetime.
-
-    Handles both GDELT's native YYYYMMDDHHMMSS format and ISO 8601 format.
-
-    Args:
-        date_str: Date string in GDELT or ISO format.
-
-    Returns:
-        Parsed datetime object, or None if input is None or invalid.
-    """
-    if not date_str:
-        return None
-    try:
-        # Try YYYYMMDDHHMMSS format
-        if len(date_str) == 14:
-            return datetime.strptime(date_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        # Try ISO format - add UTC if naive
-        result = datetime.fromisoformat(date_str)
-        return result if result.tzinfo else result.replace(tzinfo=UTC)
-    except ValueError:
-        return None
 
 
 class LowerThirdClip(BaseModel):
@@ -221,7 +198,7 @@ class LowerThirdEndpoint(BaseEndpoint):
                 show_name=item.get("show"),
                 clip_url=item.get("url"),
                 preview_url=item.get("preview"),
-                date=_parse_date(item.get("date")),
+                date=try_parse_gdelt_datetime(item.get("date")),
                 chyron_text=item.get("snippet"),
             )
             for item in data.get("clips", [])

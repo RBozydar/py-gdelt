@@ -183,12 +183,14 @@ jobs:
             --ignore-vuln PYSEC-2022-42969 \
             --ignore-vuln CVE-2026-22701 \
             --ignore-vuln CVE-2026-23490 \
-            --ignore-vuln CVE-2026-22702
+            --ignore-vuln CVE-2026-22702 \
+            --ignore-vuln CVE-2026-0994
         # Ignored CVEs:
         # - PYSEC-2022-42969: disputed/withdrawn CVE in py (interrogate dep)
         # - CVE-2026-22701: filelock (transitive dep via uv/virtualenv)
         # - CVE-2026-23490: pyasn1 (transitive dep)
         # - CVE-2026-22702: virtualenv (transitive dep)
+        # - CVE-2026-0994: protobuf (transitive dep via google-cloud-bigquery, no fix available yet)
 
   # Summary job that depends on all checks
   ci-success:

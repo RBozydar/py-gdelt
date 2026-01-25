@@ -57,19 +57,20 @@ class Countries:
         Check if country code exists.
 
         Args:
-            code: Country code (FIPS or ISO)
+            code: Country code (FIPS or ISO3)
 
         Returns:
             True if code exists, False otherwise
         """
-        return code.upper() in self._countries_data
+        code_upper = code.upper()
+        return code_upper in self._countries_data or code_upper in self._iso_to_fips_mapping
 
     def __getitem__(self, code: str) -> CountryEntry:
         """
         Get full entry for country code.
 
         Args:
-            code: Country code (FIPS)
+            code: Country code (FIPS or ISO3)
 
         Returns:
             Full country entry with metadata
@@ -77,19 +78,36 @@ class Countries:
         Raises:
             KeyError: If code is not found
         """
-        return self._countries_data[code.upper()]
+        code_upper = code.upper()
+        # Try FIPS first
+        if code_upper in self._countries_data:
+            return self._countries_data[code_upper]
+        # Try ISO3 via reverse mapping
+        fips = self._iso_to_fips_mapping.get(code_upper)
+        if fips is not None:
+            return self._countries_data[fips]
+        raise KeyError(code)
 
     def get(self, code: str) -> CountryEntry | None:
         """
         Get entry for country code, or None if not found.
 
         Args:
-            code: Country code (FIPS)
+            code: Country code (FIPS or ISO3)
 
         Returns:
             Country entry, or None if code not found
         """
-        return self._countries_data.get(code.upper())
+        code_upper = code.upper()
+        # Try FIPS first
+        entry = self._countries_data.get(code_upper)
+        if entry is not None:
+            return entry
+        # Try ISO3 via reverse mapping
+        fips = self._iso_to_fips_mapping.get(code_upper)
+        if fips is not None:
+            return self._countries_data.get(fips)
+        return None
 
     def fips_to_iso3(self, fips: str) -> str | None:
         """

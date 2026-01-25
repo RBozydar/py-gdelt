@@ -23,12 +23,16 @@ Example:
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from py_gdelt.endpoints.base import BaseEndpoint
+from py_gdelt.utils.dates import parse_gdelt_date
 
 
 __all__ = [
@@ -73,7 +77,7 @@ class ChannelInfo(BaseModel):
             Date object, or None if parsing fails (e.g., invalid dates like 99999999).
         """
         try:
-            return datetime.strptime(str(self.start_date), "%Y%m%d").replace(tzinfo=UTC).date()
+            return parse_gdelt_date(str(self.start_date))
         except ValueError:
             return None
 
