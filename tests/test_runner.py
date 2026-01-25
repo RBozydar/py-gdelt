@@ -27,11 +27,6 @@ async def test_basic_functionality() -> None:
         date = FileSource._extract_date_from_url(urls[0])
         print(f"✓ Extracted date from URL: {date}")
 
-        # Test HTTPS upgrade
-        http_url = "http://data.gdeltproject.org/test.zip"
-        https_url = FileSource._upgrade_to_https(http_url)
-        print(f"✓ HTTPS upgrade: {http_url} -> {https_url}")
-
         print("\nAll basic tests passed!")
 
 

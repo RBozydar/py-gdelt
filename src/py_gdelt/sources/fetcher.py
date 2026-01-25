@@ -25,7 +25,7 @@ from py_gdelt.exceptions import (
     ConfigurationError,
     RateLimitError,
 )
-from py_gdelt.filters import EventFilter, GKGFilter, NGramsFilter
+from py_gdelt.filters import DateRange, EventFilter, GKGFilter, NGramsFilter
 
 
 if TYPE_CHECKING:
@@ -547,3 +547,50 @@ class DataFetcher:
                 self._handle_error(e)
 
         logger.info("Fetched %d ngrams records from file source", records_yielded)
+
+    async def fetch_graph_files(
+        self,
+        graph_type: Literal["gqg", "geg", "gfg", "ggg", "gemg", "gal"],
+        date_range: DateRange,
+    ) -> AsyncIterator[tuple[str, bytes]]:
+        """Fetch graph dataset files for a date range.
+
+        This method downloads graph dataset files and yields raw bytes for parsing.
+        Graph datasets don't have BigQuery fallback - files are the only source.
+
+        Args:
+            graph_type: Type of graph dataset to fetch.
+            date_range: Date range to fetch files for.
+
+        Yields:
+            tuple[str, bytes]: Tuple of (url, decompressed_data) for each file.
+
+        Example:
+            >>> async for url, data in fetcher.fetch_graph_files("gqg", date_range):
+            ...     for record in parse_gqg(data):
+            ...         print(record.url)
+        """
+        # Convert dates to datetimes (at midnight)
+        start_dt = datetime.combine(date_range.start, datetime.min.time())
+        end_date = date_range.end or date_range.start
+        end_dt = datetime.combine(end_date, datetime.min.time())
+
+        # Get graph file URLs
+        urls = await self._file.get_files_for_date_range(
+            start_date=start_dt,
+            end_date=end_dt,
+            file_type=graph_type,
+            include_translation=False,  # Graph datasets don't have translations
+        )
+
+        logger.info(
+            "Fetching %d %s graph files for date range %s to %s",
+            len(urls),
+            graph_type,
+            date_range.start,
+            date_range.end or date_range.start,
+        )
+
+        # Stream files - errors logged internally by FileSource
+        async for url, data in self._file.stream_files(urls):
+            yield url, data

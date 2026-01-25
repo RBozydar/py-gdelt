@@ -17,7 +17,7 @@ import re
 import zipfile
 from collections.abc import AsyncIterator, Iterable
 from datetime import UTC, datetime, timedelta
-from typing import Final, Literal
+from typing import Final, Literal, get_args
 
 import httpx
 
@@ -26,7 +26,7 @@ from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
 
 
-__all__ = ["FileSource", "FileType"]
+__all__ = ["FileSource", "FileType", "GraphFileType"]
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +39,29 @@ TRANSLATION_FILE_LIST_URL: Final[str] = (
 )
 LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
 
+# Decompression limit to prevent gzip bombs
+MAX_DECOMPRESSED_SIZE: Final[int] = 500 * 1024 * 1024  # 500MB limit
+
 # File type patterns
 FILE_TYPE_PATTERNS: Final[dict[str, str]] = {
     "export": ".export.CSV.zip",
     "mentions": ".mentions.CSV.zip",
     "gkg": ".gkg.csv.zip",
     "ngrams": ".webngrams.json.gz",
+    "gqg": ".gqg.json.gz",
+    "geg": ".geg.json.gz",
+    "gfg": ".gfg.csv.gz",
+    "ggg": ".ggg.json.gz",
+    "gemg": ".gemg.json.gz",
+    "gal": ".gal.json.gz",
 }
 
 # Type alias for file types
-FileType = Literal["export", "mentions", "gkg", "ngrams"]
+FileType = Literal["export", "mentions", "gkg", "ngrams", "gqg", "geg", "gfg", "ggg", "gemg", "gal"]
+GraphFileType = Literal["gqg", "geg", "gfg", "ggg", "gemg", "gal"]
+
+# Tuple of graph file types derived from GraphFileType Literal
+GRAPH_FILE_TYPES: Final[tuple[str, ...]] = get_args(GraphFileType)
 
 
 class FileSource:
@@ -211,23 +224,36 @@ class FileSource:
         pattern = FILE_TYPE_PATTERNS[file_type]
         urls: list[str] = []
 
-        # Generate URLs for 15-minute intervals
+        # GFG (Frontpage Graph) files are published hourly, unlike other datasets
+        # which are published every 15 minutes. See GDELT documentation.
+        delta = timedelta(hours=1) if file_type == "gfg" else timedelta(minutes=15)
+
+        # Generate URLs for time intervals
         current = start_date
-        delta = timedelta(minutes=15)
 
         while current <= end_date:
-            timestamp = current.strftime("%Y%m%d%H%M%S")
+            # GFG is hourly - normalize minutes to 00
+            if file_type == "gfg":
+                # Round down to hour
+                timestamp = current.strftime("%Y%m%d%H") + "0000"
+            else:
+                timestamp = current.strftime("%Y%m%d%H%M%S")
 
             # Build URL based on file type
-            if file_type == "ngrams":
-                url = f"http://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
+            # Graph datasets and ngrams use gdeltv3
+            if file_type == "ngrams" or file_type in GRAPH_FILE_TYPES:
+                # Graph datasets have their own subdirectory
+                if file_type == "ngrams":
+                    url = f"http://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
+                else:
+                    url = f"http://data.gdeltproject.org/gdeltv3/{file_type}/{timestamp}{pattern}"
             else:
                 url = f"http://data.gdeltproject.org/gdeltv2/{timestamp}{pattern}"
 
             urls.append(url)
 
-            # Handle translation files
-            if include_translation and file_type != "ngrams":
+            # Handle translation files (not supported for graph datasets)
+            if include_translation and file_type != "ngrams" and file_type not in GRAPH_FILE_TYPES:
                 trans_url = url.replace(pattern, f".translation{pattern}")
                 urls.append(trans_url)
 
@@ -452,8 +478,12 @@ class FileSource:
 
         Returns:
             Decompressed content
+
+        Raises:
+            DataError: If decompressed size exceeds limit
         """
         result = io.BytesIO()
+        total_size = 0
 
         with gzip.GzipFile(fileobj=io.BytesIO(compressed_data)) as gz:
             # Read in chunks to avoid loading huge files into memory
@@ -463,28 +493,13 @@ class FileSource:
                 chunk = gz.read(chunk_size)
                 if not chunk:
                     break
+                total_size += len(chunk)
+                if total_size > MAX_DECOMPRESSED_SIZE:
+                    msg = f"Decompressed size exceeds {MAX_DECOMPRESSED_SIZE // (1024 * 1024)}MB limit"
+                    raise DataError(msg)
                 result.write(chunk)
 
         return result.getvalue()
-
-    @staticmethod
-    def _upgrade_to_https(url: str) -> str:
-        """Upgrade HTTP URL to HTTPS.
-
-        Note:
-            This method is currently unused because data.gdeltproject.org only
-            supports HTTP (SSL cert is for *.storage.googleapis.com). Kept for
-            potential future use if GDELT fixes their SSL certificate.
-
-        Args:
-            url: URL to upgrade
-
-        Returns:
-            HTTPS version of URL
-        """
-        if url.startswith("http://"):
-            return url.replace("http://", "https://", 1)
-        return url
 
     @staticmethod
     def _extract_date_from_url(url: str) -> datetime | None:

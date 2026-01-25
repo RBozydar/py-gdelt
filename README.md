@@ -65,6 +65,15 @@ async with GDELTClient() as client:
         ngram_size=1,
     )
     ngrams = await client.tv_ngrams.query(tv_filter)
+
+    # Query Graph Datasets (quotes, entities, frontpage links)
+    from py_gdelt.filters import GQGFilter, GEGFilter
+    gqg_filter = GQGFilter(date_range=DateRange(start=yesterday))
+    quotes = await client.graphs.query_gqg(gqg_filter)
+
+    geg_filter = GEGFilter(date_range=DateRange(start=yesterday))
+    async for entity in client.graphs.stream_geg(geg_filter):
+        print(f"{entity.name}: {entity.entity_type}")
 ```
 
 ## Data Sources Covered
@@ -78,6 +87,7 @@ async with GDELTClient() as client:
 - **TV-GKG** - Television GKG (closed caption analysis from TV broadcasts)
 - **TV NGrams** - Word frequencies from TV closed captions
 - **Radio NGrams** - Word frequencies from radio transcripts
+- **Graph Datasets** - GQG, GEG, GFG, GGG, GEMG, GAL (see below)
 
 ### REST APIs
 - **DOC 2.0** - Full-text article search and discovery
@@ -89,14 +99,14 @@ async with GDELTClient() as client:
 - **TVV** 🏗️ - TV Visual channel inventory
 - **GKG GeoJSON v1** 🏗️ - Legacy geographic GKG API
 
-### Graph Datasets 🏗️
+### Graph Datasets
 - **GQG** - Global Quotation Graph (extracted quotes with context)
 - **GEG** - Global Entity Graph (NER via Cloud NLP API)
 - **GFG** - Global Frontpage Graph (homepage link tracking)
 - **GGG** - Global Geographic Graph (location co-mentions)
-- **GDG** - Global Difference Graph (article change detection)
+- **GDG** 🏗️ - Global Difference Graph (article change detection)
 - **GEMG** - Global Embedded Metadata Graph (meta tags, JSON-LD)
-- **GRG** - Global Relationship Graph (subject-verb-object triples)
+- **GRG** 🏗️ - Global Relationship Graph (subject-verb-object triples)
 - **GAL** - Article List (lightweight article metadata)
 
 ### Lookup Tables
@@ -128,9 +138,12 @@ async with GDELTClient() as client:
 | **TV-GKG** | - | ✓ | ✓ | Jul 2009+ | ✓ |
 | **TV NGrams** | - | - | ✓ | Jul 2009+ | - |
 | **Radio NGrams** | - | - | ✓ | 2017+ | - |
-| **GQG** 🏗️ | - | ✓ | ✓ | Jan 2020+ | ✓ |
-| **GEG** 🏗️ | - | ✓ | ✓ | Jul 2016+ | ✓ |
-| **GFG** 🏗️ | - | ✓ | ✓ | Mar 2018+ | ✓ |
+| **GQG** | - | - | ✓ | Jan 2020+ | - |
+| **GEG** | - | - | ✓ | Jul 2016+ | - |
+| **GFG** | - | - | ✓ | Mar 2018+ | - |
+| **GGG** | - | - | ✓ | Jan 2020+ | - |
+| **GEMG** | - | - | ✓ | Jan 2020+ | - |
+| **GAL** | - | - | ✓ | Jan 2020+ | - |
 
 > 🏗️ = Work in progress - coming in future releases
 
