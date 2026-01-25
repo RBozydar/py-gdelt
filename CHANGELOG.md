@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6](https://github.com/RBozydar/py-gdelt/compare/gdelt-py-v0.1.5...gdelt-py-v0.1.6) (2026-01-25)
+
+
+### Features
+
+* add file-based dataset endpoints (VGKG, TV-GKG, TV NGrams, Radio NGrams) ([#61](https://github.com/RBozydar/py-gdelt/issues/61)) ([162de20](https://github.com/RBozydar/py-gdelt/commit/162de20340c2ea7cdcba2720136a59bc0304b9c7))
+* **endpoints:** add LowerThird, TVV, and GKG GeoJSON API endpoints ([#65](https://github.com/RBozydar/py-gdelt/issues/65)) ([d2d529a](https://github.com/RBozydar/py-gdelt/commit/d2d529adbd64f6448ae82812c21fe274701c1ed6))
+* **graphs:** add GDELT Graph Datasets support (GQG, GEG, GFG, GGG, GEMG, GAL) ([#66](https://github.com/RBozydar/py-gdelt/issues/66)) ([c6398f0](https://github.com/RBozydar/py-gdelt/commit/c6398f06df19de06f9fadce016a9689383d9d334))
+* **lookups:** add 4 new lookup tables + expand GKG themes to 59K entries ([#62](https://github.com/RBozydar/py-gdelt/issues/62)) ([2bbe3c8](https://github.com/RBozydar/py-gdelt/commit/2bbe3c8e8ebee851fe2184f97a1251eb8193058c))
+* **lookups:** enrich CAMEO codes with examples and usage notes ([#70](https://github.com/RBozydar/py-gdelt/issues/70)) ([09289ff](https://github.com/RBozydar/py-gdelt/commit/09289ff5ccbe42c2914b57cd0f641ea0f0552bd1))
+* **mcp:** add MCP server with streaming aggregation for geopolitical research ([#50](https://github.com/RBozydar/py-gdelt/issues/50)) ([b8d5a31](https://github.com/RBozydar/py-gdelt/commit/b8d5a3156daccd369c4907555df5ce0d3f7b50b9))
+
+
+### Bug Fixes
+
+* Claude workflow max-turns and continue-on-error ([#56](https://github.com/RBozydar/py-gdelt/issues/56)) ([27f4199](https://github.com/RBozydar/py-gdelt/commit/27f41993424ea95a5dcba270c8f4bb7bf96cdba4))
+* **filters:** remove arbitrary date range limits for file-based datasets ([519a320](https://github.com/RBozydar/py-gdelt/commit/519a3200b3f93e78819ca79e4f11b12c4e8a3ed3))
+* resolve weekly integration test failures ([#69](https://github.com/RBozydar/py-gdelt/issues/69)) ([02b3a23](https://github.com/RBozydar/py-gdelt/commit/02b3a2387b387ec942f454c297e2c14c569c8ec9))
+
 ## [0.1.5](https://github.com/RBozydar/py-gdelt/compare/gdelt-py-v0.1.4...gdelt-py-v0.1.5) (2026-01-12)
 
 
