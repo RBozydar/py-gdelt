@@ -169,7 +169,7 @@ def main() -> None:
         print("  specific    - Download a specific file")
         print("  list        - List available files from master list")
         print("  concurrent  - Download with custom concurrency")
-        sys.exit(1)
+        sys.exit(0)  # Exit 0 when showing help (valid operation)
 
     example = sys.argv[1]
 

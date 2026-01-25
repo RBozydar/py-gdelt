@@ -371,6 +371,16 @@ class TestCountries:
         countries = Countries()
         assert "XXX" not in countries
 
+    def test_contains_iso3_codes(self) -> None:
+        """Test __contains__ supports ISO3 codes (GDELT v2 format)."""
+        countries = Countries()
+        # ISO3 codes should be recognized
+        assert "USA" in countries
+        assert "GBR" in countries
+        assert "IRQ" in countries
+        # Case insensitive
+        assert "usa" in countries
+
     def test_getitem_valid_code(self) -> None:
         """Test __getitem__ returns entry."""
         countries = Countries()

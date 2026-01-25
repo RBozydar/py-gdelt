@@ -57,12 +57,17 @@ class Countries:
         Check if country code exists.
 
         Args:
-            code: Country code (FIPS or ISO)
+            code: Country code (FIPS or ISO3)
 
         Returns:
             True if code exists, False otherwise
         """
-        return code.upper() in self._countries_data
+        code_upper = code.upper()
+        # Check FIPS codes (keys in _countries_data)
+        if code_upper in self._countries_data:
+            return True
+        # Check ISO3 codes (reverse mapping)
+        return code_upper in self._iso_to_fips_mapping
 
     def __getitem__(self, code: str) -> CountryEntry:
         """
