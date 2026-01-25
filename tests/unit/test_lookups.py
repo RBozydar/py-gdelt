@@ -474,6 +474,16 @@ class TestCountries:
         countries = Countries()
         assert "XXX" not in countries
 
+    def test_contains_iso3_codes(self) -> None:
+        """Test __contains__ supports ISO3 codes (GDELT v2 format)."""
+        countries = Countries()
+        # ISO3 codes should be recognized
+        assert "USA" in countries
+        assert "GBR" in countries
+        assert "IRQ" in countries
+        # Case insensitive
+        assert "usa" in countries
+
     def test_getitem_valid_code(self) -> None:
         """Test __getitem__ returns entry."""
         countries = Countries()
@@ -481,6 +491,17 @@ class TestCountries:
         assert entry.name == "United States"
         assert entry.iso3 == "USA"
         assert entry.iso2 == "US"
+
+    def test_getitem_iso3_codes(self) -> None:
+        """Test __getitem__ supports ISO3 codes (GDELT v2 format)."""
+        countries = Countries()
+        # ISO3 codes should work
+        entry = countries["USA"]
+        assert entry.name == "United States"
+        assert entry.iso3 == "USA"
+        # Case insensitive
+        entry = countries["gbr"]
+        assert entry.name == "United Kingdom"
 
     def test_getitem_invalid_code_raises_key_error(self) -> None:
         """Test __getitem__ raises KeyError for invalid code."""
@@ -494,6 +515,18 @@ class TestCountries:
         entry = countries.get("US")
         assert entry is not None
         assert entry.name == "United States"
+
+    def test_get_iso3_codes(self) -> None:
+        """Test get() supports ISO3 codes (GDELT v2 format)."""
+        countries = Countries()
+        # ISO3 codes should work
+        entry = countries.get("USA")
+        assert entry is not None
+        assert entry.name == "United States"
+        # Case insensitive
+        entry = countries.get("gbr")
+        assert entry is not None
+        assert entry.name == "United Kingdom"
 
     def test_get_invalid_code_returns_none(self) -> None:
         """Test get() returns None for invalid code."""

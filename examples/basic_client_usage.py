@@ -80,7 +80,7 @@ async def rest_api_usage() -> None:
                 print("\nFirst article:")
                 print(f"  Title: {articles[0].title}")
                 print(f"  URL: {articles[0].url}")
-                print(f"  Date: {articles[0].date}")
+                print(f"  Seen: {articles[0].seen_datetime}")
         except RateLimitError as e:
             print(f"Rate limit exceeded: {e}")
             if e.retry_after:
@@ -232,7 +232,7 @@ def sync_usage() -> None:
 
 
 async def main() -> None:
-    """Run all examples."""
+    """Run all async examples."""
     print("\n" + "=" * 60)
     print("GDELT Python Client - Usage Examples")
     print("=" * 60)
@@ -245,13 +245,16 @@ async def main() -> None:
     await config_file_usage()
     await streaming_usage()
 
-    # Run sync example
+
+if __name__ == "__main__":
+    # Run async examples
+    asyncio.run(main())
+
+    # Run sync example outside of asyncio.run() to avoid nested event loops
+    # Note: sync_usage() uses GDELTClient's __enter__ which calls asyncio.run()
+    # internally, so it must be run from truly synchronous code
     sync_usage()
 
     print("\n" + "=" * 60)
     print("All examples completed!")
     print("=" * 60 + "\n")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
