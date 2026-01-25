@@ -242,8 +242,8 @@ class GFGRecord(SchemaEvolutionMixin, BaseModel):
         Returns:
             Validated GFGRecord with all fields parsed and typed.
         """
-        # Parse date from GDELT format (YYYYMMDDHHMMSS)
-        date = datetime.strptime(raw.date, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+        # Parse date using module helper for consistency
+        date = _parse_gdelt_date(raw.date)
 
         # Parse page_position (default to 0 if empty)
         page_position = 0
@@ -272,8 +272,8 @@ class GGGRecord(SchemaEvolutionMixin, BaseModel):
         date: Publication date/time
         url: Source document URL
         location_name: Name of the location
-        lat: Latitude
-        lon: Longitude
+        lat: Latitude (-90 to 90)
+        lon: Longitude (-180 to 180)
         context: Surrounding text context
     """
 
@@ -289,6 +289,44 @@ class GGGRecord(SchemaEvolutionMixin, BaseModel):
     def parse_date(cls, v: Any) -> datetime:
         """Parse date from ISO or GDELT format."""
         return _parse_gdelt_date(v)
+
+    @field_validator("lat")
+    @classmethod
+    def validate_lat(cls, v: float) -> float:
+        """Validate latitude is within valid range.
+
+        Args:
+            v: Latitude value.
+
+        Returns:
+            Validated latitude.
+
+        Raises:
+            ValueError: If latitude is outside -90 to 90 range.
+        """
+        if not -90 <= v <= 90:
+            msg = f"Latitude must be between -90 and 90, got {v}"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("lon")
+    @classmethod
+    def validate_lon(cls, v: float) -> float:
+        """Validate longitude is within valid range.
+
+        Args:
+            v: Longitude value.
+
+        Returns:
+            Validated longitude.
+
+        Raises:
+            ValueError: If longitude is outside -180 to 180 range.
+        """
+        if not -180 <= v <= 180:
+            msg = f"Longitude must be between -180 and 180, got {v}"
+            raise ValueError(msg)
+        return v
 
 
 class MetaTag(SchemaEvolutionMixin, BaseModel):

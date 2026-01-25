@@ -41,6 +41,20 @@ __all__ = ["GraphEndpoint"]
 logger = logging.getLogger(__name__)
 
 
+def _normalize_languages(languages: list[str] | None) -> set[str] | None:
+    """Normalize language codes to lowercase for case-insensitive comparison.
+
+    Args:
+        languages: List of language codes or None.
+
+    Returns:
+        Lowercase set of language codes, or None if input was None.
+    """
+    if languages is None:
+        return None
+    return {lang.lower() for lang in languages}
+
+
 class GraphEndpoint:
     """Endpoint for GDELT Graph datasets.
 
@@ -149,10 +163,11 @@ class GraphEndpoint:
         Yields:
             GQGRecord: Individual quotation graph records.
         """
+        languages_lower = _normalize_languages(filter_obj.languages)
         async for url, data in self._fetcher.fetch_graph_files("gqg", filter_obj.date_range):
             try:
                 for record in graph_parsers.parse_gqg(data):
-                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                    if languages_lower and record.lang.lower() not in languages_lower:
                         continue
                     yield record
             except Exception as e:  # noqa: BLE001
@@ -187,10 +202,11 @@ class GraphEndpoint:
         Yields:
             GEGRecord: Individual entity graph records.
         """
+        languages_lower = _normalize_languages(filter_obj.languages)
         async for url, data in self._fetcher.fetch_graph_files("geg", filter_obj.date_range):
             try:
                 for record in graph_parsers.parse_geg(data):
-                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                    if languages_lower and record.lang.lower() not in languages_lower:
                         continue
                     yield record
             except Exception as e:  # noqa: BLE001
@@ -225,10 +241,11 @@ class GraphEndpoint:
         Yields:
             GFGRecord: Individual Frontpage graph records.
         """
+        languages_lower = _normalize_languages(filter_obj.languages)
         async for url, data in self._fetcher.fetch_graph_files("gfg", filter_obj.date_range):
             try:
                 for record in graph_parsers.parse_gfg(data):
-                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                    if languages_lower and record.lang.lower() not in languages_lower:
                         continue
                     yield record
             except Exception as e:  # noqa: BLE001
@@ -299,10 +316,11 @@ class GraphEndpoint:
         Yields:
             GEMGRecord: Individual embedded metadata graph records.
         """
+        languages_lower = _normalize_languages(filter_obj.languages)
         async for url, data in self._fetcher.fetch_graph_files("gemg", filter_obj.date_range):
             try:
                 for record in graph_parsers.parse_gemg(data):
-                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                    if languages_lower and record.lang.lower() not in languages_lower:
                         continue
                     yield record
             except Exception as e:  # noqa: BLE001
@@ -337,10 +355,11 @@ class GraphEndpoint:
         Yields:
             GALRecord: Individual article list records.
         """
+        languages_lower = _normalize_languages(filter_obj.languages)
         async for url, data in self._fetcher.fetch_graph_files("gal", filter_obj.date_range):
             try:
                 for record in graph_parsers.parse_gal(data):
-                    if filter_obj.languages and record.lang not in filter_obj.languages:
+                    if languages_lower and record.lang.lower() not in languages_lower:
                         continue
                     yield record
             except Exception as e:  # noqa: BLE001
