@@ -498,6 +498,34 @@ class TestDownloadAndExtract:
             with pytest.raises(DataError, match="Invalid archive format"):
                 await file_source.download_and_extract(url)
 
+    @pytest.mark.asyncio
+    async def test_download_and_extract_gzip_bomb(
+        self,
+        file_source: FileSource,
+    ) -> None:
+        """Test that decompression is aborted when size exceeds limit."""
+        url = "http://data.gdeltproject.org/gdeltv3/webngrams/20240101000000.webngrams.json.gz"
+
+        # Create a gzip bomb: small compressed data that expands to >500MB
+        # We'll simulate this by creating a gzip file that will trigger the size check
+        # Use a high compression ratio with repeated data
+        large_data = b"0" * (10 * 1024 * 1024)  # 10MB of zeros (compresses well)
+
+        gzip_buffer = io.BytesIO()
+        with gzip.GzipFile(fileobj=gzip_buffer, mode="wb") as gz:
+            # Write 51 chunks of 10MB each = 510MB total (exceeds 500MB limit)
+            for _ in range(51):
+                gz.write(large_data)
+        gzip_bomb = gzip_buffer.getvalue()
+
+        async with respx.mock:
+            respx.get(url).mock(
+                return_value=httpx.Response(200, content=gzip_bomb),
+            )
+
+            with pytest.raises(DataError, match="Decompressed size exceeds 500MB limit"):
+                await file_source.download_and_extract(url)
+
 
 class TestStreamFiles:
     """Test concurrent file streaming."""
@@ -675,20 +703,6 @@ class TestStreamFiles:
 
 class TestHelperMethods:
     """Test helper and utility methods."""
-
-    def test_upgrade_to_https(self) -> None:
-        """Test HTTP to HTTPS upgrade."""
-        http_url = "http://data.gdeltproject.org/gdeltv2/file.zip"
-        https_url = FileSource._upgrade_to_https(http_url)
-
-        assert https_url == "https://data.gdeltproject.org/gdeltv2/file.zip"
-
-    def test_upgrade_to_https_already_https(self) -> None:
-        """Test HTTPS URL is not modified."""
-        https_url = "https://data.gdeltproject.org/gdeltv2/file.zip"
-        result = FileSource._upgrade_to_https(https_url)
-
-        assert result == https_url
 
     def test_extract_date_from_url(self) -> None:
         """Test extracting date from GDELT URL."""

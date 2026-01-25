@@ -22,6 +22,7 @@ from py_gdelt.endpoints.gkg_geojson import (
     GKGGeoJSONFeature,
     GKGGeoJSONResult,
 )
+from py_gdelt.endpoints.graphs import GraphEndpoint
 from py_gdelt.endpoints.lowerthird import LowerThirdClip, LowerThirdEndpoint
 from py_gdelt.endpoints.mentions import MentionsEndpoint
 from py_gdelt.endpoints.ngrams import NGramsEndpoint
@@ -58,6 +59,7 @@ __all__ = [
     "GeoEndpoint",
     "GeoPoint",
     "GeoResult",
+    "GraphEndpoint",
     "LowerThirdClip",
     "LowerThirdEndpoint",
     "MentionsEndpoint",

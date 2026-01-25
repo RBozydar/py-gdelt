@@ -65,6 +65,7 @@ from py_gdelt.endpoints import (
     GeoEndpoint,
     GKGEndpoint,
     GKGGeoJSONEndpoint,
+    GraphEndpoint,
     LowerThirdEndpoint,
     MentionsEndpoint,
     NGramsEndpoint,
@@ -532,6 +533,36 @@ class GDELTClient:
             raise RuntimeError(msg)
         return TVGKGEndpoint(
             settings=self.settings,
+            file_source=self._file_source,
+        )
+
+    @cached_property
+    def graphs(self) -> GraphEndpoint:
+        """Access the Graph datasets endpoint.
+
+        Provides methods for querying GDELT Graph datasets (GQG, GEG, GFG, GGG, GEMG, GAL)
+        from file downloads.
+
+        Returns:
+            GraphEndpoint instance.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     from py_gdelt.filters import GQGFilter, DateRange
+            ...     filter_obj = GQGFilter(
+            ...         date_range=DateRange(start=date(2025, 1, 20))
+            ...     )
+            ...     result = await client.graphs.query_gqg(filter_obj)
+            ...     for record in result:
+            ...         print(record.quotes)
+        """
+        if self._file_source is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return GraphEndpoint(
             file_source=self._file_source,
         )
 

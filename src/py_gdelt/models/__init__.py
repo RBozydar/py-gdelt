@@ -10,6 +10,17 @@ from py_gdelt.models.common import (
 )
 from py_gdelt.models.events import Actor, Event, Mention
 from py_gdelt.models.gkg import Amount, GKGRecord, Quotation, TimecodeMapping, TVGKGRecord
+from py_gdelt.models.graphs import (
+    Entity,
+    GALRecord,
+    GEGRecord,
+    GEMGRecord,
+    GFGRecord,
+    GGGRecord,
+    GQGRecord,
+    MetaTag,
+    Quote,
+)
 from py_gdelt.models.ngrams import (
     BroadcastNGramRecord,
     BroadcastSource,
@@ -31,16 +42,25 @@ __all__ = [
     "Article",
     "BroadcastNGramRecord",
     "BroadcastSource",
+    "Entity",
     "EntityMention",
     "Event",
     "FaceAnnotationDict",
     "FailedRequest",
     "FetchResult",
+    "GALRecord",
+    "GEGRecord",
+    "GEMGRecord",
+    "GFGRecord",
+    "GGGRecord",
     "GKGRecord",
+    "GQGRecord",
     "Location",
     "Mention",
+    "MetaTag",
     "NGramRecord",
     "Quotation",
+    "Quote",
     "RadioNGramRecord",
     "SafeSearchDict",
     "TVGKGRecord",
