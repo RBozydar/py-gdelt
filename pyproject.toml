@@ -157,10 +157,11 @@ select = [
     "RUF",    # Ruff-specific rules
 ]
 ignore = [
-    # === PERMANENT - Justified by Architecture (5 rules) ===
+    # === PERMANENT - Justified by Architecture (6 rules) ===
     "ARG002",   # unused-method-argument (8 violations - protocol compliance)
     "S608",     # hardcoded-sql-expression (3 violations - BigQuery safe builders)
     "PLR0913",  # too-many-arguments (1 violation - dataclass constructor)
+    "UP040",    # non-pep695-type-alias (Python 3.11 compatibility)
     "UP046",    # non-pep695-generic-class (Python 3.11 compatibility)
     "UP047",    # non-pep695-generic-function (Python 3.11 compatibility)
 
@@ -212,6 +213,7 @@ ignore = [
   "RUF003",   # ambiguous-unicode OK in tests
   "PLC0415",  # Lazy imports OK in tests
   "SIM105",   # suppressible-exception OK in tests
+  "FLY002",   # str.join OK in tests for TSV/CSV creation (safer than f-strings)
 ]
 
 "examples/**/*.py" = [

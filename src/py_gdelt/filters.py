@@ -8,7 +8,7 @@ across all GDELT data sources including Events, Mentions, GKG, DOC, GEO, and TV 
 from __future__ import annotations
 
 from datetime import date, datetime  # noqa: TC003 - Pydantic needs runtime access
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -16,13 +16,20 @@ from py_gdelt.exceptions import InvalidCodeError
 
 
 __all__ = [
+    "BroadcastNGramsFilter",
     "DateRange",
     "DocFilter",
     "EventFilter",
     "GKGFilter",
+    "GKGGeoJSONFilter",
     "GeoFilter",
+    "LowerThirdFilter",
     "NGramsFilter",
+    "RadioNGramsFilter",
     "TVFilter",
+    "TVGKGFilter",
+    "TVNGramsFilter",
+    "VGKGFilter",
 ]
 
 
@@ -278,3 +285,121 @@ class NGramsFilter(BaseModel):
             msg = "min_position must be <= max_position"
             raise ValueError(msg)
         return self
+
+
+class LowerThirdFilter(BaseModel):
+    """Filter for LowerThird (Chyron) API queries.
+
+    Attributes:
+        query: Search terms. Supports exact phrases, boolean operators,
+            show filters (show:"name"), station filters (station:CNN).
+        timespan: Time offset (e.g., "24h", "7d", "1w"). Mutually exclusive
+            with start_datetime/end_datetime.
+        start_datetime: Start of date range (YYYYMMDDHHMMSS format internally).
+        end_datetime: End of date range.
+        mode: Output mode - ClipGallery, TimelineVol, StationChart.
+        max_results: Max records (1-3000, default 250).
+        sort: Sort order - DateDesc, DateAsc, or None for relevance.
+    """
+
+    query: str
+    timespan: str | None = None
+    start_datetime: datetime | None = None
+    end_datetime: datetime | None = None
+    mode: Literal["ClipGallery", "TimelineVol", "StationChart"] = "ClipGallery"
+    max_results: int = Field(default=250, ge=1, le=3000)
+    sort: Literal["DateDesc", "DateAsc"] | None = None
+
+    @model_validator(mode="after")
+    def validate_time_constraints(self) -> LowerThirdFilter:
+        """Validate that timespan and datetime range are mutually exclusive."""
+        if self.timespan and (self.start_datetime or self.end_datetime):
+            msg = "Cannot specify both timespan and datetime range"
+            raise ValueError(msg)
+        return self
+
+
+class GKGGeoJSONFilter(BaseModel):
+    """Filter for GKG GeoJSON API (v1.0 Legacy).
+
+    Note:
+        This is a v1.0 API that uses UPPERCASE parameter names.
+        The timespan is limited to 1440 minutes (24 hours).
+
+    Attributes:
+        query: Theme, person, or organization to search.
+        timespan: Minutes of data to include (1-1440, default 60).
+    """
+
+    query: str
+    timespan: int = Field(default=60, ge=1, le=1440)
+
+
+class VGKGFilter(BaseModel):
+    """Filter for VGKG (Visual GKG) queries."""
+
+    date_range: DateRange
+    domain: str | None = None  # Filter by source domain
+    min_label_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    @field_validator("domain")
+    @classmethod
+    def validate_domain(cls, v: str | None) -> str | None:
+        """Normalize domain to lowercase."""
+        return v.lower() if v else None
+
+
+class TVGKGFilter(BaseModel):
+    """Filter for TV-GKG (Television Global Knowledge Graph) queries.
+
+    Note:
+        TV-GKG uses standard GKG 2.0 format but has a 48-hour embargo.
+        The embargo is handled in the endpoint layer, not the filter.
+    """
+
+    date_range: DateRange
+    themes: list[str] | None = None
+    station: str | None = None  # TV station filter
+
+    @field_validator("themes", mode="before")
+    @classmethod
+    def validate_themes(cls, v: list[str] | None) -> list[str] | None:
+        """Validate GKG theme codes."""
+        if v is None:
+            return None
+        from py_gdelt.lookups.themes import GKGThemes
+
+        themes = GKGThemes()
+        for theme in v:
+            try:
+                themes.validate(theme)
+            except InvalidCodeError:
+                msg = f"Invalid GKG theme: {theme!r}"
+                raise InvalidCodeError(msg, code=theme, code_type="GKG theme") from None
+        return v
+
+    @field_validator("station")
+    @classmethod
+    def validate_station(cls, v: str | None) -> str | None:
+        """Normalize station name to uppercase."""
+        return v.upper() if v else None
+
+
+class BroadcastNGramsFilter(BaseModel):
+    """Filter for TV/Radio NGrams queries."""
+
+    date_range: DateRange
+    station: str | None = None
+    show: str | None = None  # Radio only
+    ngram_size: int = Field(default=1, ge=1, le=5)  # 1-5 grams
+
+    @field_validator("station")
+    @classmethod
+    def validate_station(cls, v: str | None) -> str | None:
+        """Normalize station name to uppercase."""
+        return v.upper() if v else None
+
+
+# Type aliases for clarity
+TVNGramsFilter: TypeAlias = BroadcastNGramsFilter
+RadioNGramsFilter: TypeAlias = BroadcastNGramsFilter

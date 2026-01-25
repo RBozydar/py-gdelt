@@ -298,9 +298,16 @@ class NGramsEndpoint:
             NGramRecord: Individual NGram records matching the filter criteria
 
         Raises:
-            RateLimitError: If rate limited and retries exhausted
-            APIError: If downloads fail
-            DataError: If file parsing fails
+            RuntimeError: If called from within a running event loop.
+            RateLimitError: If rate limited and retries exhausted.
+            APIError: If downloads fail.
+            DataError: If file parsing fails.
+
+        Note:
+            This method cannot be called from within an async context (e.g., inside
+            an async function or running event loop). Doing so will raise RuntimeError.
+            Use the async stream() method instead. This method creates its own event
+            loop internally.
 
         Example:
             >>> filter_obj = NGramsFilter(
@@ -310,11 +317,26 @@ class NGramsEndpoint:
             >>> for record in endpoint.stream_sync(filter_obj):
             ...     print(f"{record.ngram}: {record.url}")
         """
-        # Create a new event loop for the sync wrapper
+        # Manual event loop management is required for async generators.
+        # Unlike query_sync() which uses asyncio.run() for a single coroutine,
+        # stream_sync() must iterate through an async generator step-by-step.
+        # asyncio.run() cannot handle async generators - it expects a coroutine
+        # that returns a value, not one that yields multiple values.
+
+        # Check if we're already in an async context - this would cause issues
+        try:
+            asyncio.get_running_loop()
+            has_running_loop = True
+        except RuntimeError:
+            has_running_loop = False
+
+        if has_running_loop:
+            msg = "stream_sync() cannot be called from a running event loop. Use stream() instead."
+            raise RuntimeError(msg)
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            # Run the async generator and yield results
             async_gen = self.stream(filter_obj)
             while True:
                 try:
