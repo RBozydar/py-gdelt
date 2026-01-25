@@ -149,30 +149,30 @@ def test_lowerthird_filter_sort_validation() -> None:
 # Date Parsing Tests
 
 
-def testtry_parse_gdelt_datetime_gdelt_format() -> None:
+def test_try_parse_gdelt_datetime_gdelt_format() -> None:
     """Test parsing GDELT date format."""
     result = try_parse_gdelt_datetime("20240115120000")
     assert result == datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
-def testtry_parse_gdelt_datetime_iso_format() -> None:
+def test_try_parse_gdelt_datetime_iso_format() -> None:
     """Test parsing ISO date format."""
     result = try_parse_gdelt_datetime("2024-01-15T12:00:00")
     assert result is not None
     assert result == datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
-def testtry_parse_gdelt_datetime_none() -> None:
+def test_try_parse_gdelt_datetime_none() -> None:
     """Test parsing None returns None."""
     assert try_parse_gdelt_datetime(None) is None
 
 
-def testtry_parse_gdelt_datetime_empty_string() -> None:
+def test_try_parse_gdelt_datetime_empty_string() -> None:
     """Test parsing empty string returns None."""
     assert try_parse_gdelt_datetime("") is None
 
 
-def testtry_parse_gdelt_datetime_invalid() -> None:
+def test_try_parse_gdelt_datetime_invalid() -> None:
     """Test parsing invalid date returns None."""
     assert try_parse_gdelt_datetime("invalid") is None
     assert try_parse_gdelt_datetime("2024") is None

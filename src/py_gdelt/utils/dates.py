@@ -47,15 +47,14 @@ def parse_gdelt_datetime(value: str | int | datetime) -> datetime:
     if isinstance(value, int):
         value = str(value)
 
-    # ISO format (contains 'T' or '-' delimiter)
-    if "T" in value or "-" in value:
-        try:
-            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-            if dt.tzinfo is None:
-                return dt.replace(tzinfo=UTC)
-            return dt.astimezone(UTC)
-        except ValueError:
-            pass  # Fall through to error
+    # Try ISO format first
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=UTC)
+        return dt.astimezone(UTC)
+    except ValueError:
+        pass  # Not ISO format, try GDELT formats
 
     # GDELT formats: 14-digit timestamp or 8-digit date
     try:
