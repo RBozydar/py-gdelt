@@ -53,20 +53,6 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 
-def _decompress_if_needed(data: bytes) -> bytes:
-    """Decompress data if it is gzip-compressed.
-
-    Args:
-        data: Raw bytes (potentially gzipped).
-
-    Returns:
-        Decompressed bytes if gzipped, otherwise original bytes.
-    """
-    if data.startswith(b"\x1f\x8b"):
-        return gzip.decompress(data)
-    return data
-
-
 def _parse_jsonl(data: bytes, model_cls: type[T]) -> Iterator[T]:
     """Parse JSON-NL data into Pydantic models.
 
@@ -184,16 +170,31 @@ def parse_gfg(data: bytes) -> Iterator[GFGRecord]:
     Yields:
         GFGRecord: Validated frontpage graph records.
     """
-    # Decompress if needed
-    decompressed = _decompress_if_needed(data)
+    # Use streaming approach to reduce memory usage (like _parse_jsonl)
+    if data.startswith(b"\x1f\x8b"):
+        # Gzipped data - use gzip.open for streaming decompression
+        fileobj = io.BytesIO(data)
+        with gzip.open(fileobj, "rt", encoding="utf-8", errors="replace") as reader:
+            yield from _parse_gfg_lines(reader)
+    else:
+        # Plain text - use StringIO for line iteration
+        with io.StringIO(data.decode("utf-8", errors="replace")) as reader:
+            yield from _parse_gfg_lines(reader)
 
-    # Decode as UTF-8
-    text = decompressed.decode("utf-8", errors="replace")
 
-    # Parse TSV with csv.reader
-    reader = csv.reader(io.StringIO(text), delimiter="\t")
+def _parse_gfg_lines(reader: io.TextIOBase) -> Iterator[GFGRecord]:
+    """Parse TSV lines from a text reader into GFGRecord models.
 
-    for line_num, row in enumerate(reader, start=1):
+    Args:
+        reader: Text IO reader to read lines from.
+
+    Yields:
+        GFGRecord: Validated frontpage graph records.
+    """
+    # Wrap reader in csv.reader for TSV parsing
+    tsv_reader = csv.reader(reader, delimiter="\t")
+
+    for line_num, row in enumerate(tsv_reader, start=1):
         # Skip empty rows
         if not row or not row[0].strip():
             continue

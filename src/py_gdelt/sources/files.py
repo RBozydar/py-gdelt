@@ -17,7 +17,7 @@ import re
 import zipfile
 from collections.abc import AsyncIterator, Iterable
 from datetime import UTC, datetime, timedelta
-from typing import Final, Literal
+from typing import Final, Literal, get_args
 
 import httpx
 
@@ -59,6 +59,9 @@ FILE_TYPE_PATTERNS: Final[dict[str, str]] = {
 # Type alias for file types
 FileType = Literal["export", "mentions", "gkg", "ngrams", "gqg", "geg", "gfg", "ggg", "gemg", "gal"]
 GraphFileType = Literal["gqg", "geg", "gfg", "ggg", "gemg", "gal"]
+
+# Tuple of graph file types derived from GraphFileType Literal
+GRAPH_FILE_TYPES: Final[tuple[str, ...]] = get_args(GraphFileType)
 
 
 class FileSource:
@@ -237,7 +240,7 @@ class FileSource:
 
             # Build URL based on file type
             # Graph datasets and ngrams use gdeltv3
-            if file_type in ("ngrams", "gqg", "geg", "gfg", "ggg", "gemg", "gal"):
+            if file_type == "ngrams" or file_type in GRAPH_FILE_TYPES:
                 # Graph datasets have their own subdirectory
                 if file_type == "ngrams":
                     url = f"http://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
@@ -249,15 +252,7 @@ class FileSource:
             urls.append(url)
 
             # Handle translation files (not supported for graph datasets)
-            if include_translation and file_type not in (
-                "ngrams",
-                "gqg",
-                "geg",
-                "gfg",
-                "ggg",
-                "gemg",
-                "gal",
-            ):
+            if include_translation and file_type != "ngrams" and file_type not in GRAPH_FILE_TYPES:
                 trans_url = url.replace(pattern, f".translation{pattern}")
                 urls.append(trans_url)
 
