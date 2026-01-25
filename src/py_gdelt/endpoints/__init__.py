@@ -17,6 +17,12 @@ from py_gdelt.endpoints.doc import DocEndpoint
 from py_gdelt.endpoints.events import EventsEndpoint
 from py_gdelt.endpoints.geo import GeoEndpoint, GeoPoint, GeoResult
 from py_gdelt.endpoints.gkg import GKGEndpoint
+from py_gdelt.endpoints.gkg_geojson import (
+    GKGGeoJSONEndpoint,
+    GKGGeoJSONFeature,
+    GKGGeoJSONResult,
+)
+from py_gdelt.endpoints.lowerthird import LowerThirdClip, LowerThirdEndpoint
 from py_gdelt.endpoints.mentions import MentionsEndpoint
 from py_gdelt.endpoints.ngrams import NGramsEndpoint
 from py_gdelt.endpoints.radio_ngrams import RadioNGramsEndpoint
@@ -31,11 +37,13 @@ from py_gdelt.endpoints.tv import (
 )
 from py_gdelt.endpoints.tv_gkg import TVGKGEndpoint
 from py_gdelt.endpoints.tv_ngrams import TVNGramsEndpoint
+from py_gdelt.endpoints.tvv import ChannelInfo, TVVEndpoint
 from py_gdelt.endpoints.vgkg import VGKGEndpoint
 
 
 __all__ = [
     "BaseEndpoint",
+    "ChannelInfo",
     "ContextEndpoint",
     "ContextEntity",
     "ContextResult",
@@ -44,9 +52,14 @@ __all__ = [
     "DocEndpoint",
     "EventsEndpoint",
     "GKGEndpoint",
+    "GKGGeoJSONEndpoint",
+    "GKGGeoJSONFeature",
+    "GKGGeoJSONResult",
     "GeoEndpoint",
     "GeoPoint",
     "GeoResult",
+    "LowerThirdClip",
+    "LowerThirdEndpoint",
     "MentionsEndpoint",
     "NGramsEndpoint",
     "RadioNGramsEndpoint",
@@ -59,5 +72,6 @@ __all__ = [
     "TVStationData",
     "TVTimeline",
     "TVTimelinePoint",
+    "TVVEndpoint",
     "VGKGEndpoint",
 ]

@@ -64,6 +64,8 @@ from py_gdelt.endpoints import (
     EventsEndpoint,
     GeoEndpoint,
     GKGEndpoint,
+    GKGGeoJSONEndpoint,
+    LowerThirdEndpoint,
     MentionsEndpoint,
     NGramsEndpoint,
     RadioNGramsEndpoint,
@@ -71,6 +73,7 @@ from py_gdelt.endpoints import (
     TVEndpoint,
     TVGKGEndpoint,
     TVNGramsEndpoint,
+    TVVEndpoint,
     VGKGEndpoint,
 )
 from py_gdelt.lookups import Lookups
@@ -648,6 +651,78 @@ class GDELTClient:
             msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
             raise RuntimeError(msg)
         return TVAIEndpoint(
+            settings=self.settings,
+            client=self._http_client,
+        )
+
+    @cached_property
+    def lowerthird(self) -> LowerThirdEndpoint:
+        """Access the LowerThird (Chyron) API.
+
+        Provides methods for searching OCR'd TV chyrons (lower-third text overlays).
+
+        Returns:
+            LowerThirdEndpoint for searching TV chyrons.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     clips = await client.lowerthird.search("breaking news")
+        """
+        if self._http_client is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return LowerThirdEndpoint(
+            settings=self.settings,
+            client=self._http_client,
+        )
+
+    @cached_property
+    def tvv(self) -> TVVEndpoint:
+        """Access the TV Visual (TVV) API for channel inventory.
+
+        Provides methods for retrieving TV channel metadata.
+
+        Returns:
+            TVVEndpoint for channel metadata.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     channels = await client.tvv.get_inventory()
+        """
+        if self._http_client is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return TVVEndpoint(
+            settings=self.settings,
+            client=self._http_client,
+        )
+
+    @cached_property
+    def gkg_geojson(self) -> GKGGeoJSONEndpoint:
+        """Access the GKG GeoJSON API (v1.0 Legacy).
+
+        Provides methods for querying geographic GKG data as GeoJSON.
+
+        Returns:
+            GKGGeoJSONEndpoint for geographic GKG queries.
+
+        Raises:
+            RuntimeError: If client not initialized (use context manager).
+
+        Example:
+            >>> async with GDELTClient() as client:
+            ...     result = await client.gkg_geojson.search("TERROR", timespan=60)
+        """
+        if self._http_client is None:
+            msg = "GDELTClient not initialized. Use 'async with GDELTClient() as client:'"
+            raise RuntimeError(msg)
+        return GKGGeoJSONEndpoint(
             settings=self.settings,
             client=self._http_client,
         )
