@@ -224,7 +224,8 @@ class FileSource:
         pattern = FILE_TYPE_PATTERNS[file_type]
         urls: list[str] = []
 
-        # GFG is hourly, others are 15-minute
+        # GFG (Frontpage Graph) files are published hourly, unlike other datasets
+        # which are published every 15 minutes. See GDELT documentation.
         delta = timedelta(hours=1) if file_type == "gfg" else timedelta(minutes=15)
 
         # Generate URLs for time intervals

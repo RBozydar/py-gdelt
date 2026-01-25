@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from py_gdelt.endpoints.graphs import GraphEndpoint
+from py_gdelt.endpoints.graphs import GraphEndpoint, _normalize_languages
 from py_gdelt.filters import (
     DateRange,
     GALFilter,
@@ -1159,3 +1159,105 @@ class TestGraphEndpointDateParsing:
 
         assert len(records) == 1
         assert records[0].date == datetime(2024, 1, 15, 14, 30, 0, tzinfo=UTC)
+
+
+class TestNormalizeLanguages:
+    """Tests for _normalize_languages helper function."""
+
+    def test_normalize_languages_none_returns_none(self) -> None:
+        """Test that None input returns None."""
+        result = _normalize_languages(None)
+        assert result is None
+
+    def test_normalize_languages_lowercase(self) -> None:
+        """Test that uppercase languages are converted to lowercase."""
+        result = _normalize_languages(["EN", "DE", "FR"])
+        assert result == {"en", "de", "fr"}
+
+    def test_normalize_languages_already_lowercase(self) -> None:
+        """Test that lowercase languages are preserved."""
+        result = _normalize_languages(["en", "de", "fr"])
+        assert result == {"en", "de", "fr"}
+
+    def test_normalize_languages_mixed_case(self) -> None:
+        """Test that mixed case languages are normalized."""
+        result = _normalize_languages(["En", "dE", "FR", "es"])
+        assert result == {"en", "de", "fr", "es"}
+
+    def test_normalize_languages_returns_set(self) -> None:
+        """Test that result is a set for efficient lookup."""
+        result = _normalize_languages(["en", "en", "EN"])
+        assert isinstance(result, set)
+        assert result == {"en"}
+
+
+class TestCaseInsensitiveLanguageFiltering:
+    """Tests for case-insensitive language filtering in endpoints."""
+
+    @pytest.mark.asyncio
+    async def test_uppercase_filter_matches_lowercase_record(
+        self,
+        mock_file_source: MagicMock,
+    ) -> None:
+        """Test that filtering with uppercase ['EN'] matches records with lang='en'."""
+        endpoint = GraphEndpoint(file_source=mock_file_source)
+
+        # Record has lowercase 'en'
+        record = {
+            "date": "20240101120000",
+            "url": "https://example.com/article",
+            "lang": "en",
+            "quotes": [],
+        }
+        data = json.dumps(record).encode("utf-8")
+
+        async def mock_fetch_graph_files(
+            _graph_type: str, _date_range: DateRange
+        ) -> AsyncIterator[tuple[str, bytes]]:
+            yield ("http://test.url/gqg.jsonl.gz", data)
+
+        endpoint._fetcher.fetch_graph_files = mock_fetch_graph_files
+
+        # Filter with uppercase 'EN'
+        filter_obj = GQGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            languages=["EN"],
+        )
+
+        records = [rec async for rec in endpoint.stream_gqg(filter_obj)]
+        assert len(records) == 1
+        assert records[0].lang == "en"
+
+    @pytest.mark.asyncio
+    async def test_lowercase_filter_matches_uppercase_record(
+        self,
+        mock_file_source: MagicMock,
+    ) -> None:
+        """Test that filtering with lowercase ['en'] matches records with lang='EN'."""
+        endpoint = GraphEndpoint(file_source=mock_file_source)
+
+        # Record has uppercase 'EN'
+        record = {
+            "date": "20240101120000",
+            "url": "https://example.com/article",
+            "lang": "EN",
+            "quotes": [],
+        }
+        data = json.dumps(record).encode("utf-8")
+
+        async def mock_fetch_graph_files(
+            _graph_type: str, _date_range: DateRange
+        ) -> AsyncIterator[tuple[str, bytes]]:
+            yield ("http://test.url/gqg.jsonl.gz", data)
+
+        endpoint._fetcher.fetch_graph_files = mock_fetch_graph_files
+
+        # Filter with lowercase 'en'
+        filter_obj = GQGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            languages=["en"],
+        )
+
+        records = [rec async for rec in endpoint.stream_gqg(filter_obj)]
+        assert len(records) == 1
+        assert records[0].lang == "EN"

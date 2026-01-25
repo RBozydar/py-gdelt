@@ -203,6 +203,122 @@ class TestGraphModels:
         assert record.lon == -74.0060
         assert record.context == "Event in New York City"
 
+    def test_ggg_record_valid_coordinates(self) -> None:
+        """Test GGGRecord accepts valid coordinates."""
+        data = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "Portland",
+            "lat": 45.0,
+            "lon": -122.0,
+            "context": "Event in Portland",
+        }
+        record = GGGRecord.model_validate(data)
+        assert record.lat == 45.0
+        assert record.lon == -122.0
+
+    def test_ggg_record_edge_case_coordinates(self) -> None:
+        """Test GGGRecord accepts edge case coordinates (poles and date line)."""
+        # North pole
+        data_north = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "North Pole",
+            "lat": 90.0,
+            "lon": 0.0,
+            "context": "At the North Pole",
+        }
+        record_north = GGGRecord.model_validate(data_north)
+        assert record_north.lat == 90.0
+
+        # South pole
+        data_south = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "South Pole",
+            "lat": -90.0,
+            "lon": 0.0,
+            "context": "At the South Pole",
+        }
+        record_south = GGGRecord.model_validate(data_south)
+        assert record_south.lat == -90.0
+
+        # Date line east
+        data_east = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "Date Line East",
+            "lat": 0.0,
+            "lon": 180.0,
+            "context": "At the date line",
+        }
+        record_east = GGGRecord.model_validate(data_east)
+        assert record_east.lon == 180.0
+
+        # Date line west
+        data_west = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "Date Line West",
+            "lat": 0.0,
+            "lon": -180.0,
+            "context": "At the date line",
+        }
+        record_west = GGGRecord.model_validate(data_west)
+        assert record_west.lon == -180.0
+
+    def test_ggg_record_invalid_latitude_too_high(self) -> None:
+        """Test GGGRecord rejects latitude > 90."""
+        data = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "Invalid",
+            "lat": 91.0,
+            "lon": 0.0,
+            "context": "Invalid latitude",
+        }
+        with pytest.raises(ValidationError, match="Latitude must be between -90 and 90"):
+            GGGRecord.model_validate(data)
+
+    def test_ggg_record_invalid_latitude_too_low(self) -> None:
+        """Test GGGRecord rejects latitude < -90."""
+        data = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "Invalid",
+            "lat": -91.0,
+            "lon": 0.0,
+            "context": "Invalid latitude",
+        }
+        with pytest.raises(ValidationError, match="Latitude must be between -90 and 90"):
+            GGGRecord.model_validate(data)
+
+    def test_ggg_record_invalid_longitude_too_high(self) -> None:
+        """Test GGGRecord rejects longitude > 180."""
+        data = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "Invalid",
+            "lat": 0.0,
+            "lon": 181.0,
+            "context": "Invalid longitude",
+        }
+        with pytest.raises(ValidationError, match="Longitude must be between -180 and 180"):
+            GGGRecord.model_validate(data)
+
+    def test_ggg_record_invalid_longitude_too_low(self) -> None:
+        """Test GGGRecord rejects longitude < -180."""
+        data = {
+            "date": "20250120103000",
+            "url": "https://example.com",
+            "location_name": "Invalid",
+            "lat": 0.0,
+            "lon": -181.0,
+            "context": "Invalid longitude",
+        }
+        with pytest.raises(ValidationError, match="Longitude must be between -180 and 180"):
+            GGGRecord.model_validate(data)
+
     def test_metatag_model(self) -> None:
         """Test MetaTag model with type alias."""
         data = {"key": "og:title", "type": "property", "value": "Test Article"}
