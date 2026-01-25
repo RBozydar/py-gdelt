@@ -26,7 +26,7 @@ MARKDOWN_PATH = REPO_ROOT / "gdelt_docs" / "cameo_docs" / "chapter_2_verb_codebo
 JSON_PATH = REPO_ROOT / "src" / "py_gdelt" / "lookups" / "data" / "cameo_codes.json"
 
 # Regex patterns for parsing markdown tables
-_ROW_PATTERN = re.compile(r"^\|\s*([^|]+?)\s*\|\s*(.+?)\s*\|$")
+_ROW_PATTERN = re.compile(r"^\|\s*([^|]+?)\s*\|\s*(.+)\s*\|$")
 _SEPARATOR_PATTERN = re.compile(r"^\|[\s-]+\|[\s-]+\|$")
 
 
