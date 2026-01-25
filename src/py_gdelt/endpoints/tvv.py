@@ -70,7 +70,7 @@ class ChannelInfo(BaseModel):
         """Parse start_date integer to date object.
 
         Returns:
-            Date object or None if parsing fails.
+            Date object, or None if parsing fails (e.g., invalid dates like 99999999).
         """
         try:
             return datetime.strptime(str(self.start_date), "%Y%m%d").replace(tzinfo=UTC).date()
