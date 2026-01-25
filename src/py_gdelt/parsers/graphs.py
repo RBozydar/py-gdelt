@@ -63,14 +63,11 @@ def _parse_jsonl(data: bytes, model_cls: type[T]) -> Iterator[T]:
     Yields:
         T: Validated Pydantic model instances.
     """
-    # Use streaming approach to reduce memory usage
     if data.startswith(b"\x1f\x8b"):
-        # Gzipped data - use gzip.open for streaming decompression
         fileobj = io.BytesIO(data)
         with gzip.open(fileobj, "rt", encoding="utf-8", errors="replace") as reader:
             yield from _parse_lines(reader, model_cls)
     else:
-        # Plain text - use StringIO for line iteration
         with io.StringIO(data.decode("utf-8", errors="replace")) as reader:
             yield from _parse_lines(reader, model_cls)
 
@@ -170,14 +167,11 @@ def parse_gfg(data: bytes) -> Iterator[GFGRecord]:
     Yields:
         GFGRecord: Validated frontpage graph records.
     """
-    # Use streaming approach to reduce memory usage (like _parse_jsonl)
     if data.startswith(b"\x1f\x8b"):
-        # Gzipped data - use gzip.open for streaming decompression
         fileobj = io.BytesIO(data)
         with gzip.open(fileobj, "rt", encoding="utf-8", errors="replace") as reader:
             yield from _parse_gfg_lines(reader)
     else:
-        # Plain text - use StringIO for line iteration
         with io.StringIO(data.decode("utf-8", errors="replace")) as reader:
             yield from _parse_gfg_lines(reader)
 

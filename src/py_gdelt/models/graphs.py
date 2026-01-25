@@ -242,7 +242,6 @@ class GFGRecord(SchemaEvolutionMixin, BaseModel):
         Returns:
             Validated GFGRecord with all fields parsed and typed.
         """
-        # Parse date using module helper for consistency
         date = _parse_gdelt_date(raw.date)
 
         # Parse page_position (default to 0 if empty)
