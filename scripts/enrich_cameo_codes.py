@@ -25,6 +25,10 @@ REPO_ROOT = Path(__file__).parent.parent
 MARKDOWN_PATH = REPO_ROOT / "gdelt_docs" / "cameo_docs" / "chapter_2_verb_codebook.md"
 JSON_PATH = REPO_ROOT / "src" / "py_gdelt" / "lookups" / "data" / "cameo_codes.json"
 
+# Regex patterns for parsing markdown tables
+_ROW_PATTERN = re.compile(r"^\|\s*([^|]+?)\s*\|\s*(.+?)\s*\|$")
+_SEPARATOR_PATTERN = re.compile(r"^\|[\s-]+\|[\s-]+\|$")
+
 
 def parse_markdown_entries(content: str) -> dict[str, dict[str, Any]]:
     """Parse CAMEO code entries from markdown content.
@@ -40,18 +44,13 @@ def parse_markdown_entries(content: str) -> dict[str, dict[str, Any]]:
     current_usage_notes: list[str] = []
     current_examples: list[str] = []
 
-    # Pattern to match table rows: | Field | Value |
-    row_pattern = re.compile(r"^\|\s*([^|]+?)\s*\|\s*(.+?)\s*\|$")
-    # Pattern to detect table separator rows (|---|---|)
-    separator_pattern = re.compile(r"^\|[\s-]+\|[\s-]+\|$")
-
     lines = content.splitlines()
     for i, line in enumerate(lines):
         # Check if this line is a separator row
-        if separator_pattern.match(line):
+        if _SEPARATOR_PATTERN.match(line):
             # Look at the previous line to see if it starts a new entry
             if i > 0:
-                prev_match = row_pattern.match(lines[i - 1])
+                prev_match = _ROW_PATTERN.match(lines[i - 1])
                 if prev_match:
                     prev_field = prev_match.group(1).strip().lower()
                     prev_value = prev_match.group(2).strip()
@@ -75,7 +74,7 @@ def parse_markdown_entries(content: str) -> dict[str, dict[str, Any]]:
                         current_examples = []
             continue
 
-        match = row_pattern.match(line)
+        match = _ROW_PATTERN.match(line)
         if not match:
             continue
 
