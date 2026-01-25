@@ -26,8 +26,10 @@ __all__ = [
     "GFGFilter",
     "GGGFilter",
     "GKGFilter",
+    "GKGGeoJSONFilter",
     "GQGFilter",
     "GeoFilter",
+    "LowerThirdFilter",
     "NGramsFilter",
     "RadioNGramsFilter",
     "TVFilter",
@@ -289,6 +291,54 @@ class NGramsFilter(BaseModel):
             msg = "min_position must be <= max_position"
             raise ValueError(msg)
         return self
+
+
+class LowerThirdFilter(BaseModel):
+    """Filter for LowerThird (Chyron) API queries.
+
+    Attributes:
+        query: Search terms. Supports exact phrases, boolean operators,
+            show filters (show:"name"), station filters (station:CNN).
+        timespan: Time offset (e.g., "24h", "7d", "1w"). Mutually exclusive
+            with start_datetime/end_datetime.
+        start_datetime: Start of date range (YYYYMMDDHHMMSS format internally).
+        end_datetime: End of date range.
+        mode: Output mode - ClipGallery, TimelineVol, StationChart.
+        max_results: Max records (1-3000, default 250).
+        sort: Sort order - DateDesc, DateAsc, or None for relevance.
+    """
+
+    query: str
+    timespan: str | None = None
+    start_datetime: datetime | None = None
+    end_datetime: datetime | None = None
+    mode: Literal["ClipGallery", "TimelineVol", "StationChart"] = "ClipGallery"
+    max_results: int = Field(default=250, ge=1, le=3000)
+    sort: Literal["DateDesc", "DateAsc"] | None = None
+
+    @model_validator(mode="after")
+    def validate_time_constraints(self) -> LowerThirdFilter:
+        """Validate that timespan and datetime range are mutually exclusive."""
+        if self.timespan and (self.start_datetime or self.end_datetime):
+            msg = "Cannot specify both timespan and datetime range"
+            raise ValueError(msg)
+        return self
+
+
+class GKGGeoJSONFilter(BaseModel):
+    """Filter for GKG GeoJSON API (v1.0 Legacy).
+
+    Note:
+        This is a v1.0 API that uses UPPERCASE parameter names.
+        The timespan is limited to 1440 minutes (24 hours).
+
+    Attributes:
+        query: Theme, person, or organization to search.
+        timespan: Minutes of data to include (1-1440, default 60).
+    """
+
+    query: str
+    timespan: int = Field(default=60, ge=1, le=1440)
 
 
 class VGKGFilter(BaseModel):
