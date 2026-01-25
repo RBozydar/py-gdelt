@@ -84,7 +84,7 @@ class Countries:
             return self._countries_data[code_upper]
         # Try ISO3 via reverse mapping
         fips = self._iso_to_fips_mapping.get(code_upper)
-        if fips:
+        if fips is not None:
             return self._countries_data[fips]
         raise KeyError(code)
 
@@ -101,11 +101,11 @@ class Countries:
         code_upper = code.upper()
         # Try FIPS first
         entry = self._countries_data.get(code_upper)
-        if entry:
+        if entry is not None:
             return entry
         # Try ISO3 via reverse mapping
         fips = self._iso_to_fips_mapping.get(code_upper)
-        if fips:
+        if fips is not None:
             return self._countries_data.get(fips)
         return None
 
