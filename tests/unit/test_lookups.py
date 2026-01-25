@@ -18,6 +18,7 @@ from py_gdelt.lookups import (
     Languages,
     Lookups,
 )
+from py_gdelt.lookups.models import CAMEOCodeEntry
 
 
 class TestCAMEOCodes:
@@ -96,6 +97,43 @@ class TestCAMEOCodes:
         cameo = CAMEOCodes()
         results = cameo.search("NONEXISTENT_XYZ")
         assert results == []
+
+    def test_search_include_examples_finds_in_examples(self) -> None:
+        """Test search with include_examples=True finds matches in examples field."""
+        cameo = CAMEOCodes()
+        # "NATO" appears in examples for code "010" and "011" but not in name/description
+        results_without = cameo.search("NATO")
+        results_with = cameo.search("NATO", include_examples=True)
+        # With include_examples=True, should find more results
+        assert len(results_with) > len(results_without)
+        # Code "010" has NATO in examples
+        assert "010" in results_with
+
+    def test_search_include_examples_finds_in_usage_notes(self) -> None:
+        """Test search with include_examples=True finds matches in usage_notes field."""
+        cameo = CAMEOCodes()
+        # "verbal act" appears in usage_notes but not in name/description
+        results_without = cameo.search("verbal act")
+        results_with = cameo.search("verbal act", include_examples=True)
+        # With include_examples=True, should find more results
+        assert len(results_with) > len(results_without)
+        # Codes 011, 012, 013, etc. have "verbal act" in usage_notes
+        assert "011" in results_with
+
+    def test_search_include_examples_case_insensitive(self) -> None:
+        """Test search with include_examples is case-insensitive for examples."""
+        cameo = CAMEOCodes()
+        results_lower = cameo.search("nato", include_examples=True)
+        results_upper = cameo.search("NATO", include_examples=True)
+        assert results_lower == results_upper
+
+    def test_search_include_examples_default_false(self) -> None:
+        """Test that include_examples defaults to False for backward compatibility."""
+        cameo = CAMEOCodes()
+        # Using the default should be equivalent to include_examples=False
+        results_default = cameo.search("NATO")
+        results_explicit = cameo.search("NATO", include_examples=False)
+        assert results_default == results_explicit
 
     def test_get_goldstein_valid_code(self) -> None:
         """Test get_goldstein returns correct Goldstein entry."""
@@ -224,6 +262,71 @@ class TestCAMEOCodes:
         assert cameo.get_goldstein_category(-2.0) == "mildly_conflictual"
         # Boundary at 0: 0.0 is cooperative, -0.01 is mildly_conflictual
         assert cameo.get_goldstein_category(0.0) == "cooperative"
+
+    def test_cameo_code_entry_is_hashable(self) -> None:
+        """Test CAMEOCodeEntry is hashable and can be used in sets/dicts."""
+        entry = CAMEOCodeEntry(
+            name="Test",
+            description="Test description",
+            quad_class=1,
+            examples=("example1", "example2"),
+        )
+
+        # Should be hashable
+        h = hash(entry)
+        assert isinstance(h, int)
+
+        # Should work in set
+        s = {entry}
+        assert entry in s
+
+        # Should work as dict key
+        d = {entry: "value"}
+        assert d[entry] == "value"
+
+    def test_codes_with_examples_returns_list(self) -> None:
+        """Test codes_with_examples returns a list of codes."""
+        cameo = CAMEOCodes()
+        result = cameo.codes_with_examples()
+        assert isinstance(result, list)
+        # All returned codes should have non-empty examples
+        for code in result:
+            entry = cameo[code]
+            assert entry.examples, f"Code {code} should have examples"
+
+    def test_codes_with_examples_excludes_empty(self) -> None:
+        """Test codes_with_examples excludes codes with empty examples."""
+        cameo = CAMEOCodes()
+        codes_with = cameo.codes_with_examples()
+        # Verify there are some codes without examples (not all codes should be returned)
+        all_codes = list(cameo._codes_data.keys())
+        codes_without = [c for c in all_codes if c not in codes_with]
+        # If there are codes without examples, verify they have empty examples
+        for code in codes_without:
+            entry = cameo[code]
+            assert not entry.examples, f"Code {code} should not have examples"
+
+    def test_codes_with_usage_notes_returns_list(self) -> None:
+        """Test codes_with_usage_notes returns a list of codes."""
+        cameo = CAMEOCodes()
+        result = cameo.codes_with_usage_notes()
+        assert isinstance(result, list)
+        # All returned codes should have non-None usage_notes
+        for code in result:
+            entry = cameo[code]
+            assert entry.usage_notes is not None, f"Code {code} should have usage_notes"
+
+    def test_codes_with_usage_notes_excludes_none(self) -> None:
+        """Test codes_with_usage_notes excludes codes with None usage_notes."""
+        cameo = CAMEOCodes()
+        codes_with = cameo.codes_with_usage_notes()
+        # Verify there are some codes without usage_notes
+        all_codes = list(cameo._codes_data.keys())
+        codes_without = [c for c in all_codes if c not in codes_with]
+        # If there are codes without usage_notes, verify they have None
+        for code in codes_without:
+            entry = cameo[code]
+            assert entry.usage_notes is None, f"Code {code} should not have usage_notes"
 
 
 class TestGKGThemes:

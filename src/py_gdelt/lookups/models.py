@@ -32,7 +32,7 @@ class CAMEOCodeEntry(BaseModel):
         name: Short name of the CAMEO code
         description: Detailed description of what the code represents
         usage_notes: Optional notes about when and how to use this code
-        examples: List of real-world example scenarios for this code
+        examples: Tuple of real-world example scenarios for this code
         parent: Parent code in the CAMEO hierarchy (e.g., "01" for "011")
         quad_class: Quad class classification (1-4)
         root: Whether this is a root-level code
@@ -43,7 +43,7 @@ class CAMEOCodeEntry(BaseModel):
     name: str
     description: str
     usage_notes: str | None = None
-    examples: list[str] = []
+    examples: tuple[str, ...] = ()
     parent: str | None = None
     quad_class: int
     root: bool = False

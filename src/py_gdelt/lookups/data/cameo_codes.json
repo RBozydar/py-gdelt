@@ -9,43 +9,71 @@
     "name": "Make statement, not specified below",
     "description": "Make statement, not specified below",
     "parent": "01",
-    "quad_class": 1
+    "quad_class": 1,
+    "examples": [
+      "U.S. military chief General Colin Powell said on Wednesday NATO would need to remain strong."
+    ]
   },
   "011": {
     "name": "Decline comment",
     "description": "Decline comment",
     "parent": "01",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is a verbal act. The target could be who the source actor declines to make a comment to or about.",
+    "examples": [
+      "NATO on Monday declined to comment on an estimate that Yugoslav army and special police troops in Kosovo were losing 90 to 100 dead per day in NATO air strikes."
+    ]
   },
   "012": {
     "name": "Make pessimistic comment",
     "description": "Make pessimistic comment",
     "parent": "01",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is a verbal act. Only statements with explicit pessimistic components should be coded as 012; otherwise, default to 010.",
+    "examples": [
+      "Former West Germany Chancellor Willy Brandt said in a radio interview broadcast today he was skeptical over Moscow's will to agree on limiting European-based nuclear weapons. Israeli Prime Minister Ehud Barak said Friday he was very pessimistic about the chances of resuming peace talks with Syria, Israel radio reported."
+    ]
   },
   "013": {
     "name": "Make optimistic comment",
     "description": "Make optimistic comment",
     "parent": "01",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is a verbal act. Only statements with explicit optimistic components should be coded as 013; otherwise, default to 010.",
+    "examples": [
+      "Turkish President Turgut Ozal said on Wednesday he was confident that the United States would remove irritants damaging relations between the two NATO allies."
+    ]
   },
   "014": {
     "name": "Consider policy option",
     "description": "Consider policy option",
     "parent": "01",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is typically, although not exclusively, a verbal act. There is no limitation on types of policies that could be under consideration. Europe's leading security forum is exploring the possibility of international patrols to monitor the former Yugoslav republic of Macedonia's border with Serbia, its envoy said on Friday.",
+    "examples": [
+      "Malaysia is considering giving money to 20,000 Vietnamese boat people in the country to entice them to return home, foreign minister said on Tuesday."
+    ]
   },
   "015": {
     "name": "Acknowledge or claim responsibility",
     "description": "Acknowledge or claim responsibility",
     "parent": "01",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is a verbal act. Remorseful acknowledgements should be coded as 'Apologize' (055) instead.",
+    "examples": [
+      "A Damascus-based Palestinian guerrilla group claimed responsibility on Saturday for attacks on Israeli troops from Jordan in the past two days."
+    ]
   },
   "016": {
     "name": "Deny responsibility",
     "description": "Deny responsibility",
     "parent": "01",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is a verbal act. The target for this event type is the party that introduces some accusation or charge against the source actor who denies responsibility.",
+    "examples": [
+      "The government of Liberia denied on Thursday charges by Ivory Coast that Monrovia is committing genocide.",
+      "South Korea on Friday rejected as \"totally baseless\" accusations by Amnesty International that it had carried out mass arrests of political prisoners, but church human rights groups here supported the accusations."
+    ]
   },
   "017": {
     "name": "Engage in symbolic act",
@@ -93,7 +121,11 @@
     "name": "Appeal for military cooperation",
     "description": "Appeal for military cooperation",
     "parent": "021",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Use this code for requests to develop or expand military relations by engaging in acts such as joint military maneuvers or exercises. Appeals for provision of military aid-not mutual exchange-are coded as 0232 instead. Actual events of military cooperation are coded as 062.",
+    "examples": [
+      "South Korea has requested to lease a Russian military training ground, mil- itary officers in Seoul said on Thursday."
+    ]
   },
   "0213": {
     "name": "Appeal for judicial cooperation",
@@ -111,7 +143,13 @@
     "name": "Appeal for diplomatic cooperation (such as policy support)",
     "description": "Appeal for diplomatic cooperation (such as policy support)",
     "parent": "02",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is typically, although not exclusively, a verbal act. It refers to appeals for expanded diplomatic ties and non-tangible support on particular policies. Appeals for more specific forms of diplomacy, such as mediation and negotiation, are coded elsewhere within category 02.",
+    "examples": [
+      "North Korean state media have called on the United States to forge \"ties of confidence\" with Pyongyang ahead of six-party nuclear talks expected to be held in Beijing on July 26.",
+      "Charles Taylor called on Liberians to stand by him during these difficult days, \"Soon this bad wind shall pass,\" he moaned.",
+      "Lebanese President Amin G emayel has asked President Reagan for full United States support for Lebanon's cause, the White House said today."
+    ]
   },
   "023": {
     "name": "Appeal for aid, not specified below",
@@ -129,7 +167,11 @@
     "name": "Appeal for military aid",
     "description": "Appeal for military aid",
     "parent": "023",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is typically, although not exclusively, a verbal act. Requests for or suggestions of joint military actions, rather than unilateral military aid, should be coded as 0212 instead.",
+    "examples": [
+      "Angola has asked Portugal for military aid, especially instructors for its Soviet- and Cuban-trained armed forces, a Lisbon newspaper said today."
+    ]
   },
   "0233": {
     "name": "Appeal for humanitarian aid",
@@ -153,7 +195,12 @@
     "name": "Appeal for change in leadership",
     "description": "Appeal for change in leadership",
     "parent": "024",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form refers to verbal and non-threatening appeals. More forceful \"demands\" for leadership change are coded as 1041; demonstrations, protests, etc. demanding change in leadership/power are coded under category 14. Note that even though calls for the target to resign or relinquish power are forms of yielding, they are still coded here. Also code appeals for elections here.",
+    "examples": [
+      "Members of parliament from Kenya's Liberal Democratic Party called on Energy Minister Kiraitu Murungi to resign in the wake of new evidence over the $7 billion scandals. The UN Security Council has called on Haiti's interim government to hold elections by 7 February.",
+      "The UN Security Council has called on Haiti's interim government to hold elections by 7 February."
+    ]
   },
   "0242": {
     "name": "Appeal for policy change",
@@ -165,13 +212,22 @@
     "name": "Appeal for rights",
     "description": "Appeal for rights",
     "parent": "024",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form refers to verbal and non-threatening appeals. More forceful \"demands\" for rights are coded as 1043; demonstrations, protests, etc. demanding certain rights are coded under category 14. If it is clear from the lead that by requesting certain rights the source is in fact appealing to the target to yield or concede, the event might be better coded under 025. Appeals for provision of compensation for previously violated rights, for instance, are coded as 025. The UN urged the Maoists rebels in Nepal to honor human rights, according to the UN High Commissioner for Human Rights (UNHCR). The international committee of the Lebanese Living Abroad movement is contacting a number of Lebanese legislatures to propose a new addendum incorporating the right to vote abroad into the electoral law adopted for the upcoming parliamentary elections.",
+    "examples": [
+      "The international committee of the Lebanese Living Abroad movement is contacting a number of Lebanese legislatures to propose a new addendum incorporating the right to vote abroad into the electoral law adopted for the upcoming parliamentary elections."
+    ]
   },
   "0244": {
     "name": "Appeal for change in institutions, regime",
     "description": "Appeal for change in institutions, regime",
     "parent": "024",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form refers to verbal and non-threatening appeals. More forceful \"demands\" for institutional change are coded as 1044; demonstrations, protests, etc. demanding such change are coded under category 14. Institutional change is different from policy change in that the former directly alters the rules of the game. Requests for fundamental changes in the political system (e.g. democratization) as well as for more limited institutional changes (e.g. changing electoral law) are coded here.",
+    "examples": [
+      "President Emile Lahoud has pushed the Lebanese Parliament for a new election law two days before he is to call parliamentary elections.",
+      "Scandal-plagued President Gloria Macapagal Arroyo on Monday urged Congress in the Philippines to change the constitution to shift to a parliamentary form of government to ease the country's constant political instability."
+    ]
   },
   "025": {
     "name": "Appeal to yield, not specified below",
@@ -195,7 +251,11 @@
     "name": "Appeal for release of persons or property",
     "description": "Appeal for release of persons or property",
     "parent": "025",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Use this code for requests for the target to release prisoners, hostages, and any confiscated property.",
+    "examples": [
+      "The United States called on Israel to move forward with its \"courageous and historic\" disengagement plan as fast as possible."
+    ]
   },
   "0254": {
     "name": "Appeal for easing of economic sanctions, boycott, or embargo",
@@ -213,7 +273,13 @@
     "name": "Appeal for de-escalation of military engagement",
     "description": "Appeal for de-escalation of military engagement",
     "parent": "025",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Use this code for appeals for ceasefires, military withdrawals, and demobilization.",
+    "examples": [
+      "The presidents of Iraq and Egypt called on Tuesday for the withdrawa l of Syrian and other foreign forces from Lebanon to end 14 years of civil war there. Because of the compound source (governments of Iraq and Egypt), two events are coded. Leaders of the 16-member Economic Community of West African States (ECOWAS) called on Wednesday for an immediate ceasefire in war-torn Liberia.",
+      "CAMEO 026",
+      "El Salvador on Monday requested an urgent Security Council meeting on Wednesday to deal with what it called violations by Nicaragua of the Central American peace accords."
+    ]
   },
   "026": {
     "name": "Appeal to others to meet or negotiate",
@@ -267,7 +333,11 @@
     "name": "Express intent to cooperate on judicial matters",
     "description": "Express intent to cooperate on judicial matters",
     "parent": "031",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form refers to agreements, promises, commitments, or other indications of intent to develop or expand judicial cooperation by engaging in such acts as extraditions.",
+    "examples": [
+      "Libya has offered to hand over to an Arab country two of its nationals suspected by the West of blowing up a Pan Am plane in 1988, a state-owned Egyptian newspaper said."
+    ]
   },
   "0314": {
     "name": "Express intent to cooperate on intelligence",
@@ -297,13 +367,22 @@
     "name": "Express intent to provide military aid",
     "description": "Express intent to provide military aid",
     "parent": "033",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Use this event form to code commitments to provide all forms of military aid. Promises to engage in bilateral or multilateral military cooperation should be coded as 0312 instead.",
+    "examples": [
+      "British Defence Secretary Tom King has promised to continue military aid to war-torn Mozambique.",
+      "Syria has again offered its troops to Lebanon's new President Elias Hrawi to help him oust General Michel Aoun from the Christian enclave Aoun controls."
+    ]
   },
   "0333": {
     "name": "Express intent to provide humanitarian aid",
     "description": "Express intent to provide humanitarian aid",
     "parent": "033",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Use this code for commitments to provide all forms of humanitarian aid, including evacuations from dangerous zones and shelter for refugees. However, note that expressions of intent to provide military security or peacekeeping forces are coded as 0334 instead. Actual provisions of humanitarian aid are coded as 073.",
+    "examples": [
+      "The United Nations will provide nearly 25,000 tons of emergency food aid to refugees fleeing the civil war in Liberia, the World Food Program (WFP) said on Monday."
+    ]
   },
   "0334": {
     "name": "Express intent to provide military protection or peacekeeping",
@@ -321,7 +400,12 @@
     "name": "Express intent to change leadership",
     "description": "Express intent to change leadership",
     "parent": "034",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Commitments to resign or hand over power, as well to hold elections that might open the way for change in leadership, are coded here. Note that while commitments for other forms of yielding are coded under 035, commitments to give up power are coded here. Ousted President Askar Akyev has agreed to resign without returning to the Kyrgyzstan, the Parliament speaker said Saturday. Because no specific group is mentioned, the country alone is coded as the target. Use this code for commitments to bring policy change-political, economic, military, social, or otherwise. If the policy change in question clearly represents a form of yielding, the appropriate code under 035 should be used instead.",
+    "examples": [
+      "CAMEO 0342",
+      "Planning and Investment Minister Tran Xuan Gia said Vietnam is committed to opening up the economy but will not be rushed, in a rare interview late on Friday. Vietnam can be coded as the target since the country in general is obviously going to be affected from such a change in policy."
+    ]
   },
   "0342": {
     "name": "Express intent to change policy",
@@ -333,7 +417,10 @@
     "name": "Express intent to provide rights",
     "description": "Express intent to provide rights",
     "parent": "034",
-    "quad_class": 1
+    "quad_class": 1,
+    "examples": [
+      "Turkey will allow up to 13,000 Turkish Kurd refugees who have lived in Iraq for more than a decade to return home as part of a UN-brokered deal."
+    ]
   },
   "0344": {
     "name": "Express intent to change institutions, regime",
@@ -363,7 +450,12 @@
     "name": "Express intent to release persons or property",
     "description": "Express intent to release persons or property",
     "parent": "035",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Commitments to release or exchange prisoners and hostages, as well as committments to return previously confiscated properties, are coded here.",
+    "examples": [
+      "The Fijian rebels said they will release Prime Minister Mahendra Chaudhry and more than 30 members of his government, whom they had taken hostage two weeks ago, on the weekend. The rebel Revolutionary United Front (RUF) announced it will return weapons and military equipment seized last year from United Nations peace- keepers, according to reports reaching here from the country's capital Free- town. Under the disengagement plan, Isreal will evacuate all 21 settlements in the Gaza Strip in mid-August, said spokesperson for the Israeli prime minister.",
+      "Under the disengagement plan, Isreal will evacuate all 21 settlements in the Gaza Strip in mid-August, said spokesperson for the Israeli prime minister."
+    ]
   },
   "0354": {
     "name": "Express intent to ease economic sanctions, boycott, or embargo",
@@ -381,7 +473,13 @@
     "name": "Express intent to de-escalate military engagement",
     "description": "Express intent to de-escalate military engagement",
     "parent": "035",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Use this code for appeals for ceasefire, military withdrawals, and demobilization.",
+    "examples": [
+      "Yugoslavia and Slovenia agreed to a ceasefire after two days of fierce fighting but media reports said sporadic clashes were still continuing.",
+      "Two reciprocal events are coded with actors reversed. Shefket Musliu said on 21 May in Konculj, in the Federal Republic of Yugoslavia, that his forces will lay down their weapons and disband by the end of the month because \"the time has come. . . . to seek changes through political means,\" AP reported.",
+      "Syria says it is willing to withdraw its troops from neighboring Lebanon, after fifteen years of effective military occupation."
+    ]
   },
   "036": {
     "name": "Express intent to meet or negotiate",
@@ -417,7 +515,11 @@
     "name": "Consult, not specified below",
     "description": "Consult, not specified below",
     "parent": "04",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This residual category is not coded except when distinctions among 041 through 046 cannot be made. Note that events coded under 04 are typically, although not always, reciprocal events.",
+    "examples": [
+      "A group of African diplomats held their first meeting with President Par- vanov at a lunch hosted by the Ambassador of Kingdom of Morocco. This lead is coded as 040 since the place of the meeting is not explicit in the lead, hence we cannot code it as a visit made or hosted, and no negotiations are implied (so, we cannot code it as 'Engage in negotiation')."
+    ]
   },
   "041": {
     "name": "Discuss by telephone",
@@ -441,13 +543,20 @@
     "name": "Meet at a \"third\" location",
     "description": "Meet at a \"third\" location",
     "parent": "04",
-    "quad_class": 1
+    "quad_class": 1,
+    "examples": [
+      "U.S. and Soviet negotiators return to Geneva this week for talk on limiting the number of European-based nuclear missiles, an issue likely to dominate East-West relations this year."
+    ]
   },
   "045": {
     "name": "Mediate",
     "description": "Mediate",
     "parent": "04",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event code should be used only when a party meets with others explicitly as a mediator. The source is always the mediator and adversaries are the targets. All other cases of meetings and negotiations, where the pur- pose of the meeting or the role of the source actor is not specified, should be coded elsewhere under category 04. If meetings, discussions, or negoti- tions are explicitly reported as involving mediators, the mediation code takes precedence as long as the party acting as the mediator is identified in the lead.",
+    "examples": [
+      "Arab League Secretary General Chadli Klibi undertook mediation mission between Syria and Palestinian leader Yasser Arafat."
+    ]
   },
   "046": {
     "name": "Engage in negotiation",
@@ -465,13 +574,17 @@
     "name": "Engage in diplomatic cooperation, not specified below",
     "description": "Engage in diplomatic cooperation, not specified below",
     "parent": "05",
-    "quad_class": 1
+    "quad_class": 1,
+    "examples": [
+      "Two reciprocal events are coded with actors reversed."
+    ]
   },
   "051": {
     "name": "Praise or endorse",
     "description": "Praise or endorse",
     "parent": "05",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is typically, although not exclusively, a verbal act. A top U.S. official today praised Haiti's efforts to improve its record on human rights and said it was an important partner for the United States. The West German government today welcomed President Reagan's latest policy statement as proof of Washington's earnest wish for a settlement to be reached in U.S.-Soviet nuclear talks."
   },
   "052": {
     "name": "Defend verbally",
@@ -489,25 +602,41 @@
     "name": "Grant diplomatic recognition",
     "description": "Grant diplomatic recognition",
     "parent": "05",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "This event form is typically, although not exclusively, a verbal act. Recognition of newly independent states, new governments that might have come to power through unconventional means, and initiation of diplomatic ties with an entity for the first time are all coded here.",
+    "examples": [
+      "Sri Lanka has established diplomatic ties with and opened an embassy in Tehran, the foreign ministry said on Wednesday."
+    ]
   },
   "055": {
     "name": "Apologize",
     "description": "Apologize",
     "parent": "05",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Although this event form is typically a verbal act, it should also be used to code all nonverbal acts that express remorse.",
+    "examples": [
+      "Argentina has apologized to Brazil for one of its gunboats intercepting a Brazilian ship in the Beagle Channel, disputed by Argentina and Chile."
+    ]
   },
   "056": {
     "name": "Forgive",
     "description": "Forgive",
     "parent": "05",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Use this event form to code verbal and nonverbal gestures of forgiveness and explicitly conciliatory actions or announcements. Formal pardons and amnesties of arrested persons, as well as the release or exchange of prisoners, should be coded as CAMEO 0841 instead.",
+    "examples": [
+      "A group of Yoruba leaders announced yesterday that they are willing to forgive President Olusegun Obasanjo and queue behind him for a second term."
+    ]
   },
   "057": {
     "name": "Sign formal agreement",
     "description": "Sign formal agreement",
     "parent": "05",
-    "quad_class": 1
+    "quad_class": 1,
+    "usage_notes": "Sign formal agreement Ratify, sign, finalize an agreement, treaty. This category excludes promises to sign or ratify agreements and treaties. Events should be coded under this category only when agreements are reportedly finalized or signed. This event code is typically reciprocal. Even when the agreement in question implies a formal commitment to boost material cooperation, provide aid, or yield in some way, the event of signing the agreement or treaty is still coded here since signing of an agreement or treaty represents diplomatic cooperation but does not guarantee implementation- whatever its terms.",
+    "examples": [
+      "Libyan leader Muammar Gaddafi and Bulgarian President Todor Zhivkov today signed a treaty of friendship and cooperation, the BTA reported. Two reciprocal events are coded with actors reversed. Czechoslovakia and China signed an agreement today to increase trade in 1983 by 50 percent compared with last year, the official Czechoslovak news agency Ceteka said today."
+    ]
   },
   "06": {
     "name": "ENGAGE IN MATERIAL COOPERATION",
@@ -519,7 +648,11 @@
     "name": "Engage in material cooperation, not specified below",
     "description": "Engage in material cooperation, not specified below",
     "parent": "06",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Initiate, resume, improve, or expand material cooperation or exchange, not otherwise specified. This residual category is not coded except when distinctions among codes 061-064 cannot be made.",
+    "examples": [
+      "Taliban ruled Afghanistan has been sharing expertise with the Liberation Tigers of Tamil Eelam according to a special report submitted to the Canadian Security Intelligence Service. Two reciprocal events are coded with actors reversed."
+    ]
   },
   "061": {
     "name": "Cooperate economically",
@@ -555,19 +688,32 @@
     "name": "Provide aid, not specified below",
     "description": "Provide aid, not specified below",
     "parent": "07",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "This residual category is not coded except when distinctions among codes 071-075 cannot be made. In order to be coded under this category, the leads must report the delivery of aids; promises to provide aid should be coded under category 033 instead.",
+    "examples": [
+      "Doctors from two American aid groups donated and personally delivered $50,000 worth of goods to Baghdad University Medical School, risking as much as 12 years in prison and $500,000 in fines."
+    ]
   },
   "071": {
     "name": "Provide economic aid",
     "description": "Provide economic aid",
     "parent": "07",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "The lead must report the delivery of such aid; promises to provide aid should be coded under 033 instead. Debt relief should also be coded as 071.",
+    "examples": [
+      "The European Community on Monday gave the Ivory Coast 5.1 million dollars of aid for agricultural development projects."
+    ]
   },
   "072": {
     "name": "Provide military aid",
     "description": "Provide military aid",
     "parent": "07",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "be coded under category 033 instead.",
+    "examples": [
+      "The United States continued to send arms to Pakistan last year, a State Department Spokesman said Wednesday.",
+      "The United States is providing aerial photographs and other military intelligence to Macedonia which is preparing a major offensive against ethnic Albanian guerrillas, the Washington Post said Wednesday."
+    ]
   },
   "073": {
     "name": "Provide humanitarian aid",
@@ -621,7 +767,11 @@
     "name": "Ease curfew",
     "description": "Ease curfew",
     "parent": "081",
-    "quad_class": 2
+    "quad_class": 2,
+    "examples": [
+      "Yugoslavia lifted a night curfew in Kosovo where 28 people have been killed in ethnic riots this year and the province was reported quiet on Sunday.",
+      "President Omar El Bashir on Thursday shortened by one hour the nightly curfew imposed in Sudan after a June 30 coup toppled the civilian govern- ment."
+    ]
   },
   "0814": {
     "name": "Ease state of emergency or martial law",
@@ -633,31 +783,49 @@
     "name": "Ease political dissent",
     "description": "Ease political dissent",
     "parent": "08",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Use this code for concessions by opposition groups in form of ending or putting on hold demonstrations, protests, rallies, etc.",
+    "examples": [
+      "The Nigerian Union of Teachers (NUT), the umbrella union for primary school teachers, announced Thursday that it has called off a four-day strike after deliberations with the Nigerian government."
+    ]
   },
   "083": {
     "name": "Accede to requests or demands for political reform, not specified below",
     "description": "Accede to requests or demands for political reform, not specified below",
     "parent": "08",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Yield by instituting requested political changes. Note that this event type is different from 'Express intent to institute political reform' (034) as it involves the actual event of change-not just its promise. Just like military forms of yield, these could be voluntary concessions or involuntary surrenders. The Rwandan government on Thursday accepted demands from Hutu rebels that it initiate political reforms.",
+    "examples": [
+      "The Rwandan government on Thursday accepted demands from Hutu rebels"
+    ]
   },
   "0831": {
     "name": "Accede to demands for change in leadership",
     "description": "Accede to demands for change in leadership",
     "parent": "083",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Use this code when source surrenders power after being challenged through legitimate institutional channels (e.g. elections) or other coercive strategies (e.g. military coups). The target can either be the challenger(s) or the country as a whole.",
+    "examples": [
+      "Tuesday the Serbian parliament approved a \"special law\" recognizing victories by Zoran Djindjic's opposition coalition in November 17 municipal elections in 14 of the 18 most important Serbian cities, including Belgrade. Georgian President Eduard Shevardnadze resigned Sunday as the opposition threatened to storm his residence in Tbilisi."
+    ]
   },
   "0832": {
     "name": "Accede to demands for change in policy",
     "description": "Accede to demands for change in policy",
     "parent": "083",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Note the difference between policy and institutional change; the former can relate to any issue (economic, social, etc.) but it does not change the rules by which the political system functions. If another code within category 08 fits the policy in question more specifically, that code should take precedence (e.g. changing policy on economic sanctions should be coded as 085 instead). More often than not policies that fit under this particular code will be on domestic issues. As part of its fight to eradicate poverty, the governing Labour Party has introduced a legally-binding minimum rate of pay in Britain for the first time."
   },
   "0833": {
     "name": "Accede to demands for rights",
     "description": "Accede to demands for rights",
     "parent": "083",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Allowing repatriation of refugees should also be coded here. If another code within category 08 fits the rights in question more specifically, that code should take precedence (e.g. respecting property rights by returning confiscated property should be coded as 0842 instead). The Federal Minister for Interior Aftab Ahmad Khan Sherpao allowed opposition leader Maulana Fazl-ur-Rehman to bring out 'Shan-e-Mustafa (SAW)' Rally after an agreement on carrying out a violence free protest demonstration, according to the Pakistani Federal Secretary Interior.",
+    "examples": [
+      "0834",
+      "President Dos Sontas has reportedly conceded at last to demands from National Union for the Total Independence of Angola (UNITA) to overhaul the judiciary. Lt. Gen. Prosper Avril resigned yesterday to allow Haiti's first democratic elections to take place. The political change in this lead is more fundamental than leadership change given the mention of \"first\" democratic elections, which points to potential change in the overall political system (i.e. democratization)."
+    ]
   },
   "0834": {
     "name": "Accede to demands for change in institutions, regime",
@@ -675,25 +843,44 @@
     "name": "Return, release person(s)",
     "description": "Return, release person(s)",
     "parent": "084",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Formal pardons, amnesties, commutations, and exchanges of prisoners should all be coded here.",
+    "examples": [
+      "Polish police today released the correspondent of the American news agency United Press International, who was detained for 23 hours and questioned in connection with an inquiry into alleged illegal activities.",
+      "Bosnian Serb forces Tuesday let free six French UN peacekeepers held captive inside a UN armored personnel carrier since Friday, a UN spokesman said."
+    ]
   },
   "0842": {
     "name": "Return, release property",
     "description": "Return, release property",
     "parent": "084",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "When confiscated property or other rights are not returned but compensation is provided instead, those incidents should be coded as 080.",
+    "examples": [
+      "French maritime authorities today release an impounded ship operated by the Greenpeace ecology movement, port officials said. An Egyptian court released a Lebanese millionaire's assets of nearly 19 million dollars on Saturday six years after they were frozen in a major bank scandal."
+    ]
   },
   "085": {
     "name": "Ease economic sanctions, boycott, embargo",
     "description": "Ease economic sanctions, boycott, embargo",
     "parent": "08",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Use this event form to code state activities that imply easing of limitations to normal economic relations.",
+    "examples": [
+      "Germany on Wednesday lifted sanctions against gold from South Africa in recognition of the country's moves to abolish apartheid, a government spokesman said.",
+      "The United Arab Emirates (UAE) has lifted its boycott of trade in oil on Namibia, effective since March 31.",
+      "The European Union failed Wednesday to renew sanctions against Zimbabwe, with the fate of an EU-Africa summit scheduled for April hanging in the balance."
+    ]
   },
   "086": {
     "name": "Allow international involvement, not specified below",
     "description": "Allow international involvement, not specified below",
     "parent": "08",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Use the following sub-categories whenever possible. The types of international involvement covered in this category require physical access to territories under the source's control. Note that accepting international involvement in the form of mediation is coded under 04. The target should be the international actor whose involvement is allowed or received.",
+    "examples": [
+      "Kyrgyz Prime Minister Nikolai Tanaev received a mission of observers from the OSCE, informing them in detail on the economic situation of the country."
+    ]
   },
   "0861": {
     "name": "Receive deployment of peacekeepers",
@@ -711,37 +898,59 @@
     "name": "Allow humanitarian access",
     "description": "Allow humanitarian access",
     "parent": "086",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Mere promises to allow such access should be coded as 0355. Note that this event form is accompanied by the linked event 'Provide humanitarian aid' ( 073 ) if the target is the humanitarian agency; in some cases the target would be the particular area that is given access.",
+    "examples": [
+      "Humanitarian access for the Darfur region has improved significantly since September as the Khartoum government tried to secure international favor. Uzbekistan finally opened the Friendship Bridge after four years to allow the delivery of 1,000 tons of grain and flour to Afghanistan, where millions of people are at risk of starvation as winter sets in, reports aid agencies."
+    ]
   },
   "087": {
     "name": "De-escalate military engagement",
     "description": "De-escalate military engagement",
     "parent": "08",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Use sub-categories for more detailed coding whenever possible. Note that only real manifestations of de-escalation are coded here, expressions of intent to de-escalate are not."
   },
   "0871": {
     "name": "Declare truce, ceasefire",
     "description": "Declare truce, ceasefire",
     "parent": "087",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Although mere declarations of ceasefire, or agreements to commence a ceasefire, do not guarantee that military engagement is actually halted, they are still coded here. The target could be the location for the ceasefire or the opponent.",
+    "examples": [
+      "The pro-Iranian Hizbollah (Party of God) group declared a unilateral ceasefire on Wednesday in south Lebanon after 12 days of battles with the Syrian- backed Amal militia."
+    ]
   },
   "0872": {
     "name": "Ease military blockade",
     "description": "Ease military blockade",
     "parent": "087",
-    "quad_class": 2
+    "quad_class": 2,
+    "examples": [
+      "The Israeli army lifted Friday a day-old blockade on Palestinian lorryss passing through this crossing point between the Gaza Strip and the Jewish state, officials told AFP."
+    ]
   },
   "0873": {
     "name": "Demobilize armed forces",
     "description": "Demobilize armed forces",
     "parent": "087",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "The source actor for this event is the demobilizing party; the target is either the party against whom the source was formerly fighting or the actor to whom weaponry is turned in.",
+    "examples": [
+      "One third of ethnic Albanian guerrillas operating in Macedonia have been demobilized since the August 13 peace accord between Macedonian and ethnic Albanian political parties, two rebel commanders told AFP by phone Sunday."
+    ]
   },
   "0874": {
     "name": "Retreat or surrender militarily",
     "description": "Retreat or surrender militarily",
     "parent": "087",
-    "quad_class": 2
+    "quad_class": 2,
+    "usage_notes": "Note that the yielding should involve a comprehensive military disengagement, at least from a certain area of contention.",
+    "examples": [
+      "Five hundred Ugandan rebels surrendered last week in the eastern town in Soroti followin a government offensive in the area, a local official said.",
+      "The United States speeded up the withdrawal of some invasion forces from Panama on Wednesday, but defence officials cautioned that no deadline had been set for complete removal of the troops.",
+      "Bosnian Serbs said on Tuesday their forces had completed their withdrawal from the besieged Bosnian town of Gorazde."
+    ]
   },
   "09": {
     "name": "INVESTIGATE",
@@ -753,7 +962,11 @@
     "name": "Investigate, not specified below",
     "description": "Investigate, not specified below",
     "parent": "09",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This residual category is not coded except when distinctions among codes 091-094 cannot be made. Also note that category 09 should be used only when investigations are being or have been carried out. Investigation of historical cases should also be coded here.",
+    "examples": [
+      "The United Nations has sent 21 military and civilian personnel to Yugoslavia on Wednesday to investigate the feasibility of a 10,000-member peacekeeping force, a U.N. spokesman said on Monday."
+    ]
   },
   "091": {
     "name": "Investigate crime, corruption",
@@ -789,19 +1002,31 @@
     "name": "Demand, not specified below",
     "description": "Demand, not specified below",
     "parent": "10",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This residual category is not coded except when distinctions among codes 101-108 cannot be made. Note that demands are stronger or more forceful and potentially carry more serious repercussions-although not as much as threats-than simple appeals. We rely primarily on the language used by reporters to make this distinction. All demands are verbal acts.",
+    "examples": [
+      "Poland's parliament has demanded an immediate admission by Moscow that Soviet NKVD security forces murdered more than 15,000 captive Polish off-ficers during World War Two."
+    ]
   },
   "101": {
     "name": "Demand material cooperation, not specified below",
     "description": "Demand material cooperation, not specified below",
     "parent": "10",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use the following sub-categories whenever possible. Demands for judicial co- operation, such as extradition of criminals, or compliance with requirements of an investigation are coded here.",
+    "examples": [
+      "French President Jacques Chirac issued a stern reminder Saturday to Iraq that it must cooperate fully with UN inspectors probing suspect sites for weapons of mass destruction. An Argentine judge has ordered former president Carlos Mene m to appear October 16 for questioning in an investigation of illegal arms sales to Croatia and Ecuador in the 1990s, court sources said Wednesday."
+    ]
   },
   "1011": {
     "name": "Demand economic cooperation",
     "description": "Demand economic cooperation",
     "parent": "101",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code for demands for economic activities such as trade and investment. Demands for provision of economic aid-not mutual exchange-are coded as 1031 instead.",
+    "examples": [
+      "The Bush administration declared Tuesday that China must drop barriers to U.S. exports or face tariff penalties for maintaining unfair trade practices."
+    ]
   },
   "1012": {
     "name": "Demand military cooperation",
@@ -855,7 +1080,12 @@
     "name": "Demand military protection or peacekeeping",
     "description": "Demand military protection or peacekeeping",
     "parent": "103",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "The source that demands peacekeepers could demand that for itself or on",
+    "examples": [
+      "Ethnic Albanians in south Serbia are demanding a U.N. military presence to protect them against a heavily armed ruling Serb minority and prevent a Bosnia-style civil war, but some foreign monitors are skeptical.",
+      "The Red Cross operating in Iraq said US and British forces must ensure security to allow emergency water, food, and medical supplies to reach the needy."
+    ]
   },
   "104": {
     "name": "Demand political reform, not specified below",
@@ -873,19 +1103,31 @@
     "name": "Demand policy change",
     "description": "Demand policy change",
     "parent": "104",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This event form refers to verbal and non-threatening demands. Demands that take the form of demonstrations, protests, etc. are coded under category 14 instead. Just like the source actor, the policy in question can also be domestic or international in nature. If it is clear from the lead that by demanding certain policy changes the source is in fact demanding that the target yield or concede, the event might be better coded under 105 (e.g. demands for military withdrawal should be coded as 1056). Opposition groups in Zimbabwe are demanding that President Mugabe abandon his controversial policy of land confiscations.",
+    "examples": [
+      "Opposition groups in Zimbabwe are demanding that President Mugabe abandon his controversial policy of land confiscations."
+    ]
   },
   "1043": {
     "name": "Demand rights",
     "description": "Demand rights",
     "parent": "104",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This event form refers to verbal and non-threatening demands. Demands that take the form of demonstrations, protests, etc. are coded under category 14 instead. If it is clear from the lead that by demanding certain rights the source is in fact demanding that the target yield or concede, the event might be better coded under 105. Demands for provision of compensation for previously violated rights, for instance, are coded as 105.",
+    "examples": [
+      "The main Hutu rebel group, Forces for Defence of Democracy (FDD), insisted on its demands that Burundi's government grant the Hutu majority more rights."
+    ]
   },
   "1044": {
     "name": "Demand change in institutions, regime",
     "description": "Demand change in institutions, regime",
     "parent": "104",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This event form refers to verbal and non-threatening demands. Demands that take the form of demonstrations, protests, etc. are coded under category 14 instead. Institutional change is different from policy change in that the former directly alters the rules of the game. Demands for fundamental changes in the political system (e.g. democratization) as well as more limited institutional changes (e.g. changing electoral law) are coded here.",
+    "examples": [
+      "Rwandan rebels announced that President Kagame and his Rwandan Patriotic Front must agree to major constitutional changes before they demobilize. The Albanians of southern Serbia are demanding political and territorial autonomy from Serbian authorities."
+    ]
   },
   "105": {
     "name": "Demand that target yields, not specified below",
@@ -897,43 +1139,60 @@
     "name": "Demand easing of administrative sanctions",
     "description": "Demand easing of administrative sanctions",
     "parent": "105",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code when a government is pushed to undertake some political changes that clearly constitute some form of concession or yielding, such as relaxing or removing bans, curfews, or other restrictions that are already in place. Demands that take the form of demonstrations, protests, etc. are coded under category 14 instead. Human rights organization Amnesty International demanded that the Su- danese government end curbs on press freedom. The International Labor Office (ILO) reiterated its demand today that Israel ease restrictions on the movement of Palestinian workers."
   },
   "1052": {
     "name": "Demand easing of political dissent",
     "description": "Demand easing of political dissent",
     "parent": "105",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code for demands that the target stop engaging in protests, demonstrations, strikes, etc. Note that this code refers exclusively to verbal de- mands; if the source actively seeks to stop activities through repressive measures, 175 is used instead.",
+    "examples": [
+      "Iranian authorities have been pressuring workers of the United Bus Company of Tehran (Sharekat-e Vahed) to cancel the strike they have been planning for better pay and working conditions."
+    ]
   },
   "1053": {
     "name": "Demand release of persons or property",
     "description": "Demand release of persons or property",
     "parent": "105",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code for demands that the target release prisoners, hostages, and any confiscated property.",
+    "examples": [
+      "Russia said on Tuesday that Sudan must return a Mi-26 helicopter that was captured by the Sudanese authorities last week."
+    ]
   },
   "1054": {
     "name": "Demand easing of economic sanctions, boycott, or embargo",
     "description": "Demand easing of economic sanctions, boycott, or embargo",
     "parent": "105",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code only for economic sanctions, boycotts, or embargoes. The 106th Inter-Parliamentary Union Conference stressed the obligation of the international community to take immediate action to lift embargoes and other sanctions which have negatively affected children in different parts of the world."
   },
   "1055": {
     "name": "Demand that target allows international involvement (non-mediation)",
     "description": "Demand that target allows international involvement (non-mediation)",
     "parent": "105",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "freedom of movement necessary for discharging their mandate."
   },
   "1056": {
     "name": "Demand de-escalation of military engagement",
     "description": "Demand de-escalation of military engagement",
     "parent": "105",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Washington along with its allies demanded that Hamas renounce its armed struggle against Israel. European Community foreign ministers demanded the withdrawal of Y-",
+    "examples": [
+      "goslav federal forces from Bosnia-Herzogovina on Monday calling them an occupying army, diplomats quoted an EC declaration as saying.",
+      "Bosnian Serbs demanded a truce with Moslem forces in east Bosnia before allowing U.N. aid conveys to feed starving Moslem civilians in the region."
+    ]
   },
   "106": {
     "name": "Demand meeting, negotiation",
     "description": "Demand meeting, negotiation",
     "parent": "10",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Yugoslavia on Tuesday demanded a meeting of the U.N. Security Council to discuss Croatia's military advance into the Serb-held Krajin a region, describing it as \"a serious challenge to the world community.\""
   },
   "107": {
     "name": "Demand settling of dispute",
@@ -999,31 +1258,52 @@
     "name": "Accuse of espionage, treason",
     "description": "Accuse of espionage, treason",
     "parent": "112",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "A Christian missionary from Calgary was arrested in Lebanon for collaborating with Israel, according to the Canadian Press.",
+      "Nigerian authorities jailed 52 members of the banned Movement for the Actualization of the Sovereign State of Biafra (MASSOB) on allegations of treason for playing in a youth football tournament in Lagos."
+    ]
   },
   "113": {
     "name": "Rally opposition against",
     "description": "Rally opposition against",
     "parent": "11",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This event form is typically, although not exclusively, a verbal act. Use this event form to code instances where one party (the source) solicits third parties to express disapproval of, protest against, or punish another party (the target). Note that only diplomatic solicitations-not military mobilizations-should be coded here.",
+    "examples": [
+      "An official Syrian newspaper called Thursday on Arabs to unite and \"mobilize\" against Israeli right-winger Ariel Sharon, who has vowed not to return the Golan Heights to Syria if he is elected prime minister February 4.",
+      "Archbishop Desmond Tutu on Sunday called for sanctions against Nigeria in the wake of the execution of Ken Saro-Wiwa."
+    ]
   },
   "114": {
     "name": "Complain officially",
     "description": "Complain officially",
     "parent": "11",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Yugoslavia lodged an official protest with Albania today, charging its neigh- bor with supporting dissidents here in what is said was tantamount to inciting revolution.",
+      "Lebanon complained to the United Nations on Tuesday over two Israeli air raids last Friday in which it said 20 people were killed or wounded."
+    ]
   },
   "115": {
     "name": "Bring lawsuit against",
     "description": "Bring lawsuit against",
     "parent": "11",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Source must be the plaintiff or the state, and target must be the defendant.",
+    "examples": [
+      "A Saudi businessman is suing the United States for damages to his pharmaceutical plant which were caused by a missile attack in August, his American lawyer said."
+    ]
   },
   "116": {
     "name": "Find guilty or liable (legally)",
     "description": "Find guilty or liable (legally)",
     "parent": "11",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Source must be the court in question, which could be domestic or interna- tional, and target must be the defendant. This event form refers typically to rulings against non-individuals, where imprisonment is not an issue. When individuals are found guilty and are therefore detained, use 173 instead.",
+    "examples": [
+      "A European court convicted Turkey of \"inhuman acts\" Thursday for de- stroying the home of a Kurdish citizen in the country's southeast."
+    ]
   },
   "12": {
     "name": "REJECT",
@@ -1035,55 +1315,88 @@
     "name": "Reject, not specified below",
     "description": "Reject, not specified below",
     "parent": "12",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This residual category is not coded except when distinctions among codes 121-129 cannot be made. All rejections coded under this category should imply refusals to cooperate or yield in some way.",
+    "examples": [
+      "The Palestinians reject proposed Israeli changes to the Wye River land-for- security deal, chief Palestinian negotiator Saeb Erakat said."
+    ]
   },
   "121": {
     "name": "Reject material cooperation",
     "description": "Reject material cooperation",
     "parent": "12",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "This category contains sub-forms for more detailed coding whenever possible. Refusals to provide unilateral material assistance-not mutual exchangere- coded as 122 instead. Note the difference between refusing to establish or expand material cooperation and reducing or eliminating existing ties (category 16).",
+    "examples": [
+      "Yemen has rejected a U.S. request to interrogate detainees held after the escape of 23 al-Qaida prisoners, a security official said Tuesday."
+    ]
   },
   "1211": {
     "name": "Reject economic cooperation",
     "description": "Reject economic cooperation",
     "parent": "121",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code for rejections of mutual economic exchange, such as trade and investment; rejection to provide financial aid (or cancel debt) is coded as 1221 instead.",
+    "examples": [
+      "Bangladesh has once again outright rejected an Indian proposal for signing Free Trade Agreement (FTA) with her, urging the counterpart to sign the proposed South Asia Free Trade Agreement (SAFTA) instead."
+    ]
   },
   "1212": {
     "name": "Reject military cooperation",
     "description": "Reject military cooperation",
     "parent": "121",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code for rejections of mutual military exchange; rejection to provide military aid is coded as 1222 instead.",
+    "examples": [
+      "South Korea has rejected North Korea's consistent demand to sever a decades-long military alliance with Washington, which keeps troops here under a mutual defense pact."
+    ]
   },
   "122": {
     "name": "Reject request or demand for material aid, not specified below",
     "description": "Reject request or demand for material aid, not specified below",
     "parent": "12",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this event form to code refusals to provide material assistance. Use sub-categories whenever possible."
   },
   "1221": {
     "name": "Reject request for economic aid",
     "description": "Reject request for economic aid",
     "parent": "122",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Bonn rejected recent calls by East Germany's Communist rulers for immediate economic aid, saying it was withholding it until a democratically-elected government takes over."
+    ]
   },
   "1222": {
     "name": "Reject request for military aid",
     "description": "Reject request for military aid",
     "parent": "122",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "The Turkish government has refused to commit to any direct assistance to the US-led war against Iraq, citing domestic opposition."
+    ]
   },
   "1223": {
     "name": "Reject request for humanitarian aid",
     "description": "Reject request for humanitarian aid",
     "parent": "122",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Refusals to provide shelter or refuge should also be coded here. When source",
+    "examples": [
+      "refuse to grant humanitarian agencies access (instead of refusing to provide"
+    ]
   },
   "1224": {
     "name": "Reject request for military protection or peacekeeping",
     "description": "Reject request for military protection or peacekeeping",
     "parent": "122",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "coded here; refusals by adversaries to grant access to peacekeepers should If the reform in question clearly constitutes some form of concession or yielding by the source, such as the easing of existing administrative sanctions, a more appropriate code might be found under 124 ('Refuse to yield'). Actors Refuse to open the way for change in leadership, are coded here. Note that while refusals to undertake other forms of yielding are coded under 124,",
+    "examples": [
+      "be deployed in East Timor.",
+      "requested the demand or those (the country or the people) that will be affected by the rejection should be coded as target depending on availability of information in the lead.",
+      "Vice-President Moody Awori has declined to resign despite growing pressure by the Kenya Anti-Corruption Commision after he was implicated in a major scandal."
+    ]
   },
   "123": {
     "name": "Reject request or demand for political reform, not specified below",
@@ -1101,19 +1414,22 @@
     "name": "Reject request for policy change",
     "description": "Reject request for policy change",
     "parent": "123",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code for refusals to acquiesce to demands for policy change- political, economic, military, social, or otherwise. If the policy change in question clearly represents a form of yielding, the appropriate code under 124 should be used instead."
   },
   "1233": {
     "name": "Reject request for rights",
     "description": "Reject request for rights",
     "parent": "123",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Ankara's Çankaya district administration has denied land allocation for the construction of an Alevite temple, Cemevi, in the district."
   },
   "1234": {
     "name": "Reject request for change in institutions, regime",
     "description": "Reject request for change in institutions, regime",
     "parent": "123",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Note the difference between institutional/regime changes and policy reforms. In what has been described as a policy u-turn, President Levy Mwanawasa has reneged on his commitment to the Zambian people for holding elections under a new constitution."
   },
   "124": {
     "name": "Refuse to yield, not specified below",
@@ -1125,37 +1441,60 @@
     "name": "Refuse to ease administrative sanctions",
     "description": "Refuse to ease administrative sanctions",
     "parent": "124",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Despite warnings of starvation by humanitarian agencies, the Israeli government is refusing to lift the curfew on Palestinians living in the West Bank and Gaza."
+    ]
   },
   "1242": {
     "name": "Refuse to ease popular dissent",
     "description": "Refuse to ease popular dissent",
     "parent": "124",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Around 1,800 of 2,200 Serbian teachers will not end their strike unless their demands for wage increases are met by textcolorblueBelgrade, a union official announced after three weeks of striking."
+    ]
   },
   "1243": {
     "name": "Refuse to release persons or property",
     "description": "Refuse to release persons or property",
     "parent": "124",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Refusals to release or exchange prisoners and hostages, as well as to return previously confiscated properties, are coded here. The U.S. said it would not meet hostage-takers demands to release prisoners in Iraq, including a number of females.",
+    "examples": [
+      "In an ideal scenario, the identity of the hostage-takers would have been codeable here."
+    ]
   },
   "1244": {
     "name": "Refuse to ease economic sanctions, boycott, or embargo",
     "description": "Refuse to ease economic sanctions, boycott, or embargo",
     "parent": "124",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code only for economic sanctions, boycotts, or embargoes.",
+    "examples": [
+      "US authorities said yesterday that removing the sanctions on Burma is currently out of the question as that would reward the regime for doing nothing."
+    ]
   },
   "1245": {
     "name": "Refuse to allow international involvement (non mediation)",
     "description": "Refuse to allow international involvement (non mediation)",
     "parent": "124",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "The UNITA militarist wing refused to allow United Nations planes to land and evacuate 15 of its observers who were taken hostage, the United Nations Observer Mission in Angola (MONUA) said.",
+    "examples": [
+      "Beirut again rejected Thursday a United Nations appeal for deploying army troops along its borders with Israel."
+    ]
   },
   "1246": {
     "name": "Refuse to de-escalate military engagement",
     "description": "Refuse to de-escalate military engagement",
     "parent": "124",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Use this code for rejections of ceasefirees, military withdrawals, and demobilization.",
+    "examples": [
+      "Iran's religious leader Ayatollah Ruhollah Khomeini today rejected Iraqi President Saddam Hussein's proposal for a cease-fire during the Mosul holy month of Ramadan.",
+      "Rebels in the Ivory Coast on Wednesday dismissed an appeal from President Laurent Gbago to lay down their arms, saying they had lost all trust in the government they rose up against on September 19."
+    ]
   },
   "125": {
     "name": "Reject proposal to meet,",
@@ -1185,7 +1524,10 @@
     "name": "Veto",
     "description": "Veto",
     "parent": "12",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Refuse to assent or formally reject legislative proposal, recommendation, or resolution. The United States on Wednesday vetoed a Security Council resolution cen-"
+    ]
   },
   "13": {
     "name": "THREATEN",
@@ -1197,7 +1539,11 @@
     "name": "Threaten, not specified below",
     "description": "Threaten, not specified below",
     "parent": "13",
-    "quad_class": 3
+    "quad_class": 3,
+    "usage_notes": "Threats are typically verbal acts. This residual category is not coded except when distinctions among codes 131-139 cannot be made. When any conflict-",
+    "examples": [
+      "President Reagan has threatened further action against the Soviet Union in an international television program beamed by satellite to more than 50 countries."
+    ]
   },
   "131": {
     "name": "Threaten non-force, not specified below",
@@ -1245,19 +1591,30 @@
     "name": "Threate n to impose curfew",
     "description": "Threate n to impose curfew",
     "parent": "132",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Note that the future tense used in the lead implies a threat. President Abdelaziz Bouteflicka threatened to institute a curfew in Algiers in response to recent unrest within the city.",
+      "in response to recent unrest within the city."
+    ]
   },
   "1324": {
     "name": "Threate n to impose state of emergency or martial law",
     "description": "Threate n to impose state of emergency or martial law",
     "parent": "132",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Iraq's interim government announced that it is prepared to impose martial law as street battles raged in central Baghdad between insurgents and security forces."
+    ]
   },
   "133": {
     "name": "Threate n with political dissent, protest",
     "description": "Threate n with political dissent, protest",
     "parent": "13",
-    "quad_class": 3
+    "quad_class": 3,
+    "examples": [
+      "Radical French farmers said on Friday they would blockade Paris from Monday night to demand an end to the European Community's drastic farm reform.",
+      "Druze inhabitants of the Syrian Golan Heights threatened today to hold a general strike unless Israel rescinded its annexation of the region within 10 days."
+    ]
   },
   "134": {
     "name": "Threate n to halt negotiations",
@@ -1347,55 +1704,83 @@
     "name": "Demonstrate for leadership change",
     "description": "Demonstrate for leadership change",
     "parent": "141",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Dissent collectively, gather, or rally demanding leadership change. Target should be the actor who is expected to relinquish power. Demonstrations that demand new elections should also be coded here. Angry activists from the defeated Fatah Party have staged rallies in the Gaza Strip against the party's leader Mahmoud Abbas, saying he must resign."
   },
   "1412": {
     "name": "Demonstrate for policy change",
     "description": "Demonstrate for policy change",
     "parent": "141",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Dissent collectively, gather, or rally demanding policy change. Use this code when demonstrators demand specific policy changes or unspecified political reforms. Tens of thousands of university students throughout Indonesia staged mass demonstrations Saturday to demand political reforms by President Suharto's government."
   },
   "1413": {
     "name": "Demonstrate for rights",
     "description": "Demonstrate for rights",
     "parent": "141",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Dissent collectively, gather, or rally demanding political, social, economic, or other rights. Use this code for demonstrations that demand new rights or protest the violation of existing ones. Thousands of Nigerians from throughout the country were converging Thursday for a rally in Lagos to protest the rights violations under the recently imposed Sharia law by Islamic fundamentalists in the northern districts."
   },
   "1414": {
     "name": "Demonstrate for change in institutions, regime",
     "description": "Demonstrate for change in institutions, regime",
     "parent": "141",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Dissent collectively, gather, or rally demanding major institutional, constitutional, or regime change. Note the difference between institutional/constitutional changes and policy reforms. Demonstrations that call for independence or autonomy essentially demand major changes to the whole system and are hence coded here. Thousands of Iraqi Kurds demonstrated in the northern city of Kirkuk on Sunday calling for independence from Iraq, witnesses said."
   },
   "142": {
     "name": "Conduct hunger strike, not specified below",
     "description": "Conduct hunger strike, not specified below",
     "parent": "14",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use sub-categories if demands of protesters are known and codeable. The target for this event form is the party against which the hunger strikers protest.",
+    "examples": [
+      "Up to 1,000 ethnic Turks began a hunger strike on Monday to protest against Sweden's decision to send them back to Bulgaria, where they say they face imprisonment, homelessness and persecution."
+    ]
   },
   "1421": {
     "name": "Conduct hunger strike for leadership change",
     "description": "Conduct hunger strike for leadership change",
     "parent": "142",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Target should be the actor who is expected to relinquish power. Hunger strikes that demand new elections should also be coded here.",
+    "examples": [
+      "Islamic fundamentalists continued their hunger strike to demand the resignation of Algerian President Ahmed Ben Bella."
+    ]
   },
   "1422": {
     "name": "Conduct hunger strike for policy change",
     "description": "Conduct hunger strike for policy change",
     "parent": "142",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this code when protesters demand specific policy changes or unspecified political reforms.",
+    "examples": [
+      "A member of the Syrian parliament, Mohammed Mamoun, started a hunger strike yesterday to protest President Assad's failure to usher in meaningful political reforms."
+    ]
   },
   "1423": {
     "name": "Conduct hunger strike for rights",
     "description": "Conduct hunger strike for rights",
     "parent": "142",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this code for hunger strikes that demand new rights or protest the violation of existing ones.",
+    "examples": [
+      "Algerian landowners began a hunger strike outside Parliament to demand the return of property seized by Algerian government forces in the 1970s, APS news agency said.",
+      "Salaheddine Sidhoum, Algeria's leading human rights activist, staged a 24- hour hunger strike in prison on Sunday in protest against the widespread human rights violations by Algerian security forces, his lawyer said on Tuesday."
+    ]
   },
   "1424": {
     "name": "Conduct hunger strike for change in institutions, regime",
     "description": "Conduct hunger strike for change in institutions, regime",
     "parent": "142",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Note the difference between institutional/constitutional changes and policy reforms. Hunger strikes that call for independence or autonomy essentially demand major changes to the whole system and are hence coded here. A group of Chenchen refugees are continuing a hunger strike in protest of the Russian government's refusal to accept the independence of Chechnya. Use sub-categories if demands of protesters are known and codeable. The target for this event form is the party against which the hunger strikers protest. This event form does not refer to military strikes, which are coded under category 19 instead.",
+    "examples": [
+      "the Russian government's refusal to accept the independence of Chechnya.",
+      "Palestinians of the Israeli-occupied West Bank shunned work on Monday to protest at settlement of Soviet Jewish immigrants on Arab land.",
+      "Conduct strike or boycott for policy change",
+      "Some 500,000 workers affiliated with the Serbian Workers' Union (SSS) stopped work on the first day of an open-ended strike on Monday over a controversial employment bill signed in by Serbian Labour Minister Dragan Milovanovic."
+    ]
   },
   "143": {
     "name": "Conduct strike or boycott, not specified below",
@@ -1419,7 +1804,11 @@
     "name": "Conduct strike or boycott for rights",
     "description": "Conduct strike or boycott for rights",
     "parent": "143",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this code for strikes or boycotts that demand new rights or protest the violation of existing ones.",
+    "examples": [
+      "Seven opposition parties in Nepal have organized a general strike that shut down Khatmandu in protest of last week's arrest of a number of activists."
+    ]
   },
   "1434": {
     "name": "Conduct strike or boycott for change in institutions, regime",
@@ -1431,31 +1820,54 @@
     "name": "Obstruct passage, block, not specified below",
     "description": "Obstruct passage, block, not specified below",
     "parent": "14",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use sub-categories if demands of protesters are known and codeable. Use this event form to code protest activities that seek to disrupt routine and normal proceedings by blocking roads, buildings, etc. When the blockade in question includes military forces, use 191 instead.",
+    "examples": [
+      "Angry French paper workers blocked the Europe Bridge spanning the Rhine from France to West Germany for more than three hours by dumping saw- dust on the roadway, French border police said."
+    ]
   },
   "1441": {
     "name": "Obstruct passage to demand leadership change",
     "description": "Obstruct passage to demand leadership change",
     "parent": "144",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Target should be the actor who is expected to relinquish power. Obstructions that demand new elections should also be coded here.",
+    "examples": [
+      "About 200 supporters of former President Ahmed Ben Bella blocked roads in the capital city of Algiers demanding that he be reinstated as leader of the Algerian government.",
+      "Rebels in the Ivory Coast on Tuesday blocked transport into Abidjan as they continued their effort to overthrow the government of President Laurent Gbagbo."
+    ]
   },
   "1442": {
     "name": "Obstruct passage to demand policy change",
     "description": "Obstruct passage to demand policy change",
     "parent": "144",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this code when protesters demand specific policy changes or unspecified political reforms. Demonstrators in Baghdad blocked a road to show their disapproval for the United States' military policies, a newspaper reported Tuesday.",
+    "examples": [
+      "United States' military policies, a newspaper reported Tuesday."
+    ]
   },
   "1443": {
     "name": "Obstruct passage to demand rights",
     "description": "Obstruct passage to demand rights",
     "parent": "144",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this code for obstructions that demand new rights or protest the violation of existing ones.",
+    "examples": [
+      "Young Algerians blocked roads leading to the city centre on Sunday to press their demands for greater freedom and opportunities from President Bouteflika's government."
+    ]
   },
   "1444": {
     "name": "Obstruct passage to demand change in institutions, regime",
     "description": "Obstruct passage to demand change in institutions, regime",
     "parent": "144",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Note the difference between institutional/constitutional changes and policy reforms. Obstructions that call for independence or autonomy essentially demand major changes to the whole system and are hence coded here. Hundreds of thousands of people blocked streets in Hong Kong in defiance of Chinese authorities to demand democratic reforms. Target should be the actor who is expected to relinquish power. Riots that demand new elections should also be coded here.",
+    "examples": [
+      "145",
+      "Palestinian prisoners rioted Monday at this jail in northern Israel, setting fire to their mattresses and smashing furniture, police sources said.",
+      "Egyptian demonstrators rioted following a peaceful demonstration calling for the immediate removal of President Hosni Mubarak from office."
+    ]
   },
   "145": {
     "name": "Protest violently, riot, not specified below",
@@ -1497,13 +1909,21 @@
     "name": "Demonstrate military or police power, not specified below",
     "description": "Demonstrate military or police power, not specified below",
     "parent": "15",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "This category is different from cue categories 18, 19, and 20, as they refer to uses of force, while military posturing falls short of actual use of force and is typically a demonstration of military capabilities and readiness. Category 15 is also distinct from category 13 in that the latter refers merely to threats, is typically verbal, and does not involve any activity that is undertaken to demonstrate military power. Note that source actors for codes 150-153 are not necessarily militaries affiliated with states but any organized armed groups. Targets are actors against whom the source mobilizes its military capabilities in a threatening manner.",
+    "examples": [
+      "The Macedonian army prepared to resume shelling Albanian rebel-held territory as attempts to resolve the crisis on the political front were deadlocked."
+    ]
   },
   "151": {
     "name": "Increase police alert status",
     "description": "Increase police alert status",
     "parent": "15",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Need new usage notes.",
+    "examples": [
+      "NEED EXAMPLE."
+    ]
   },
   "152": {
     "name": "Increase military alert status",
@@ -1557,61 +1977,94 @@
     "name": "Reduce or stop economic assistance",
     "description": "Reduce or stop economic assistance",
     "parent": "162",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "Japan said on Tuesday it had halted economic aid to Yugoslavia in line with Western efforts to end the fighting there."
+    ]
   },
   "1622": {
     "name": "Reduce or stop military assistance",
     "description": "Reduce or stop military assistance",
     "parent": "162",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "The United States suspended part of a military aid program for Bosnia aimed at bringing Bosnian Croat and Moslem armed forces together as a unified identity, the New York Times reported on Friday."
+    ]
   },
   "1623": {
     "name": "Reduce or stop humanitarian assistance",
     "description": "Reduce or stop humanitarian assistance",
     "parent": "162",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "The United Nations on Tuesday reduced food supplies to the biggest Cambodian refugee camp in Thailand because rice was being diverted to outside users, relief officials said."
+    ]
   },
   "163": {
     "name": "Impose embargo, boycott, or sanctions",
     "description": "Impose embargo, boycott, or sanctions",
     "parent": "16",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "President Bill Clinton has imposed sanctions on the Taliban religious faction that controls Afghanistan for its support of suspected terrorist Osama bin Laden, the White House said Tuesday."
+    ]
   },
   "164": {
     "name": "Halt negotiations",
     "description": "Halt negotiations",
     "parent": "16",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this event form to code failed negotiations and walk-outs, as well as other disruptions of planned negotiations. Note that the termination can be either unilateral or bi/multi-lateral.",
+    "examples": [
+      "Palestinians and Israelis failed to reach agreement on the fate of Palestinian offices in east Jerusalem Sunday, despite hours of tense negotiations, sources on both sides reported. Two reciprocal events are coded with actors reversed."
+    ]
   },
   "165": {
     "name": "Halt mediation",
     "description": "Halt mediation",
     "parent": "16",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "The source for this event form is typically the mediating party(ies). Use this event form to code failed mediation activities.",
+    "examples": [
+      "Syrian officers today ended mediation efforts between rival militias in Tripoli as shells continued crashing into the north Lebanese port and the death toll rose to more than 200."
+    ]
   },
   "166": {
     "name": "Expel or withdraw, not specified below",
     "description": "Expel or withdraw, not specified below",
     "parent": "16",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this category to code both expulsions by host authorities and withdrawals by guest groups or organizations. Note that expulsions or deportations of individuals-typically a legal matter-are coded as 174 instead. Mass expulsions of peoples are coded as 201. Withdrawal of hostile military forces constitutes a form of yielding and is thus coded as 0874. When diplomats are withdrawn or expelled, use 161."
   },
   "1661": {
     "name": "Expel or withdraw peacekeepers",
     "description": "Expel or withdraw peacekeepers",
     "parent": "166",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this event form to code both expulsions of peacekeeping forces by host countries and voluntary withdrawals by actors providing the peacekeeping forces. Note that while the host country should be coded as the source actor when coding an expulsion of peacekeeping forces, the provider of the forces becomes the source when coding withdrawals.",
+    "examples": [
+      "Eighty UN peacekeepers were shipped out of the eastern Bosnian enclave of Gorazde Friday, leaving just 100 UN troops to follow them out later this month."
+    ]
   },
   "1662": {
     "name": "Expel or withdraw inspectors, observers",
     "description": "Expel or withdraw inspectors, observers",
     "parent": "166",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this event form to code both expulsions by host countries and withdrawals by providers of inspectors or observers.",
+    "examples": [
+      "North Korea expelled inspectors of the International Atomic Energy Agency, or IAEA, from frozen nuclear facilities at Yongbyon after U.S. officials alleged that the North admitted it had a uranium-based program in late 2002."
+    ]
   },
   "1663": {
     "name": "Expel or withdraw aid agencies",
     "description": "Expel or withdraw aid agencies",
     "parent": "166",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this event form to code both expulsions by host countries and withdrawals by providers of humanitarian aid. When aid is simply reduced or halted but the expulsion or withdrawal of the provider is not mentioned, use 1623 instead.",
+    "examples": [
+      "Jakarta forced the UN refugee agency, UNHCR, out of the country following the relief operation, although it had more than £12m of unspent donations."
+    ]
   },
   "17": {
     "name": "COERCE",
@@ -1635,13 +2088,21 @@
     "name": "Confiscate property",
     "description": "Confiscate property",
     "parent": "171",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this event form to code raids and lootings as well as other confiscations.",
+    "examples": [
+      "In an unprecedented move, Palestinian police in Jericho confiscated weapons and explosives from Palestinian armed groups, the Israeli army said Friday."
+    ]
   },
   "1712": {
     "name": "Destroy property",
     "description": "Destroy property",
     "parent": "171",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "Afghan guerillas blew up three main electric power lines leading into Kabul last month and nearly one third of the city's power supply is still down, the Czechoslovak news agency Ceteka reported from Kabul today.",
+      "Jewish settlers in the West Bank city of Hebron set fire to the offices of the Palestinian administrators of Muslim property overnight following the killing of an Israeli man, Palestinian residents said Sunday. Israeli army bulldozers demolished Palestinian homes and civilian buildings in southern Gaza on Sunday, Palestinian officials and US witnesses said."
+    ]
   },
   "172": {
     "name": "Impose administrative sanctions, not specified below",
@@ -1653,19 +2114,30 @@
     "name": "Impose restrictions on political freedoms",
     "description": "Impose restrictions on political freedoms",
     "parent": "172",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "The British government on Monday outlawed the largest Protestant extremist organization in Northern Ireland because of what it called its direct involvement in killing in the strife-torn province.",
+      "Nicaragua's Sandinista government today ordered the opposition newspaper La Prensa to suspend publication indefinitely, a spokesman for the paper said."
+    ]
   },
   "1722": {
     "name": "Ban political parties or politicians",
     "description": "Ban political parties or politicians",
     "parent": "172",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "President Yoweri Museveni has banned Ugandan opposition candidates from participating in the upcoming elections."
+    ]
   },
   "1723": {
     "name": "Impose curfew",
     "description": "Impose curfew",
     "parent": "172",
-    "quad_class": 4
+    "quad_class": 4,
+    "examples": [
+      "Turkish authorities have imposed a curfew in the town of Cizre in southeastern Turkey after a demonstration over fraud allegations in Sunday's local elections, security sources said here Tuesday.",
+      "The military government of President Prosper Avril declared a 30-day state of siege in Haiti on Saturday, suspending parts of the constitution and arresting political opponents, a spokeswoman for the U.S. embassy said."
+    ]
   },
   "1724": {
     "name": "Impose state of emergency or martial law",
@@ -1677,25 +2149,36 @@
     "name": "Arrest, detain, or charge with legal action",
     "description": "Arrest, detain, or charge with legal action",
     "parent": "17",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Legal or extrajudicial arrests, detentions, or imprisonments. Use this code for both criminal and political detentions. Note, however, that taking of hostages is coded as 181 instead, and charges or lawsuits are coded as 115. Israeli soldiers arrested more than 100 Palestinians on Saturday in a security sweep of the Hebron area of the occupied West Bank, military sources said."
   },
   "174": {
     "name": "Expel or deport individuals",
     "description": "Expel or deport individuals",
     "parent": "17",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Formal removal or expulsion of individuals from territories, typically following legal proceedings. Expulsion of diplomats constitute reduction of diplomatic relations and should be coded as 'Reduce or break diplomatic relations' (161). Expulsion of peacekeepers, inspectors, or aid agencies refer to category 166. Mass political expulsions, with the purpose of ethnic cleansing for instance, are coded as 201 instead.",
+    "examples": [
+      "Ghanaian authorities have deported 168 Liberians for traveling without proper documents on a Swedish-registered vessel, a port official said Monday."
+    ]
   },
   "175": {
     "name": "Use tactics of violent repression",
     "description": "Use tactics of violent repression",
     "parent": "17",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Note the difference between repression of dissidents and military engagements. Liberian riot police used tear gas to disperse demonstrators protesting election results in Monrovia."
   },
   "176": {
     "name": "Attack cybernetically",
     "description": "Attack cybernetically",
     "parent": "17",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Cyberattacks can be any of a wide range of acts, with an even wider range of motives. Vandalism of websites, theft of private electronic information, and the hostile shutting-down of networks all fit under this category.",
+    "examples": [
+      "North Korea has tried to hack into the computers of South Korean army officers, officials said Tuesday.",
+      "Muslim hackers angered by the publication of cartoons of the Prophet Mohammed have defaced nearly 3,000 Danish Web sites over the past month in the biggest politically motivated cyber attack long-time observers have ever seen."
+    ]
   },
   "18": {
     "name": "ASSAULT",
@@ -1707,7 +2190,11 @@
     "name": "Use unconventional violence, not specified below",
     "description": "Use unconventional violence, not specified below",
     "parent": "18",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this event form to code use of forms of force and violence that do not require high levels of organization or conventional weaponry, not otherwise specified.",
+    "examples": [
+      "A temporary camp for Congolese refugees was attacked by Burundian militiamen armed with machetes, killing at least 156 people, the UN refugee agency reported."
+    ]
   },
   "181": {
     "name": "Abduct, hijack, or take hostage",
@@ -1719,7 +2206,14 @@
     "name": "Physically assault, not specified below",
     "description": "Physically assault, not specified below",
     "parent": "18",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "This event form category contains sub-forms for more detailed coding whenever possible. Beatings are coded here. Israeli soldiers routinely beat up Palestinian detainees on the occupied West Bank with the knowledge of senior officers, a court martial was told today. Use this event form to code rapes and other sexual assaults. The distinction between 1822 and the default code 182 depend primarily on the particular terminology used by reporters. This code is used typically when \"torture\" is mentioned in the lead. Security forces in Guinea have tortured scores of Sierra Leonean and Liberian refugees, whom authorities blame for a border conflict, Human Rights Watch (HWR) said Thursday. Killing individuals by physically assaulting them without the use of weaponry, through beating, torture, lynching, etc. When a physical assault-beating, torture, lynching, etc.-is specifically mentioned to have caused death, this code takes precedence over other codes for physical assault.",
+    "examples": [
+      "Bank with the knowledge of senior officers, a court martial was told today.",
+      "U.S. border patrol agents sexually abused illegal Mexican immigrants with impunity, a human rights organization charged on Saturday.",
+      "A Palestinian prisoner died as a result of torture while in Israeli police custody, according to a report by a pathologist sent to Israel by Physicians for Human Rights.",
+      "Irish nationalist guerrillas wounded two British soldiers in a bomb attack on Thursday, police said."
+    ]
   },
   "1821": {
     "name": "Sexually assault",
@@ -1815,7 +2309,13 @@
     "name": "Fight with small arms and light weapons",
     "description": "Fight with small arms and light weapons",
     "parent": "19",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "include heavy-machine guns, hand-held under-barrel and mounted grenade launchers, portable anti-aircraft guns, portable anti-tank guns, recoilless rifles, portable launchers of anti-tank missile and rocket systems, portable launchers of anti-aircraft missile system, and mortars of calib ers less than 100 mm.",
+    "examples": [
+      "Sudanese rebels shelled the southern regional capital Juba for the first time in a year on Sunday and Monday, killing about 20 people, relief officials in Nairobi said.",
+      "Egyptian police opened fire to disperse Moslem fundamentalist demonstrators on Monday night, killing one person and arresting 12, security sources said.",
+      "Serb forces killed three ethnic Albanians in a gunbattle in southeastern Serbia Friday, a political council representing ethnic Albanians in the region said in remarks published here Sunday."
+    ]
   },
   "194": {
     "name": "Fight with artillery and tanks",
@@ -1839,7 +2339,11 @@
     "name": "Employ remotely piloted aerial munitions",
     "description": "Employ remotely piloted aerial munitions",
     "parent": "195",
-    "quad_class": 4
+    "quad_class": 4,
+    "usage_notes": "Use this event form to code aerial attacks that involve the use of unmanned or remotely piloted vehicles. This code takes precedence over the use of precision guided munitions (1951).",
+    "examples": [
+      "Recent US Predator attacks, occurring about once every three days, have killed at least eight top al-Qaeda leaders since last July, according to Pentagon sources."
+    ]
   },
   "196": {
     "name": "Violate ceasefire",
