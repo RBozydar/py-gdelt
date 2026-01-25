@@ -225,6 +225,29 @@ class TestCAMEOCodes:
         # Boundary at 0: 0.0 is cooperative, -0.01 is mildly_conflictual
         assert cameo.get_goldstein_category(0.0) == "cooperative"
 
+    def test_cameo_code_entry_is_hashable(self) -> None:
+        """Test CAMEOCodeEntry is hashable and can be used in sets/dicts."""
+        from py_gdelt.lookups.models import CAMEOCodeEntry
+
+        entry = CAMEOCodeEntry(
+            name="Test",
+            description="Test description",
+            quad_class=1,
+            examples=("example1", "example2"),
+        )
+
+        # Should be hashable
+        h = hash(entry)
+        assert isinstance(h, int)
+
+        # Should work in set
+        s = {entry}
+        assert entry in s
+
+        # Should work as dict key
+        d = {entry: "value"}
+        assert d[entry] == "value"
+
 
 class TestGKGThemes:
     """Tests for GKGThemes class."""
