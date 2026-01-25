@@ -136,22 +136,30 @@ class CAMEOCodes:
             return "mildly_conflictual"
         return "cooperative"
 
-    def search(self, query: str) -> list[str]:
+    def search(self, query: str, include_examples: bool = False) -> list[str]:
         """
         Search codes by name/description (substring match).
 
         Args:
-            query: Search query string
+            query: Search query string (case-insensitive).
+            include_examples: If True, also search in examples and usage_notes fields.
 
         Returns:
-            List of CAMEO codes matching the query
+            List of CAMEO codes matching the query.
         """
         query_lower = query.lower()
-        return [
-            code
-            for code, entry in self._codes_data.items()
-            if query_lower in entry.name.lower() or query_lower in entry.description.lower()
-        ]
+        results: list[str] = []
+        for code, entry in self._codes_data.items():
+            if query_lower in entry.name.lower() or query_lower in entry.description.lower():
+                results.append(code)
+                continue
+            if include_examples:
+                if entry.usage_notes and query_lower in entry.usage_notes.lower():
+                    results.append(code)
+                    continue
+                if any(query_lower in example.lower() for example in entry.examples):
+                    results.append(code)
+        return results
 
     def is_conflict(self, code: str) -> bool:
         """
@@ -263,3 +271,19 @@ class CAMEOCodes:
                 code_type="cameo",
                 suggestions=suggestions,
             )
+
+    def codes_with_examples(self) -> list[str]:
+        """Return all CAMEO codes that have example scenarios.
+
+        Returns:
+            List of CAMEO codes with non-empty examples.
+        """
+        return [code for code, entry in self._codes_data.items() if entry.examples]
+
+    def codes_with_usage_notes(self) -> list[str]:
+        """Return all CAMEO codes that have usage notes.
+
+        Returns:
+            List of CAMEO codes with non-None usage_notes.
+        """
+        return [code for code, entry in self._codes_data.items() if entry.usage_notes]
