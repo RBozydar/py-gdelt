@@ -14,10 +14,12 @@ from __future__ import annotations
 import logging
 import threading
 import warnings
-from datetime import UTC, datetime
+from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from py_gdelt.utils.dates import parse_gdelt_datetime
 
 
 if TYPE_CHECKING:
@@ -42,30 +44,6 @@ logger = logging.getLogger(__name__)
 # Module-level set to track warned fields (avoid spam)
 _warned_fields: set[tuple[str, str]] = set()
 _warned_fields_lock = threading.Lock()
-
-
-def _parse_gdelt_date(v: Any) -> datetime:
-    """Parse date from ISO or GDELT format.
-
-    Args:
-        v: Date value (datetime, string, or other).
-
-    Returns:
-        Parsed datetime with UTC timezone.
-
-    Raises:
-        ValueError: If date format is invalid.
-    """
-    if isinstance(v, datetime):
-        return v
-    if isinstance(v, str):
-        # ISO format with 'T'
-        if "T" in v:
-            return datetime.fromisoformat(v.replace("Z", "+00:00"))
-        # GDELT format (YYYYMMDDHHMMSS)
-        return datetime.strptime(v, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-    msg = f"Invalid date format: {v}"
-    raise ValueError(msg)
 
 
 class SchemaEvolutionMixin(BaseModel):
@@ -160,7 +138,7 @@ class GQGRecord(SchemaEvolutionMixin, BaseModel):
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
         """Parse date from ISO or GDELT format."""
-        return _parse_gdelt_date(v)
+        return parse_gdelt_datetime(v)
 
 
 class Entity(SchemaEvolutionMixin, BaseModel):
@@ -208,7 +186,7 @@ class GEGRecord(SchemaEvolutionMixin, BaseModel):
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
         """Parse date from ISO or GDELT format."""
-        return _parse_gdelt_date(v)
+        return parse_gdelt_datetime(v)
 
 
 class GFGRecord(SchemaEvolutionMixin, BaseModel):
@@ -242,7 +220,7 @@ class GFGRecord(SchemaEvolutionMixin, BaseModel):
         Returns:
             Validated GFGRecord with all fields parsed and typed.
         """
-        date = _parse_gdelt_date(raw.date)
+        date = parse_gdelt_datetime(raw.date)
 
         # Parse page_position (default to 0 if empty)
         page_position = 0
@@ -287,7 +265,7 @@ class GGGRecord(SchemaEvolutionMixin, BaseModel):
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
         """Parse date from ISO or GDELT format."""
-        return _parse_gdelt_date(v)
+        return parse_gdelt_datetime(v)
 
     @field_validator("lat")
     @classmethod
@@ -373,7 +351,7 @@ class GEMGRecord(SchemaEvolutionMixin, BaseModel):
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
         """Parse date from ISO or GDELT format."""
-        return _parse_gdelt_date(v)
+        return parse_gdelt_datetime(v)
 
 
 class GALRecord(SchemaEvolutionMixin, BaseModel):
@@ -403,4 +381,4 @@ class GALRecord(SchemaEvolutionMixin, BaseModel):
     @classmethod
     def parse_date(cls, v: Any) -> datetime:
         """Parse date from ISO or GDELT format."""
-        return _parse_gdelt_date(v)
+        return parse_gdelt_datetime(v)

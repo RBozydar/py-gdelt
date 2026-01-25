@@ -8,11 +8,13 @@ Based on schema discovery from real GDELT VGKG data (2026-01-20).
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
+
+from py_gdelt.utils.dates import parse_gdelt_datetime
 
 
 if TYPE_CHECKING:
@@ -125,7 +127,7 @@ class VGKGRecord(BaseModel):
             ValueError: If date parsing or type conversion fails.
         """
         return cls(
-            date=datetime.strptime(raw.date, "%Y%m%d%H%M%S").replace(tzinfo=UTC),
+            date=parse_gdelt_datetime(raw.date),
             document_identifier=raw.document_identifier,
             image_url=raw.image_url,
             labels=cls._parse_labels(raw.labels),

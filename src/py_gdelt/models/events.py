@@ -8,12 +8,13 @@ after parsing from TAB-delimited files.
 from __future__ import annotations
 
 from contextlib import suppress
-from datetime import UTC, date, datetime
+from datetime import date, datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from py_gdelt.models.common import Location
+from py_gdelt.utils.dates import parse_gdelt_date, parse_gdelt_datetime
 
 
 if TYPE_CHECKING:
@@ -212,15 +213,13 @@ class Event(BaseModel):
             )
 
         # Parse date from sql_date (YYYYMMDD)
-        event_date = datetime.strptime(raw.sql_date, "%Y%m%d").replace(tzinfo=UTC).date()
+        event_date = parse_gdelt_date(raw.sql_date)
 
         # Parse date_added (YYYYMMDDHHMMSS)
         date_added_dt: datetime | None = None
         if raw.date_added:
             with suppress(ValueError):
-                date_added_dt = datetime.strptime(raw.date_added, "%Y%m%d%H%M%S").replace(
-                    tzinfo=UTC,
-                )
+                date_added_dt = parse_gdelt_datetime(raw.date_added)
 
         # Create actors
         actor1 = _make_actor(
@@ -389,10 +388,10 @@ class Mention(BaseModel):
             return value.strip() == "1"
 
         # Parse event_time (YYYYMMDDHHMMSS)
-        event_time = datetime.strptime(raw.event_time_full, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+        event_time = parse_gdelt_datetime(raw.event_time_full)
 
         # Parse mention_time (YYYYMMDDHHMMSS)
-        mention_time = datetime.strptime(raw.mention_time_full, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+        mention_time = parse_gdelt_datetime(raw.mention_time_full)
 
         # Parse char offsets (can be empty string)
         actor1_offset = (
