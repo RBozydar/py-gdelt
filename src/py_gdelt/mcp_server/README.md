@@ -194,7 +194,7 @@ Get coverage trends over time for a query.
 **Parameters:**
 - `query` (str): Search query string
 - `metric` (str, default="volume"): Metric to track - "volume" (article count) or "tone" (average tone)
-- `days_back` (int, default=30): Number of days to look back (max: 90)
+- `days_back` (int, default=30): Number of days to look back (max: 365)
 
 **Returns:** Time series data with date and value for each point.
 
@@ -214,7 +214,7 @@ Full-text article search via GDELT DOC API.
 
 **Parameters:**
 - `query` (str): Search query string (supports boolean operators, phrases)
-- `days_back` (int, default=7): Number of days to look back (max: 90)
+- `days_back` (int, default=7): Number of days to look back (max: 365)
 - `max_results` (int, default=100): Maximum results to return (1-250)
 - `sort_by` (str, default="date"): Sort order - "date", "relevance", or "tone"
 

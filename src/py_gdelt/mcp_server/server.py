@@ -658,7 +658,7 @@ async def gdelt_trends(
     Args:
         query: Search query string
         metric: Metric to track - "volume" (article count) or "tone" (average tone)
-        days_back: Number of days to look back (default: 30, max: 90)
+        days_back: Number of days to look back (default: 30, max: 365)
 
     Returns:
         Time series data with date and value for each point
@@ -666,8 +666,8 @@ async def gdelt_trends(
     try:
         client = await get_client()
 
-        # Limit to 90 days for timeline queries
-        days = min(days_back, 90)
+        # DOC API supports up to 1 year with timespan=1y
+        days = min(days_back, 365)
 
         # Use DOC API timeline mode
         timespan = f"{days}d"
@@ -736,7 +736,7 @@ async def gdelt_doc(
 
     Args:
         query: Search query string (supports boolean operators, phrases)
-        days_back: Number of days to look back (default: 7, max: 90)
+        days_back: Number of days to look back (default: 7, max: 365)
         max_results: Maximum results to return (1-250, default: 100)
         sort_by: Sort order - "date", "relevance", or "tone" (default: "date")
 
@@ -750,8 +750,8 @@ async def gdelt_doc(
         if sort_by not in {"date", "relevance", "tone"}:
             return [{"error": f"Invalid sort_by: {sort_by}. Must be one of: date, relevance, tone"}]
 
-        # Build timespan
-        days = min(days_back, 90)
+        # DOC API supports up to 1 year with timespan=1y
+        days = min(days_back, 365)
         timespan = f"{days}d"
 
         logger.info(
