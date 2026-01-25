@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
 from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field
 
 from py_gdelt.models.common import EntityMention, Location, ToneScores
+from py_gdelt.utils.dates import parse_gdelt_datetime
 
 
 if TYPE_CHECKING:
@@ -144,8 +145,7 @@ class GKGRecord(BaseModel):
             original_record_id = raw.gkg_record_id[:-2]
 
         # Parse date (format: YYYYMMDDHHMMSS)
-        date_str = raw.date
-        date = datetime.strptime(date_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+        date = parse_gdelt_datetime(raw.date)
 
         # Parse themes from V2 enhanced (preferred) or V1
         themes = _parse_themes(raw.themes_v2_enhanced or raw.themes_v1)
@@ -585,7 +585,7 @@ class TVGKGRecord(BaseModel):
         timecodes = cls._parse_timecode_toc(raw.extras_xml)
         return cls(
             gkg_record_id=raw.gkg_record_id,
-            date=datetime.strptime(raw.date, "%Y%m%d%H%M%S").replace(tzinfo=UTC),
+            date=parse_gdelt_datetime(raw.date),
             source_identifier=raw.source_common_name or "",
             document_identifier=raw.document_identifier or "",
             themes=_parse_semicolon_delimited(raw.themes_v1),

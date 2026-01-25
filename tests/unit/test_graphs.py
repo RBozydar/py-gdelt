@@ -679,11 +679,17 @@ class TestDateParsing:
     """Tests for date parsing across all graph models."""
 
     def test_datetime_object_passthrough(self) -> None:
-        """Test that datetime objects are passed through unchanged."""
+        """Test that datetime objects are converted to UTC."""
         dt = datetime(2025, 1, 20, 10, 30, 0)
         data = {"date": dt, "url": "https://example.com", "lang": "en"}
         record = GQGRecord.model_validate(data)
-        assert record.date == dt
+        # Naive datetimes are converted to UTC by parse_gdelt_datetime
+        assert record.date.year == dt.year
+        assert record.date.month == dt.month
+        assert record.date.day == dt.day
+        assert record.date.hour == dt.hour
+        assert record.date.minute == dt.minute
+        assert record.date.tzinfo is not None  # Now UTC-aware
 
     def test_iso_format_with_z_suffix(self) -> None:
         """Test ISO format with Z timezone suffix."""

@@ -37,6 +37,7 @@ from pydantic import BaseModel
 
 from py_gdelt.endpoints.base import BaseEndpoint
 from py_gdelt.filters import TVFilter
+from py_gdelt.utils.dates import try_parse_gdelt_datetime
 
 
 __all__ = [
@@ -291,7 +292,7 @@ class TVEndpoint(BaseEndpoint):
                 show_name=item.get("show"),
                 clip_url=item.get("url"),
                 preview_url=item.get("preview"),
-                date=_parse_date(item.get("date")),
+                date=try_parse_gdelt_datetime(item.get("date")),
                 duration_seconds=item.get("duration"),
                 snippet=item.get("snippet"),
             )
@@ -517,7 +518,7 @@ class TVAIEndpoint(BaseEndpoint):
                 show_name=item.get("show"),
                 clip_url=item.get("url"),
                 preview_url=item.get("preview"),
-                date=_parse_date(item.get("date")),
+                date=try_parse_gdelt_datetime(item.get("date")),
                 duration_seconds=item.get("duration"),
                 snippet=item.get("snippet"),
             )
@@ -525,36 +526,6 @@ class TVAIEndpoint(BaseEndpoint):
         ]
 
         return clips
-
-
-def _parse_date(date_str: str | None) -> datetime | None:
-    """Parse GDELT date string to datetime.
-
-    Handles both GDELT's native YYYYMMDDHHMMSS format and ISO 8601 format.
-
-    Args:
-        date_str: Date string in GDELT or ISO format
-
-    Returns:
-        Parsed datetime object, or None if input is None or invalid
-
-    Example:
-        >>> _parse_date("20240115120000")
-        datetime(2024, 1, 15, 12, 0, 0)
-        >>> _parse_date("2024-01-15T12:00:00")
-        datetime(2024, 1, 15, 12, 0, 0)
-    """
-    if not date_str:
-        return None
-    try:
-        # Try YYYYMMDDHHMMSS format
-        if len(date_str) == 14:
-            return datetime.strptime(date_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-        # Try ISO format - add UTC if naive
-        result = datetime.fromisoformat(date_str)
-        return result if result.tzinfo else result.replace(tzinfo=UTC)
-    except ValueError:
-        return None
 
 
 def _parse_timespan(timespan: str) -> timedelta | None:

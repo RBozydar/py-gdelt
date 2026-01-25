@@ -16,7 +16,7 @@ import logging
 import re
 import zipfile
 from collections.abc import AsyncIterator, Iterable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Final, Literal, get_args
 
 import httpx
@@ -24,6 +24,7 @@ import httpx
 from py_gdelt.cache import Cache
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
+from py_gdelt.utils.dates import parse_gdelt_datetime
 
 
 __all__ = ["FileSource", "FileType", "GraphFileType"]
@@ -516,7 +517,7 @@ class FileSource:
         if match:
             timestamp_str = match.group(1)
             try:
-                return datetime.strptime(timestamp_str, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+                return parse_gdelt_datetime(timestamp_str)
             except ValueError:
                 logger.debug("Invalid timestamp in URL: %s", timestamp_str)
                 return None

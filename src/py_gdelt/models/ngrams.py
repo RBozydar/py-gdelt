@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from datetime import date as date_type
+from datetime import date as date_type  # noqa: TC003 - Pydantic needs runtime access
+from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
 from enum import Enum
 from typing import TYPE_CHECKING, TypeAlias
 
 from pydantic import BaseModel, Field
+
+from py_gdelt.utils.dates import parse_gdelt_date, parse_gdelt_datetime
 
 
 if TYPE_CHECKING:
@@ -60,7 +62,7 @@ class NGramRecord(BaseModel):
             ValueError: If date parsing or type conversion fails
         """
         return cls(
-            date=datetime.strptime(raw.date, "%Y%m%d%H%M%S").replace(tzinfo=UTC),
+            date=parse_gdelt_datetime(raw.date),
             ngram=raw.ngram,
             language=raw.language,
             segment_type=int(raw.segment_type),
@@ -138,7 +140,7 @@ class BroadcastNGramRecord(BaseModel):
             ValueError: If date parsing or type conversion fails.
         """
         return cls(
-            date=datetime.strptime(raw.date, "%Y%m%d").replace(tzinfo=UTC).date(),
+            date=parse_gdelt_date(raw.date),
             station=raw.station,
             hour=int(raw.hour),
             ngram=raw.ngram,

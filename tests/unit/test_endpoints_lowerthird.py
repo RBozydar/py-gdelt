@@ -12,10 +12,10 @@ from pydantic import ValidationError
 from py_gdelt.endpoints.lowerthird import (
     LowerThirdClip,
     LowerThirdEndpoint,
-    _parse_date,
 )
 from py_gdelt.endpoints.tv import TVStationChart, TVTimeline
 from py_gdelt.filters import LowerThirdFilter
+from py_gdelt.utils.dates import try_parse_gdelt_datetime
 
 
 # Model Tests
@@ -149,33 +149,33 @@ def test_lowerthird_filter_sort_validation() -> None:
 # Date Parsing Tests
 
 
-def test_parse_date_gdelt_format() -> None:
+def test_try_parse_gdelt_datetime_gdelt_format() -> None:
     """Test parsing GDELT date format."""
-    result = _parse_date("20240115120000")
+    result = try_parse_gdelt_datetime("20240115120000")
     assert result == datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
-def test_parse_date_iso_format() -> None:
+def test_try_parse_gdelt_datetime_iso_format() -> None:
     """Test parsing ISO date format."""
-    result = _parse_date("2024-01-15T12:00:00")
+    result = try_parse_gdelt_datetime("2024-01-15T12:00:00")
     assert result is not None
     assert result == datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
-def test_parse_date_none() -> None:
+def test_try_parse_gdelt_datetime_none() -> None:
     """Test parsing None returns None."""
-    assert _parse_date(None) is None
+    assert try_parse_gdelt_datetime(None) is None
 
 
-def test_parse_date_empty_string() -> None:
+def test_try_parse_gdelt_datetime_empty_string() -> None:
     """Test parsing empty string returns None."""
-    assert _parse_date("") is None
+    assert try_parse_gdelt_datetime("") is None
 
 
-def test_parse_date_invalid() -> None:
+def test_try_parse_gdelt_datetime_invalid() -> None:
     """Test parsing invalid date returns None."""
-    assert _parse_date("invalid") is None
-    assert _parse_date("2024") is None
+    assert try_parse_gdelt_datetime("invalid") is None
+    assert try_parse_gdelt_datetime("2024") is None
 
 
 # Parameter Building Tests
