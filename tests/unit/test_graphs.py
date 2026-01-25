@@ -616,50 +616,35 @@ class TestGraphFilters:
         )
         assert filter_obj.languages == ["en", "es"]
 
-    def test_gqg_filter_max_date_range(self) -> None:
-        """Test GQGFilter rejects date range > 7 days."""
-        with pytest.raises(ValidationError, match="7 days"):
-            GQGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 15)))
+    def test_gqg_filter_accepts_large_date_range(self) -> None:
+        """Test GQGFilter accepts large date ranges (file-based, no limit)."""
+        filter_obj = GQGFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2025, 1, 1)))
+        assert filter_obj.date_range.days > 365  # Inclusive, so > 365
 
-    def test_gqg_filter_exactly_7_days(self) -> None:
-        """Test GQGFilter allows exactly 7 days."""
-        filter_obj = GQGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 7)))
-        assert filter_obj.date_range.days == 7
+    def test_geg_filter_accepts_large_date_range(self) -> None:
+        """Test GEGFilter accepts large date ranges (file-based, no limit)."""
+        filter_obj = GEGFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2025, 1, 1)))
+        assert filter_obj.date_range.days > 365
 
-    def test_geg_filter_max_date_range(self) -> None:
-        """Test GEGFilter rejects date range > 7 days."""
-        with pytest.raises(ValidationError, match="7 days"):
-            GEGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 15)))
+    def test_gfg_filter_accepts_large_date_range(self) -> None:
+        """Test GFGFilter accepts large date ranges (file-based, no limit)."""
+        filter_obj = GFGFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2025, 1, 1)))
+        assert filter_obj.date_range.days > 365
 
-    def test_gfg_filter_max_date_range(self) -> None:
-        """Test GFGFilter allows up to 30 days."""
-        filter_obj = GFGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 30)))
-        assert filter_obj.date_range.days == 30
+    def test_ggg_filter_accepts_large_date_range(self) -> None:
+        """Test GGGFilter accepts large date ranges (file-based, no limit)."""
+        filter_obj = GGGFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2025, 1, 1)))
+        assert filter_obj.date_range.days > 365
 
-    def test_gfg_filter_exceeds_max(self) -> None:
-        """Test GFGFilter rejects date range > 30 days."""
-        with pytest.raises(ValidationError, match="30 days"):
-            GFGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 2, 15)))
+    def test_gemg_filter_accepts_large_date_range(self) -> None:
+        """Test GEMGFilter accepts large date ranges (file-based, no limit)."""
+        filter_obj = GEMGFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2025, 1, 1)))
+        assert filter_obj.date_range.days > 365
 
-    def test_gfg_filter_exactly_30_days(self) -> None:
-        """Test GFGFilter allows exactly 30 days."""
-        filter_obj = GFGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 30)))
-        assert filter_obj.date_range.days == 30
-
-    def test_ggg_filter_max_date_range(self) -> None:
-        """Test GGGFilter rejects date range > 7 days."""
-        with pytest.raises(ValidationError, match="7 days"):
-            GGGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 15)))
-
-    def test_gemg_filter_max_date_range(self) -> None:
-        """Test GEMGFilter rejects date range > 7 days."""
-        with pytest.raises(ValidationError, match="7 days"):
-            GEMGFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 15)))
-
-    def test_gal_filter_max_date_range(self) -> None:
-        """Test GALFilter rejects date range > 7 days."""
-        with pytest.raises(ValidationError, match="7 days"):
-            GALFilter(date_range=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 15)))
+    def test_gal_filter_accepts_large_date_range(self) -> None:
+        """Test GALFilter accepts large date ranges (file-based, no limit)."""
+        filter_obj = GALFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2025, 1, 1)))
+        assert filter_obj.date_range.days > 365
 
     def test_filter_with_languages(self) -> None:
         """Test filter with language list."""

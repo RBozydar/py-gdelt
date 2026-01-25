@@ -46,16 +46,17 @@ class TestDateRange:
         with pytest.raises(ValidationError, match="end date must be >= start date"):
             DateRange(start=date(2024, 1, 10), end=date(2024, 1, 1))
 
-    def test_range_exceeds_365_days(self) -> None:
-        """Test that range > 365 days raises ValueError."""
-        with pytest.raises(ValidationError, match="date range cannot exceed 365 days"):
-            DateRange(start=date(2024, 1, 1), end=date(2025, 1, 2))
+    def test_large_date_range_allowed(self) -> None:
+        """Test that large date ranges are allowed (no enforced limit)."""
+        # Multiple years should work for file-based sources
+        dr = DateRange(start=date(2020, 1, 1), end=date(2025, 1, 1))
+        assert dr.days > 1800  # ~5 years, inclusive
 
-    def test_exactly_365_days_allowed(self) -> None:
-        """Test that exactly 365 days is allowed."""
-        # 2024 is a leap year, so use 2023 for exactly 365 days
-        dr = DateRange(start=date(2023, 1, 1), end=date(2023, 12, 31))
-        assert dr.days == 365
+    def test_multi_year_range_allowed(self) -> None:
+        """Test that multi-year date ranges work for historical queries."""
+        # Events v1 goes back to 1979, so large ranges should be supported
+        dr = DateRange(start=date(2015, 1, 1), end=date(2024, 12, 31))
+        assert dr.days > 3600  # ~10 years, inclusive
 
     def test_days_property_with_end_none(self) -> None:
         """Test days property when end is None."""

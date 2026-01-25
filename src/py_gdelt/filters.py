@@ -8,7 +8,7 @@ across all GDELT data sources including Events, Mentions, GKG, DOC, GEO, and TV 
 from __future__ import annotations
 
 from datetime import date, datetime  # noqa: TC003 - Pydantic needs runtime access
-from typing import Literal, Self, TypeAlias
+from typing import Literal, TypeAlias
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -40,20 +40,28 @@ __all__ = [
 
 
 class DateRange(BaseModel):
-    """Date range filter with validation."""
+    """Date range filter with validation.
+
+    Note:
+        There is no enforced date range limit. File-based datasets (Events, GKG,
+        Mentions, etc.) can span years of data. Use streaming methods for large
+        date ranges to avoid memory issues.
+
+        REST APIs have their own limits enforced server-side:
+        - DOC 2.0: 1 year (with timespan=1y)
+        - GEO 2.0: 7 days
+        - Context 2.0: 72 hours
+    """
 
     start: date
     end: date | None = None
 
     @model_validator(mode="after")
     def validate_range(self) -> DateRange:
-        """Ensure start <= end and range not too large."""
+        """Ensure start <= end."""
         end = self.end or self.start
         if end < self.start:
             msg = "end date must be >= start date"
-            raise ValueError(msg)
-        if (end - self.start).days > 365:
-            msg = "date range cannot exceed 365 days"
             raise ValueError(msg)
         return self
 
@@ -412,94 +420,80 @@ RadioNGramsFilter: TypeAlias = BroadcastNGramsFilter
 
 
 class GQGFilter(BaseModel):
-    """Filter for Global Quotation Graph queries (max 7 days)."""
+    """Filter for Global Quotation Graph queries.
+
+    Note:
+        GQG is a file-based dataset with no inherent date range limit.
+        Large date ranges will produce large result sets - use streaming
+        methods (``stream_gqg``) for memory efficiency.
+    """
 
     date_range: DateRange
     languages: list[str] | None = None
-
-    @model_validator(mode="after")
-    def validate_date_range(self) -> Self:
-        """Ensure date range does not exceed 7 days."""
-        if self.date_range.days > 7:
-            msg = "GQG max date range: 7 days"
-            raise ValueError(msg)
-        return self
 
 
 class GEGFilter(BaseModel):
-    """Filter for Global Entity Graph queries (max 7 days)."""
+    """Filter for Global Entity Graph queries.
+
+    Note:
+        GEG is a file-based dataset with no inherent date range limit.
+        Large date ranges will produce large result sets - use streaming
+        methods (``stream_geg``) for memory efficiency.
+    """
 
     date_range: DateRange
     languages: list[str] | None = None
-
-    @model_validator(mode="after")
-    def validate_date_range(self) -> Self:
-        """Ensure date range does not exceed 7 days."""
-        if self.date_range.days > 7:
-            msg = "GEG max date range: 7 days"
-            raise ValueError(msg)
-        return self
 
 
 class GFGFilter(BaseModel):
-    """Filter for Global Frontpage Graph queries (max 30 days)."""
+    """Filter for Global Frontpage Graph queries.
+
+    Note:
+        GFG is a file-based dataset with no inherent date range limit.
+        Large date ranges will produce large result sets - use streaming
+        methods (``stream_gfg``) for memory efficiency.
+    """
 
     date_range: DateRange
     languages: list[str] | None = None
 
-    @model_validator(mode="after")
-    def validate_date_range(self) -> Self:
-        """Ensure date range does not exceed 30 days."""
-        if self.date_range.days > 30:
-            msg = "GFG max date range: 30 days"
-            raise ValueError(msg)
-        return self
-
 
 class GGGFilter(BaseModel):
-    """Filter for Global Geographic Graph queries (max 7 days).
+    """Filter for Global Geographic Graph queries.
 
     Note:
+        GGG is a file-based dataset with no inherent date range limit.
+        Large date ranges will produce large result sets - use streaming
+        methods (``stream_ggg``) for memory efficiency.
+
         Unlike other graph filters, GGGFilter does not have a ``languages`` field
         because GGG records contain geographic data without language metadata.
     """
 
     date_range: DateRange
 
-    @model_validator(mode="after")
-    def validate_date_range(self) -> Self:
-        """Ensure date range does not exceed 7 days."""
-        if self.date_range.days > 7:
-            msg = "GGG max date range: 7 days"
-            raise ValueError(msg)
-        return self
-
 
 class GEMGFilter(BaseModel):
-    """Filter for Global Embedded Metadata Graph queries (max 7 days)."""
+    """Filter for Global Embedded Metadata Graph queries.
+
+    Note:
+        GEMG is a file-based dataset with no inherent date range limit.
+        Large date ranges will produce large result sets - use streaming
+        methods (``stream_gemg``) for memory efficiency.
+    """
 
     date_range: DateRange
     languages: list[str] | None = None
-
-    @model_validator(mode="after")
-    def validate_date_range(self) -> Self:
-        """Ensure date range does not exceed 7 days."""
-        if self.date_range.days > 7:
-            msg = "GEMG max date range: 7 days"
-            raise ValueError(msg)
-        return self
 
 
 class GALFilter(BaseModel):
-    """Filter for Article List queries (max 7 days)."""
+    """Filter for Article List queries.
+
+    Note:
+        GAL is a file-based dataset with no inherent date range limit.
+        Large date ranges will produce large result sets - use streaming
+        methods (``stream_gal``) for memory efficiency.
+    """
 
     date_range: DateRange
     languages: list[str] | None = None
-
-    @model_validator(mode="after")
-    def validate_date_range(self) -> Self:
-        """Ensure date range does not exceed 7 days."""
-        if self.date_range.days > 7:
-            msg = "GAL max date range: 7 days"
-            raise ValueError(msg)
-        return self
