@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Final
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, is_fuzzy_available, load_lookup_json
 from py_gdelt.lookups.models import CAMEOCodeEntry, GoldsteinEntry
 
 
@@ -136,16 +136,61 @@ class CAMEOCodes:
             return "mildly_conflictual"
         return "cooperative"
 
-    def search(self, query: str, include_examples: bool = False) -> list[str]:
+    def search(
+        self,
+        query: str,
+        include_examples: bool = False,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
         """
-        Search codes by name/description (substring match).
+        Search codes by name/description.
+
+        Supports both substring matching and fuzzy matching (when rapidfuzz is installed).
 
         Args:
             query: Search query string (case-insensitive).
             include_examples: If True, also search in examples and usage_notes fields.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
 
         Returns:
             List of CAMEO codes matching the query.
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        # Determine matching mode
+        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
+
+        if use_fuzzy and not is_fuzzy_available():
+            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
+            raise ImportError(msg)
+
+        # CAMEO-specific: if query is numeric, prioritize exact code prefix matches first
+        query_is_numeric = query.isdigit()
+        if query_is_numeric:
+            prefix_matches = [code for code in self._codes_data if code.startswith(query)]
+            if prefix_matches:
+                return sorted(prefix_matches)
+
+        if use_fuzzy:
+            return self._fuzzy_search(query, include_examples, threshold)
+        return self._substring_search(query, include_examples)
+
+    def _substring_search(self, query: str, include_examples: bool) -> list[str]:
+        """Perform substring-based search.
+
+        Args:
+            query: Search query string.
+            include_examples: If True, also search in examples and usage_notes.
+
+        Returns:
+            List of matching CAMEO codes.
         """
         query_lower = query.lower()
         results: list[str] = []
@@ -160,6 +205,38 @@ class CAMEOCodes:
                 if any(query_lower in example.lower() for example in entry.examples):
                     results.append(code)
         return results
+
+    def _fuzzy_search(self, query: str, include_examples: bool, threshold: int) -> list[str]:
+        """Perform fuzzy search using rapidfuzz.
+
+        Args:
+            query: Search query string.
+            include_examples: If True, also search in examples and usage_notes.
+            threshold: Minimum score for fuzzy matches.
+
+        Returns:
+            List of matching CAMEO codes sorted by score.
+        """
+        # Build searchable text for each code
+        candidates: dict[str, str] = {}
+        for code, entry in self._codes_data.items():
+            text_parts = [entry.name, entry.description]
+            if include_examples:
+                if entry.usage_notes:
+                    text_parts.append(entry.usage_notes)
+                text_parts.extend(entry.examples)
+            candidates[code] = " ".join(text_parts)
+
+        # Perform fuzzy search on the combined text
+        matches = fuzzy_search(
+            query,
+            list(candidates.values()),
+            threshold=threshold,
+        )
+
+        # Map back to codes
+        text_to_code = {text: code for code, text in candidates.items()}
+        return [text_to_code[match] for match, _ in matches]
 
     def is_conflict(self, code: str) -> bool:
         """
@@ -219,26 +296,72 @@ class CAMEOCodes:
 
         return None
 
-    def suggest(self, code: str, limit: int = 3) -> list[str]:
+    def suggest(
+        self,
+        code: str,
+        limit: int = 3,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
         """Suggest similar CAMEO codes based on input.
 
-        Uses fuzzy matching to find codes with similar prefixes or names.
+        Uses fuzzy matching (when available) to find codes with similar prefixes or names.
 
         Args:
             code: The invalid code to find suggestions for.
             limit: Maximum number of suggestions to return.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
 
         Returns:
             List of suggestions in format "code (Name)".
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
+        # Determine matching mode
+        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
+
+        if use_fuzzy and not is_fuzzy_available():
+            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
+            raise ImportError(msg)
+
         suggestions: list[str] = []
 
-        # Strategy 1: Prefix match on code
-        for cameo_code, entry in self._codes_data.items():
-            if cameo_code.startswith(code):
-                suggestions.append(f"{cameo_code} ({entry.name})")
-                if len(suggestions) >= limit:
-                    return suggestions
+        # CAMEO-specific: if code is numeric, prioritize exact code prefix matches first
+        if code.isdigit():
+            for cameo_code, entry in self._codes_data.items():
+                if cameo_code.startswith(code):
+                    suggestions.append(f"{cameo_code} ({entry.name})")
+                    if len(suggestions) >= limit:
+                        return suggestions
+
+        if use_fuzzy:
+            return self._fuzzy_suggest(code, limit, threshold, suggestions)
+        return self._substring_suggest(code, limit, suggestions)
+
+    def _substring_suggest(self, code: str, limit: int, suggestions: list[str]) -> list[str]:
+        """Suggest using substring matching.
+
+        Args:
+            code: The code to find suggestions for.
+            limit: Maximum number of suggestions.
+            suggestions: Pre-populated suggestions (e.g., from prefix matching).
+
+        Returns:
+            List of suggestions.
+        """
+        # Strategy 1: Prefix match on code (already done for numeric codes)
+        if not code.isdigit():
+            for cameo_code, entry in self._codes_data.items():
+                if cameo_code.startswith(code):
+                    suggestions.append(f"{cameo_code} ({entry.name})")
+                    if len(suggestions) >= limit:
+                        return suggestions
 
         # Strategy 2: Contains match in name
         code_lower = code.lower()
@@ -250,6 +373,51 @@ class CAMEOCodes:
                 suggestions.append(f"{cameo_code} ({entry.name})")
                 if len(suggestions) >= limit:
                     return suggestions
+
+        return suggestions
+
+    def _fuzzy_suggest(
+        self, code: str, limit: int, threshold: int, suggestions: list[str]
+    ) -> list[str]:
+        """Suggest using fuzzy matching.
+
+        Args:
+            code: The code to find suggestions for.
+            limit: Maximum number of suggestions.
+            threshold: Minimum score for fuzzy matches.
+            suggestions: Pre-populated suggestions (e.g., from prefix matching).
+
+        Returns:
+            List of suggestions.
+        """
+        remaining = limit - len(suggestions)
+        if remaining <= 0:
+            return suggestions
+
+        # Build candidate list
+        candidates: dict[str, str] = {}
+        existing = {s.split()[0] for s in suggestions}  # Extract codes from existing suggestions
+
+        for cameo_code, entry in self._codes_data.items():
+            if cameo_code not in existing:
+                candidates[cameo_code] = f"{cameo_code} {entry.name}"
+
+        if not candidates:
+            return suggestions
+
+        matches = fuzzy_search(
+            code,
+            list(candidates.values()),
+            threshold=threshold,
+            limit=remaining,
+        )
+
+        # Map back to formatted suggestions
+        text_to_code = {text: c for c, text in candidates.items()}
+        for match, _ in matches:
+            cameo_code = text_to_code[match]
+            entry = self._codes_data[cameo_code]
+            suggestions.append(f"{cameo_code} ({entry.name})")
 
         return suggestions
 

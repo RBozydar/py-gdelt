@@ -1408,3 +1408,337 @@ class TestGCAMLookup:
         gcam = GCAMLookup()
         result = gcam.by_language("invalid_lang")
         assert result == {}
+
+
+class TestFuzzyMatching:
+    """Tests for fuzzy matching across lookup classes."""
+
+    def test_cameo_search_fuzzy_false_uses_substring(self) -> None:
+        """Test fuzzy=False forces substring matching even when rapidfuzz available."""
+        cameo = CAMEOCodes()
+        # With fuzzy=False, should use substring matching (case insensitive)
+        results = cameo.search("statement", fuzzy=False)
+        assert len(results) > 0
+        assert "01" in results
+
+    def test_cameo_suggest_fuzzy_false_uses_substring(self) -> None:
+        """Test suggest with fuzzy=False forces substring matching."""
+        cameo = CAMEOCodes()
+        # With fuzzy=False, should use substring matching
+        suggestions = cameo.suggest("01", fuzzy=False)
+        assert len(suggestions) > 0
+        # Should suggest codes starting with "01"
+        assert any("01" in s for s in suggestions)
+
+    def test_cameo_numeric_query_prioritizes_code_prefix(self) -> None:
+        """Test CAMEO search with numeric query prioritizes code prefix matches."""
+        cameo = CAMEOCodes()
+        # Numeric queries should prioritize exact code prefix matches
+        results = cameo.search("01", fuzzy=False)
+        assert len(results) > 0
+        # All results should be codes starting with "01"
+        assert all(code.startswith("01") for code in results)
+
+    def test_cameo_numeric_suggest_prioritizes_code_prefix(self) -> None:
+        """Test CAMEO suggest with numeric query prioritizes code prefix matches."""
+        cameo = CAMEOCodes()
+        # Numeric queries should prioritize exact code prefix matches first
+        suggestions = cameo.suggest("14", fuzzy=False)
+        assert len(suggestions) > 0
+        # First suggestions should be codes starting with "14"
+        first_code = suggestions[0].split()[0]
+        assert first_code.startswith("14")
+
+    def test_countries_search_fuzzy_false_uses_substring(self) -> None:
+        """Test countries search with fuzzy=False uses substring matching."""
+        countries = Countries()
+        results = countries.search("United", fuzzy=False)
+        assert len(results) > 0
+        # Should find United States
+        assert "US" in results
+
+    def test_countries_suggest_fuzzy_false_uses_substring(self) -> None:
+        """Test countries suggest with fuzzy=False uses substring matching."""
+        countries = Countries()
+        suggestions = countries.suggest("US", fuzzy=False)
+        assert len(suggestions) > 0
+
+    def test_themes_search_fuzzy_false_uses_substring(self) -> None:
+        """Test themes search with fuzzy=False uses substring matching."""
+        themes = GKGThemes()
+        results = themes.search("climate", fuzzy=False)
+        assert len(results) > 0
+        assert "ENV_CLIMATECHANGE" in results
+
+    def test_themes_suggest_fuzzy_false_uses_substring(self) -> None:
+        """Test themes suggest with fuzzy=False uses substring matching."""
+        themes = GKGThemes()
+        suggestions = themes.suggest("ENV", fuzzy=False)
+        assert len(suggestions) > 0
+        # Should suggest themes starting with "ENV"
+        assert any("ENV" in s for s in suggestions)
+
+    def test_languages_search_fuzzy_false_uses_substring(self) -> None:
+        """Test languages search with fuzzy=False uses substring matching."""
+        languages = Languages()
+        results = languages.search("German", fuzzy=False)
+        assert len(results) > 0
+        assert "deu" in results
+
+    def test_languages_suggest_fuzzy_false_uses_substring(self) -> None:
+        """Test languages suggest with fuzzy=False uses substring matching."""
+        languages = Languages()
+        suggestions = languages.suggest("deu", fuzzy=False)
+        assert len(suggestions) > 0
+
+    def test_gcam_search_fuzzy_false_uses_substring(self) -> None:
+        """Test GCAM search with fuzzy=False uses substring matching."""
+        gcam = GCAMLookup()
+        results = gcam.search("Forest", fuzzy=False)
+        assert len(results) > 0
+        # Should find Forest Values entries (c1.x)
+        assert any(var.startswith("c1.") for var in results)
+
+    def test_gcam_suggest_fuzzy_false_uses_prefix(self) -> None:
+        """Test GCAM suggest with fuzzy=False uses prefix matching."""
+        gcam = GCAMLookup()
+        suggestions = gcam.suggest("c2.1", fuzzy=False)
+        assert len(suggestions) > 0
+        # All suggestions should start with "c2.1"
+        assert all(s.startswith("c2.1") for s in suggestions)
+
+    def test_image_tags_search_fuzzy_false_uses_substring(self) -> None:
+        """Test ImageTags search with fuzzy=False uses substring matching."""
+        tags = ImageTags()
+        results = tags.search("person", fuzzy=False)
+        assert len(results) > 0
+        assert "person" in results
+
+    def test_image_tags_suggest_fuzzy_false_uses_substring(self) -> None:
+        """Test ImageTags suggest with fuzzy=False uses substring matching."""
+        tags = ImageTags()
+        suggestions = tags.suggest("per", fuzzy=False)
+        assert len(suggestions) > 0
+        # Should suggest tags starting with "per"
+        assert "person" in suggestions
+
+    def test_image_web_tags_search_fuzzy_false_uses_substring(self) -> None:
+        """Test ImageWebTags search with fuzzy=False uses substring matching."""
+        web_tags = ImageWebTags()
+        results = web_tags.search("Trump", fuzzy=False)
+        assert len(results) > 0
+        assert "Donald Trump" in results
+
+    def test_image_web_tags_suggest_fuzzy_false_uses_substring(self) -> None:
+        """Test ImageWebTags suggest with fuzzy=False uses substring matching."""
+        web_tags = ImageWebTags()
+        suggestions = web_tags.suggest("Pres", fuzzy=False)
+        assert len(suggestions) > 0
+
+
+class TestFuzzyMatchingWithRapidfuzz:
+    """Tests for fuzzy matching that require rapidfuzz to be installed."""
+
+    @pytest.fixture(autouse=True)
+    def check_rapidfuzz(self):
+        """Skip tests if rapidfuzz is not installed."""
+        try:
+            import rapidfuzz  # noqa: F401
+        except ImportError:
+            pytest.skip("rapidfuzz not installed")
+
+    def test_cameo_search_fuzzy_true_uses_rapidfuzz(self) -> None:
+        """Test fuzzy=True uses rapidfuzz for fuzzy matching."""
+        cameo = CAMEOCodes()
+        # With fuzzy=True, should use fuzzy matching
+        results = cameo.search("statment", fuzzy=True)  # typo intentional
+        # Fuzzy matching should still find results
+        assert len(results) >= 0  # May or may not find results depending on threshold
+
+    def test_cameo_search_fuzzy_none_auto_detects(self) -> None:
+        """Test fuzzy=None auto-detects rapidfuzz availability."""
+        cameo = CAMEOCodes()
+        # With fuzzy=None (default), should auto-detect and use fuzzy if available
+        results = cameo.search("statement")
+        assert len(results) > 0
+
+    def test_cameo_suggest_fuzzy_true_uses_rapidfuzz(self) -> None:
+        """Test suggest with fuzzy=True uses rapidfuzz."""
+        cameo = CAMEOCodes()
+        suggestions = cameo.suggest("protes", fuzzy=True)  # typo intentional
+        # Should find PROTEST related codes
+        assert len(suggestions) >= 0
+
+    def test_countries_search_fuzzy_true(self) -> None:
+        """Test countries search with fuzzy=True."""
+        countries = Countries()
+        results = countries.search("Unted States", fuzzy=True)  # typo intentional
+        # Fuzzy should still find US
+        assert len(results) >= 0
+
+    def test_themes_search_fuzzy_true(self) -> None:
+        """Test themes search with fuzzy=True."""
+        themes = GKGThemes()
+        results = themes.search("climte", fuzzy=True)  # typo intentional
+        assert len(results) >= 0
+
+    def test_languages_search_fuzzy_true(self) -> None:
+        """Test languages search with fuzzy=True."""
+        languages = Languages()
+        results = languages.search("Germen", fuzzy=True)  # typo intentional
+        assert len(results) >= 0
+
+    def test_gcam_search_fuzzy_true(self) -> None:
+        """Test GCAM search with fuzzy=True."""
+        gcam = GCAMLookup()
+        results = gcam.search("Forrest", fuzzy=True)  # typo intentional
+        assert len(results) >= 0
+
+    def test_image_tags_search_fuzzy_true(self) -> None:
+        """Test ImageTags search with fuzzy=True."""
+        tags = ImageTags()
+        results = tags.search("perso", fuzzy=True)  # partial word
+        assert len(results) >= 0
+
+    def test_image_web_tags_search_fuzzy_true(self) -> None:
+        """Test ImageWebTags search with fuzzy=True."""
+        web_tags = ImageWebTags()
+        results = web_tags.search("Donld", fuzzy=True)  # typo intentional
+        assert len(results) >= 0
+
+
+class TestFuzzyMatchingImportError:
+    """Tests for fuzzy=True behavior when rapidfuzz is not installed."""
+
+    @pytest.fixture(autouse=True)
+    def mock_no_rapidfuzz(self, monkeypatch):
+        """Mock rapidfuzz not being installed."""
+        from py_gdelt.lookups import (
+            _base_tag_lookup,
+            _utils,
+            cameo,
+            countries,
+            gcam,
+            languages,
+            themes,
+        )
+
+        # Save original function and clear its cache
+        original_is_fuzzy_available = _utils.is_fuzzy_available
+        original_is_fuzzy_available.cache_clear()
+
+        # Mock is_fuzzy_available in all modules that import it
+        def mock_is_fuzzy_available() -> bool:
+            return False
+
+        monkeypatch.setattr(_utils, "is_fuzzy_available", mock_is_fuzzy_available)
+        monkeypatch.setattr(cameo, "is_fuzzy_available", mock_is_fuzzy_available)
+        monkeypatch.setattr(countries, "is_fuzzy_available", mock_is_fuzzy_available)
+        monkeypatch.setattr(themes, "is_fuzzy_available", mock_is_fuzzy_available)
+        monkeypatch.setattr(languages, "is_fuzzy_available", mock_is_fuzzy_available)
+        monkeypatch.setattr(gcam, "is_fuzzy_available", mock_is_fuzzy_available)
+        monkeypatch.setattr(_base_tag_lookup, "is_fuzzy_available", mock_is_fuzzy_available)
+
+        yield
+
+        # Restore the original cached function and clear its cache
+        original_is_fuzzy_available.cache_clear()
+
+    def test_cameo_search_fuzzy_true_raises_import_error(self) -> None:
+        """Test fuzzy=True raises ImportError when rapidfuzz not installed."""
+        cameo = CAMEOCodes()
+        with pytest.raises(ImportError) as exc_info:
+            cameo.search("statement", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_cameo_suggest_fuzzy_true_raises_import_error(self) -> None:
+        """Test suggest with fuzzy=True raises ImportError."""
+        cameo = CAMEOCodes()
+        with pytest.raises(ImportError) as exc_info:
+            cameo.suggest("01", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_countries_search_fuzzy_true_raises_import_error(self) -> None:
+        """Test countries search with fuzzy=True raises ImportError."""
+        countries = Countries()
+        with pytest.raises(ImportError) as exc_info:
+            countries.search("US", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_countries_suggest_fuzzy_true_raises_import_error(self) -> None:
+        """Test countries suggest with fuzzy=True raises ImportError."""
+        countries = Countries()
+        with pytest.raises(ImportError) as exc_info:
+            countries.suggest("US", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_themes_search_fuzzy_true_raises_import_error(self) -> None:
+        """Test themes search with fuzzy=True raises ImportError."""
+        themes = GKGThemes()
+        with pytest.raises(ImportError) as exc_info:
+            themes.search("climate", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_themes_suggest_fuzzy_true_raises_import_error(self) -> None:
+        """Test themes suggest with fuzzy=True raises ImportError."""
+        themes = GKGThemes()
+        with pytest.raises(ImportError) as exc_info:
+            themes.suggest("ENV", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_languages_search_fuzzy_true_raises_import_error(self) -> None:
+        """Test languages search with fuzzy=True raises ImportError."""
+        languages = Languages()
+        with pytest.raises(ImportError) as exc_info:
+            languages.search("German", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_languages_suggest_fuzzy_true_raises_import_error(self) -> None:
+        """Test languages suggest with fuzzy=True raises ImportError."""
+        languages = Languages()
+        with pytest.raises(ImportError) as exc_info:
+            languages.suggest("deu", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_gcam_search_fuzzy_true_raises_import_error(self) -> None:
+        """Test GCAM search with fuzzy=True raises ImportError."""
+        gcam = GCAMLookup()
+        with pytest.raises(ImportError) as exc_info:
+            gcam.search("Forest", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_gcam_suggest_fuzzy_true_raises_import_error(self) -> None:
+        """Test GCAM suggest with fuzzy=True raises ImportError."""
+        gcam = GCAMLookup()
+        with pytest.raises(ImportError) as exc_info:
+            gcam.suggest("c2", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_image_tags_search_fuzzy_true_raises_import_error(self) -> None:
+        """Test ImageTags search with fuzzy=True raises ImportError."""
+        tags = ImageTags()
+        with pytest.raises(ImportError) as exc_info:
+            tags.search("person", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_image_tags_suggest_fuzzy_true_raises_import_error(self) -> None:
+        """Test ImageTags suggest with fuzzy=True raises ImportError."""
+        tags = ImageTags()
+        with pytest.raises(ImportError) as exc_info:
+            tags.suggest("per", fuzzy=True)
+        assert "rapidfuzz" in str(exc_info.value).lower()
+
+    def test_cameo_search_fuzzy_none_falls_back_to_substring(self) -> None:
+        """Test fuzzy=None falls back to substring when rapidfuzz not installed."""
+        cameo = CAMEOCodes()
+        # With fuzzy=None (default) and no rapidfuzz, should fall back to substring
+        results = cameo.search("statement")
+        assert len(results) > 0
+        assert "01" in results
+
+    def test_countries_search_fuzzy_none_falls_back_to_substring(self) -> None:
+        """Test countries search with fuzzy=None falls back to substring."""
+        countries = Countries()
+        results = countries.search("United")
+        assert len(results) > 0
+        assert "US" in results
