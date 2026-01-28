@@ -47,6 +47,7 @@ class BaseTagLookup(ABC):
     def __init__(self) -> None:
         self._data: dict[str, TagCountEntry] | None = None
         self._keys_lower: dict[str, str] | None = None
+        self._fuzzy_candidates_cache: list[str] | None = None
 
     @property
     def _tags_data(self) -> dict[str, TagCountEntry]:
@@ -171,6 +172,13 @@ class BaseTagLookup(ABC):
             return results[:limit]
         return results
 
+    @property
+    def _fuzzy_candidates(self) -> list[str]:
+        """Lazily cache candidate list for fuzzy matching."""
+        if self._fuzzy_candidates_cache is None:
+            self._fuzzy_candidates_cache = list(self._tags_data.keys())
+        return self._fuzzy_candidates_cache
+
     def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
         """Perform fuzzy search using rapidfuzz.
 
@@ -182,13 +190,8 @@ class BaseTagLookup(ABC):
         Returns:
             List of matching tag names sorted by score.
         """
-        candidates = list(self._tags_data.keys())
-        matches = fuzzy_search(
-            query,
-            candidates,
-            threshold=threshold,
-            limit=limit,
-        )
+        candidates = self._fuzzy_candidates
+        matches = fuzzy_search(query, candidates, threshold=threshold, limit=limit)
         return [candidates[idx] for _, _, idx in matches]
 
     def suggest(

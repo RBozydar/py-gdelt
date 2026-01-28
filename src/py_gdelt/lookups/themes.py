@@ -37,6 +37,8 @@ class GKGThemes:
 
     def __init__(self) -> None:
         self._themes: dict[str, GKGThemeEntry] | None = None
+        self._fuzzy_search_cache: tuple[list[str], list[str]] | None = None
+        self._fuzzy_suggest_cache: tuple[list[str], list[str]] | None = None
 
     @property
     def _themes_data(self) -> dict[str, GKGThemeEntry]:
@@ -149,6 +151,24 @@ class GKGThemes:
             return results[:limit]
         return results
 
+    @property
+    def _fuzzy_search_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy search."""
+        if self._fuzzy_search_cache is None:
+            codes = list(self._themes_data.keys())
+            texts = [entry.description for entry in self._themes_data.values()]
+            self._fuzzy_search_cache = (codes, texts)
+        return self._fuzzy_search_cache
+
+    @property
+    def _fuzzy_suggest_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy suggest."""
+        if self._fuzzy_suggest_cache is None:
+            codes = list(self._themes_data.keys())
+            texts = [f"{code} {entry.description}" for code, entry in self._themes_data.items()]
+            self._fuzzy_suggest_cache = (codes, texts)
+        return self._fuzzy_suggest_cache
+
     def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
         """Perform fuzzy search using rapidfuzz.
 
@@ -160,18 +180,8 @@ class GKGThemes:
         Returns:
             List of matching theme codes sorted by score.
         """
-        # Build candidate list with descriptions
-        codes = list(self._themes_data.keys())
-        texts = [entry.description for entry in self._themes_data.values()]
-
-        matches = fuzzy_search(
-            query,
-            texts,
-            threshold=threshold,
-            limit=limit,
-        )
-
-        # Map back to theme codes using index
+        codes, texts = self._fuzzy_search_candidates
+        matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
         return [codes[idx] for _, _, idx in matches]
 
     def get_category(self, theme: str) -> str | None:
@@ -276,18 +286,9 @@ class GKGThemes:
         Returns:
             List of suggestions.
         """
-        # Build candidate list with searchable text
-        codes = list(self._themes_data.keys())
-        texts = [f"{code} {entry.description}" for code, entry in self._themes_data.items()]
+        codes, texts = self._fuzzy_suggest_candidates
+        matches = fuzzy_search(theme, texts, threshold=threshold, limit=limit)
 
-        matches = fuzzy_search(
-            theme,
-            texts,
-            threshold=threshold,
-            limit=limit,
-        )
-
-        # Map back to formatted suggestions using index
         suggestions: list[str] = []
         for _, _, idx in matches:
             theme_code = codes[idx]

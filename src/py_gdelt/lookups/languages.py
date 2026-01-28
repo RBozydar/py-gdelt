@@ -184,18 +184,11 @@ class Languages:
         Returns:
             List of matching language codes sorted by score.
         """
-        # Build candidate list with searchable text
         codes = list(self._languages_data.keys())
         texts = [f"{code} {entry.name}" for code, entry in self._languages_data.items()]
 
-        matches = fuzzy_search(
-            query,
-            texts,
-            threshold=threshold,
-            limit=limit,
-        )
+        matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
 
-        # Map back to language codes using index
         return [codes[idx] for _, _, idx in matches]
 
     def suggest(
@@ -282,18 +275,11 @@ class Languages:
         Returns:
             List of suggestions.
         """
-        # Build candidate list with searchable text
         codes = list(self._languages_data.keys())
         texts = [f"{c} {entry.name}" for c, entry in self._languages_data.items()]
 
-        matches = fuzzy_search(
-            code,
-            texts,
-            threshold=threshold,
-            limit=limit,
-        )
+        matches = fuzzy_search(code, texts, threshold=threshold, limit=limit)
 
-        # Map back to formatted suggestions using index
         suggestions: list[str] = []
         for _, _, idx in matches:
             lang_code = codes[idx]

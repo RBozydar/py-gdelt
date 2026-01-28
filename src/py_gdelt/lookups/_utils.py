@@ -46,7 +46,7 @@ def is_fuzzy_available() -> bool:
     try:
         import rapidfuzz
 
-        _ = rapidfuzz  # Avoid unused import warning
+        _ = rapidfuzz
     except ImportError:
         return False
     else:
@@ -87,8 +87,7 @@ def fuzzy_search(
         limit=limit,
     )
 
-    # process.extract returns list of (match, score, index) tuples
-    return [(match, score, idx) for match, score, idx in results]
+    return list(results)
 
 
 def load_lookup_json(filename: str) -> dict[str, Any]:

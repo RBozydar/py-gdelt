@@ -25,6 +25,8 @@ class GCAMLookup:
     def __init__(self) -> None:
         self._data: dict[str, GCAMEntry] | None = None
         self._keys_lower: dict[str, str] | None = None
+        self._fuzzy_search_cache: tuple[list[str], list[str]] | None = None
+        self._fuzzy_suggest_cache: tuple[list[str], list[str]] | None = None
 
     @property
     def _gcam_data(self) -> dict[str, GCAMEntry]:
@@ -153,6 +155,30 @@ class GCAMLookup:
             return results[:limit]
         return results
 
+    @property
+    def _fuzzy_search_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy search."""
+        if self._fuzzy_search_cache is None:
+            codes = list(self._gcam_data.keys())
+            texts = [
+                f"{entry.dictionary_name} {entry.dimension_name}"
+                for entry in self._gcam_data.values()
+            ]
+            self._fuzzy_search_cache = (codes, texts)
+        return self._fuzzy_search_cache
+
+    @property
+    def _fuzzy_suggest_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy suggest."""
+        if self._fuzzy_suggest_cache is None:
+            codes = list(self._gcam_data.keys())
+            texts = [
+                f"{var} {entry.dictionary_name} {entry.dimension_name}"
+                for var, entry in self._gcam_data.items()
+            ]
+            self._fuzzy_suggest_cache = (codes, texts)
+        return self._fuzzy_suggest_cache
+
     def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
         """Perform fuzzy search using rapidfuzz.
 
@@ -164,20 +190,8 @@ class GCAMLookup:
         Returns:
             List of matching variable codes sorted by score.
         """
-        # Build candidate list with searchable text
-        codes = list(self._gcam_data.keys())
-        texts = [
-            f"{entry.dictionary_name} {entry.dimension_name}" for entry in self._gcam_data.values()
-        ]
-
-        matches = fuzzy_search(
-            query,
-            texts,
-            threshold=threshold,
-            limit=limit,
-        )
-
-        # Map back to variable codes using index
+        codes, texts = self._fuzzy_search_candidates
+        matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
         return [codes[idx] for _, _, idx in matches]
 
     def suggest(
@@ -246,21 +260,8 @@ class GCAMLookup:
         Returns:
             List of suggestions.
         """
-        # Build candidate list with variable codes and names
-        codes = list(self._gcam_data.keys())
-        texts = [
-            f"{var} {entry.dictionary_name} {entry.dimension_name}"
-            for var, entry in self._gcam_data.items()
-        ]
-
-        matches = fuzzy_search(
-            code,
-            texts,
-            threshold=threshold,
-            limit=limit,
-        )
-
-        # Map back to variable codes using index
+        codes, texts = self._fuzzy_suggest_candidates
+        matches = fuzzy_search(code, texts, threshold=threshold, limit=limit)
         return [codes[idx] for _, _, idx in matches]
 
     def validate(self, code: str) -> None:

@@ -313,7 +313,6 @@ class Countries:
         Returns:
             List of suggestions.
         """
-        # Build candidate list with searchable text
         fips_codes = list(self._countries_data.keys())
         texts = [
             f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
@@ -326,7 +325,6 @@ class Countries:
             limit=limit,
         )
 
-        # Map back to formatted suggestions using index
         suggestions: list[str] = []
         for _, _, idx in matches:
             fips = fips_codes[idx]
@@ -432,18 +430,11 @@ class Countries:
         Returns:
             List of matching FIPS codes sorted by score.
         """
-        # Build candidate list with searchable text
         fips_codes = list(self._countries_data.keys())
         texts = [
             f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
         ]
 
-        matches = fuzzy_search(
-            query,
-            texts,
-            threshold=threshold,
-            limit=limit,
-        )
+        matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
 
-        # Map back to FIPS codes using index
         return [fips_codes[idx] for _, _, idx in matches]

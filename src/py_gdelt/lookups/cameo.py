@@ -140,6 +140,7 @@ class CAMEOCodes:
         self,
         query: str,
         include_examples: bool = False,
+        limit: int | None = None,
         *,
         fuzzy: bool | None = None,
         threshold: int = 60,
@@ -152,6 +153,7 @@ class CAMEOCodes:
         Args:
             query: Search query string (case-insensitive).
             include_examples: If True, also search in examples and usage_notes fields.
+            limit: Maximum number of results to return. None for unlimited.
             fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
                 rapidfuzz is installed, otherwise falls back to substring matching.
                 True forces fuzzy matching (raises ImportError if not available).
@@ -171,11 +173,15 @@ class CAMEOCodes:
         if query_is_numeric:
             prefix_matches = [code for code in self._codes_data if code.startswith(query)]
             if prefix_matches:
-                return sorted(prefix_matches)
+                results = sorted(prefix_matches)
+                return results[:limit] if limit is not None else results
 
         if use_fuzzy:
-            return self._fuzzy_search(query, include_examples, threshold)
-        return self._substring_search(query, include_examples)
+            results = self._fuzzy_search(query, include_examples, threshold)
+        else:
+            results = self._substring_search(query, include_examples)
+
+        return results[:limit] if limit is not None else results
 
     def _substring_search(self, query: str, include_examples: bool) -> list[str]:
         """Perform substring-based search.
@@ -212,7 +218,6 @@ class CAMEOCodes:
         Returns:
             List of matching CAMEO codes sorted by score.
         """
-        # Build searchable text for each code
         codes = list(self._codes_data.keys())
         texts: list[str] = []
         for entry in self._codes_data.values():
@@ -223,14 +228,12 @@ class CAMEOCodes:
                 text_parts.extend(entry.examples)
             texts.append(" ".join(text_parts))
 
-        # Perform fuzzy search on the combined text
         matches = fuzzy_search(
             query,
             texts,
             threshold=threshold,
         )
 
-        # Map back to codes using index
         return [codes[idx] for _, _, idx in matches]
 
     def is_conflict(self, code: str) -> bool:
@@ -404,7 +407,6 @@ class CAMEOCodes:
             limit=remaining,
         )
 
-        # Map back to formatted suggestions using index
         for _, _, idx in matches:
             cameo_code = codes[idx]
             entry = self._codes_data[cameo_code]
