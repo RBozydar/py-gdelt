@@ -8,7 +8,7 @@ country codes used in GDELT data.
 from __future__ import annotations
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import fuzzy_search, is_fuzzy_available, load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import CountryEntry
 
 
@@ -261,13 +261,7 @@ class Countries:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
             return self._fuzzy_suggest(code, limit, threshold)
         return self._substring_suggest(code, limit)
@@ -320,22 +314,22 @@ class Countries:
             List of suggestions.
         """
         # Build candidate list with searchable text
-        candidates: dict[str, str] = {}
-        for fips, entry in self._countries_data.items():
-            candidates[fips] = f"{fips} {entry.iso3} {entry.name}"
+        fips_codes = list(self._countries_data.keys())
+        texts = [
+            f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
+        ]
 
         matches = fuzzy_search(
             code,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
             limit=limit,
         )
 
-        # Map back to formatted suggestions
-        text_to_fips = {text: fips for fips, text in candidates.items()}
+        # Map back to formatted suggestions using index
         suggestions: list[str] = []
-        for match, _ in matches:
-            fips = text_to_fips[match]
+        for _, _, idx in matches:
+            fips = fips_codes[idx]
             entry = self._countries_data[fips]
             suggestions.append(f"{fips} ({entry.name})")
 
@@ -371,13 +365,7 @@ class Countries:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
             return self._fuzzy_search(query, limit, threshold)
         return self._substring_search(query, limit)
@@ -445,17 +433,17 @@ class Countries:
             List of matching FIPS codes sorted by score.
         """
         # Build candidate list with searchable text
-        candidates: dict[str, str] = {}
-        for fips, entry in self._countries_data.items():
-            candidates[fips] = f"{fips} {entry.iso3} {entry.name}"
+        fips_codes = list(self._countries_data.keys())
+        texts = [
+            f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
+        ]
 
         matches = fuzzy_search(
             query,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
             limit=limit,
         )
 
-        # Map back to FIPS codes
-        text_to_fips = {text: fips for fips, text in candidates.items()}
-        return [text_to_fips[match] for match, _ in matches]
+        # Map back to FIPS codes using index
+        return [fips_codes[idx] for _, _, idx in matches]

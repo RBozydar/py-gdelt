@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import fuzzy_search, is_fuzzy_available, load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import LanguageEntry
 
 
@@ -129,13 +129,7 @@ class Languages:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
             return self._fuzzy_search(query, limit, threshold)
         return self._substring_search(query, limit)
@@ -191,20 +185,18 @@ class Languages:
             List of matching language codes sorted by score.
         """
         # Build candidate list with searchable text
-        candidates: dict[str, str] = {}
-        for code, entry in self._languages_data.items():
-            candidates[code] = f"{code} {entry.name}"
+        codes = list(self._languages_data.keys())
+        texts = [f"{code} {entry.name}" for code, entry in self._languages_data.items()]
 
         matches = fuzzy_search(
             query,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
             limit=limit,
         )
 
-        # Map back to language codes
-        text_to_code = {text: code for code, text in candidates.items()}
-        return [text_to_code[match] for match, _ in matches]
+        # Map back to language codes using index
+        return [codes[idx] for _, _, idx in matches]
 
     def suggest(
         self,
@@ -234,13 +226,7 @@ class Languages:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
             return self._fuzzy_suggest(code, limit, threshold)
         return self._substring_suggest(code, limit)
@@ -297,22 +283,20 @@ class Languages:
             List of suggestions.
         """
         # Build candidate list with searchable text
-        candidates: dict[str, str] = {}
-        for lang_code, entry in self._languages_data.items():
-            candidates[lang_code] = f"{lang_code} {entry.name}"
+        codes = list(self._languages_data.keys())
+        texts = [f"{c} {entry.name}" for c, entry in self._languages_data.items()]
 
         matches = fuzzy_search(
             code,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
             limit=limit,
         )
 
-        # Map back to formatted suggestions
-        text_to_code = {text: c for c, text in candidates.items()}
+        # Map back to formatted suggestions using index
         suggestions: list[str] = []
-        for match, _ in matches:
-            lang_code = text_to_code[match]
+        for _, _, idx in matches:
+            lang_code = codes[idx]
             entry = self._languages_data[lang_code]
             suggestions.append(f"{lang_code} ({entry.name})")
 

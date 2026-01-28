@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import fuzzy_search, is_fuzzy_available, load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import TagCountEntry
 
 
@@ -150,13 +150,7 @@ class BaseTagLookup(ABC):
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
             return self._fuzzy_search(query, limit, threshold)
         return self._substring_search(query, limit)
@@ -195,7 +189,7 @@ class BaseTagLookup(ABC):
             threshold=threshold,
             limit=limit,
         )
-        return [match for match, _ in matches]
+        return [candidates[idx] for _, _, idx in matches]
 
     def suggest(
         self,
@@ -226,15 +220,9 @@ class BaseTagLookup(ABC):
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
-            return self._fuzzy_suggest(query, limit, threshold)
+            return self._fuzzy_search(query, limit, threshold)
         return self._substring_suggest(query, limit)
 
     def _substring_suggest(self, query: str, limit: int) -> list[str]:
@@ -265,26 +253,6 @@ class BaseTagLookup(ABC):
                     return suggestions
 
         return suggestions
-
-    def _fuzzy_suggest(self, query: str, limit: int, threshold: int) -> list[str]:
-        """Suggest using fuzzy matching.
-
-        Args:
-            query: The query to find suggestions for.
-            limit: Maximum number of suggestions.
-            threshold: Minimum score for fuzzy matches.
-
-        Returns:
-            List of suggestions.
-        """
-        candidates = list(self._tags_data.keys())
-        matches = fuzzy_search(
-            query,
-            candidates,
-            threshold=threshold,
-            limit=limit,
-        )
-        return [match for match, _ in matches]
 
     def validate(self, tag: str) -> None:
         """Validate tag, raising exception with suggestions if invalid.

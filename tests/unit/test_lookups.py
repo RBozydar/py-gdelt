@@ -79,31 +79,31 @@ class TestCAMEOCodes:
         assert "INVALID" not in cameo
 
     def test_search_finds_matches(self) -> None:
-        """Test search finds codes by name/description."""
+        """Test search finds codes by name/description (substring matching)."""
         cameo = CAMEOCodes()
-        results = cameo.search("statement")
+        results = cameo.search("statement", fuzzy=False)
         assert len(results) > 0
         assert "01" in results
 
     def test_search_case_insensitive(self) -> None:
-        """Test search is case insensitive."""
+        """Test search is case insensitive (substring matching)."""
         cameo = CAMEOCodes()
-        results_lower = cameo.search("statement")
-        results_upper = cameo.search("STATEMENT")
+        results_lower = cameo.search("statement", fuzzy=False)
+        results_upper = cameo.search("STATEMENT", fuzzy=False)
         assert results_lower == results_upper
 
     def test_search_no_matches(self) -> None:
-        """Test search returns empty list when no matches."""
+        """Test search returns empty list when no matches (substring matching)."""
         cameo = CAMEOCodes()
-        results = cameo.search("NONEXISTENT_XYZ")
+        results = cameo.search("NONEXISTENT_XYZ", fuzzy=False)
         assert results == []
 
     def test_search_include_examples_finds_in_examples(self) -> None:
         """Test search with include_examples=True finds matches in examples field."""
         cameo = CAMEOCodes()
         # "NATO" appears in examples for code "010" and "011" but not in name/description
-        results_without = cameo.search("NATO")
-        results_with = cameo.search("NATO", include_examples=True)
+        results_without = cameo.search("NATO", fuzzy=False)
+        results_with = cameo.search("NATO", include_examples=True, fuzzy=False)
         # With include_examples=True, should find more results
         assert len(results_with) > len(results_without)
         # Code "010" has NATO in examples
@@ -113,8 +113,8 @@ class TestCAMEOCodes:
         """Test search with include_examples=True finds matches in usage_notes field."""
         cameo = CAMEOCodes()
         # "verbal act" appears in usage_notes but not in name/description
-        results_without = cameo.search("verbal act")
-        results_with = cameo.search("verbal act", include_examples=True)
+        results_without = cameo.search("verbal act", fuzzy=False)
+        results_with = cameo.search("verbal act", include_examples=True, fuzzy=False)
         # With include_examples=True, should find more results
         assert len(results_with) > len(results_without)
         # Codes 011, 012, 013, etc. have "verbal act" in usage_notes
@@ -123,16 +123,16 @@ class TestCAMEOCodes:
     def test_search_include_examples_case_insensitive(self) -> None:
         """Test search with include_examples is case-insensitive for examples."""
         cameo = CAMEOCodes()
-        results_lower = cameo.search("nato", include_examples=True)
-        results_upper = cameo.search("NATO", include_examples=True)
+        results_lower = cameo.search("nato", include_examples=True, fuzzy=False)
+        results_upper = cameo.search("NATO", include_examples=True, fuzzy=False)
         assert results_lower == results_upper
 
     def test_search_include_examples_default_false(self) -> None:
         """Test that include_examples defaults to False for backward compatibility."""
         cameo = CAMEOCodes()
         # Using the default should be equivalent to include_examples=False
-        results_default = cameo.search("NATO")
-        results_explicit = cameo.search("NATO", include_examples=False)
+        results_default = cameo.search("NATO", fuzzy=False)
+        results_explicit = cameo.search("NATO", include_examples=False, fuzzy=False)
         assert results_default == results_explicit
 
     def test_get_goldstein_valid_code(self) -> None:
@@ -372,21 +372,21 @@ class TestGKGThemes:
     def test_search_returns_matching_themes(self) -> None:
         """Test search returns themes matching description substring."""
         themes = GKGThemes()
-        results = themes.search("pandemic")
+        results = themes.search("pandemic", fuzzy=False)
         assert len(results) > 0
         assert "HEALTH_PANDEMIC" in results
 
     def test_search_case_insensitive(self) -> None:
-        """Test search is case-insensitive."""
+        """Test search is case-insensitive (substring matching)."""
         themes = GKGThemes()
-        results_upper = themes.search("PANDEMIC")
-        results_lower = themes.search("pandemic")
+        results_upper = themes.search("PANDEMIC", fuzzy=False)
+        results_lower = themes.search("pandemic", fuzzy=False)
         assert results_upper == results_lower
 
     def test_search_no_matches_returns_empty_list(self) -> None:
-        """Test search returns empty list when no matches found."""
+        """Test search returns empty list when no matches found (substring matching)."""
         themes = GKGThemes()
-        results = themes.search("NONEXISTENT_QUERY_XYZ")
+        results = themes.search("NONEXISTENT_QUERY_XYZ", fuzzy=False)
         assert results == []
 
     def test_get_category_valid_theme(self) -> None:
@@ -846,26 +846,26 @@ class TestLanguages:
     def test_search_by_code(self) -> None:
         """Test search() finds by code substring."""
         languages = Languages()
-        results = languages.search("deu")
+        results = languages.search("deu", fuzzy=False)
         assert len(results) > 0
         assert "deu" in results
 
     def test_search_by_name(self) -> None:
         """Test search() finds by name."""
         languages = Languages()
-        results = languages.search("German")
+        results = languages.search("German", fuzzy=False)
         assert len(results) > 0
         assert "deu" in results
-        results = languages.search("French")
+        results = languages.search("French", fuzzy=False)
         assert len(results) > 0
         assert "fra" in results
 
     def test_search_case_insensitive(self) -> None:
-        """Test search is case-insensitive."""
+        """Test search is case-insensitive (substring matching)."""
         languages = Languages()
-        results_lower = languages.search("german")
-        results_upper = languages.search("GERMAN")
-        results_mixed = languages.search("German")
+        results_lower = languages.search("german", fuzzy=False)
+        results_upper = languages.search("GERMAN", fuzzy=False)
+        results_mixed = languages.search("German", fuzzy=False)
         assert results_lower == results_upper == results_mixed
         assert "deu" in results_lower
 
@@ -1057,8 +1057,8 @@ class TestImageWebTags:
             web_tags.validate("Imag")
         error = exc_info.value
         assert len(error.suggestions) > 0
-        # Should suggest "Image" as it starts with "Imag"
-        assert "Image" in error.suggestions
+        # Fuzzy matching returns tags containing "image" based on similarity score
+        assert any("Image" in s or "image" in s.lower() for s in error.suggestions)
 
     def test_validate_includes_help_url(self) -> None:
         """Test error includes help_url."""
@@ -1133,23 +1133,23 @@ class TestImageTags:
         assert tags.get("INVALID_TAG") is None
 
     def test_search_finds_matches(self) -> None:
-        """Test search finds matching tags."""
+        """Test search finds matching tags (substring matching)."""
         tags = ImageTags()
-        results = tags.search("person")
+        results = tags.search("person", fuzzy=False)
         assert len(results) > 0
         assert "person" in results
 
     def test_search_case_insensitive(self) -> None:
-        """Test search is case-insensitive."""
+        """Test search is case-insensitive (substring matching)."""
         tags = ImageTags()
-        results_lower = tags.search("person")
-        results_upper = tags.search("PERSON")
+        results_lower = tags.search("person", fuzzy=False)
+        results_upper = tags.search("PERSON", fuzzy=False)
         assert results_lower == results_upper
 
     def test_search_no_matches(self) -> None:
-        """Test search returns empty list when no matches found."""
+        """Test search returns empty list when no matches found (substring matching)."""
         tags = ImageTags()
-        results = tags.search("nonexistent_query_xyz_12345")
+        results = tags.search("nonexistent_query_xyz_12345", fuzzy=False)
         assert results == []
 
     def test_suggest_prefix_matches_first(self) -> None:
@@ -1273,7 +1273,7 @@ class TestGCAMLookup:
     def test_search_by_dictionary_name(self) -> None:
         """Test search finds variables by dictionary name substring."""
         gcam = GCAMLookup()
-        results = gcam.search("Forest Values")
+        results = gcam.search("Forest Values", fuzzy=False)
         assert len(results) > 0
         # All Forest Values entries should start with "c1"
         assert all(var.startswith("c1.") for var in results)
@@ -1281,14 +1281,14 @@ class TestGCAMLookup:
     def test_search_by_dimension_name(self) -> None:
         """Test search finds variables by dimension name substring."""
         gcam = GCAMLookup()
-        results = gcam.search("AESTHETIC")
+        results = gcam.search("AESTHETIC", fuzzy=False)
         assert len(results) > 0
         assert "c1.1" in results
 
     def test_suggest_prefix_matches(self) -> None:
-        """Test suggest() returns prefix matches."""
+        """Test suggest() returns prefix matches (substring matching)."""
         gcam = GCAMLookup()
-        suggestions = gcam.suggest("c2.1")
+        suggestions = gcam.suggest("c2.1", fuzzy=False)
         assert len(suggestions) > 0
         # All suggestions should start with "c2.1"
         assert all(s.startswith("c2.1") for s in suggestions)
@@ -1552,8 +1552,10 @@ class TestFuzzyMatchingWithRapidfuzz:
         cameo = CAMEOCodes()
         # With fuzzy=True, should use fuzzy matching
         results = cameo.search("statment", fuzzy=True)  # typo intentional
-        # Fuzzy matching should still find results
-        assert len(results) >= 0  # May or may not find results depending on threshold
+        # Fuzzy matching should find results (even with typo)
+        assert len(results) > 0
+        # Results are CAMEO codes (2-4 digit strings)
+        assert all(code.isdigit() and len(code) in (2, 3, 4) for code in results)
 
     def test_cameo_search_fuzzy_none_auto_detects(self) -> None:
         """Test fuzzy=None auto-detects rapidfuzz availability."""
@@ -1566,45 +1568,57 @@ class TestFuzzyMatchingWithRapidfuzz:
         """Test suggest with fuzzy=True uses rapidfuzz."""
         cameo = CAMEOCodes()
         suggestions = cameo.suggest("protes", fuzzy=True)  # typo intentional
-        # Should find PROTEST related codes
-        assert len(suggestions) >= 0
+        # Should find PROTEST related codes (code 14)
+        assert len(suggestions) > 0
+        assert any("14" in s for s in suggestions)
 
     def test_countries_search_fuzzy_true(self) -> None:
         """Test countries search with fuzzy=True."""
         countries = Countries()
         results = countries.search("Unted States", fuzzy=True)  # typo intentional
         # Fuzzy should still find US
-        assert len(results) >= 0
+        assert len(results) > 0
+        assert "US" in results
 
     def test_themes_search_fuzzy_true(self) -> None:
         """Test themes search with fuzzy=True."""
         themes = GKGThemes()
         results = themes.search("climte", fuzzy=True)  # typo intentional
-        assert len(results) >= 0
+        # Should find climate-related themes
+        assert len(results) > 0
+        assert "ENV_CLIMATECHANGE" in results
 
     def test_languages_search_fuzzy_true(self) -> None:
         """Test languages search with fuzzy=True."""
         languages = Languages()
         results = languages.search("Germen", fuzzy=True)  # typo intentional
-        assert len(results) >= 0
+        # Should find German language code
+        assert len(results) > 0
+        assert "deu" in results
 
     def test_gcam_search_fuzzy_true(self) -> None:
         """Test GCAM search with fuzzy=True."""
         gcam = GCAMLookup()
         results = gcam.search("Forrest", fuzzy=True)  # typo intentional
-        assert len(results) >= 0
+        # Should find Forest Values entries (c1.x)
+        assert len(results) > 0
+        assert any(var.startswith("c1.") for var in results)
 
     def test_image_tags_search_fuzzy_true(self) -> None:
         """Test ImageTags search with fuzzy=True."""
         tags = ImageTags()
         results = tags.search("perso", fuzzy=True)  # partial word
-        assert len(results) >= 0
+        # Should find "person" tag
+        assert len(results) > 0
+        assert "person" in results
 
     def test_image_web_tags_search_fuzzy_true(self) -> None:
         """Test ImageWebTags search with fuzzy=True."""
         web_tags = ImageWebTags()
         results = web_tags.search("Donld", fuzzy=True)  # typo intentional
-        assert len(results) >= 0
+        # Should find "Donald Trump" tag
+        assert len(results) > 0
+        assert "Donald Trump" in results
 
 
 class TestFuzzyMatchingImportError:
@@ -1627,17 +1641,27 @@ class TestFuzzyMatchingImportError:
         original_is_fuzzy_available = _utils.is_fuzzy_available
         original_is_fuzzy_available.cache_clear()
 
-        # Mock is_fuzzy_available in all modules that import it
+        # Mock is_fuzzy_available to return False
         def mock_is_fuzzy_available() -> bool:
             return False
 
         monkeypatch.setattr(_utils, "is_fuzzy_available", mock_is_fuzzy_available)
-        monkeypatch.setattr(cameo, "is_fuzzy_available", mock_is_fuzzy_available)
-        monkeypatch.setattr(countries, "is_fuzzy_available", mock_is_fuzzy_available)
-        monkeypatch.setattr(themes, "is_fuzzy_available", mock_is_fuzzy_available)
-        monkeypatch.setattr(languages, "is_fuzzy_available", mock_is_fuzzy_available)
-        monkeypatch.setattr(gcam, "is_fuzzy_available", mock_is_fuzzy_available)
-        monkeypatch.setattr(_base_tag_lookup, "is_fuzzy_available", mock_is_fuzzy_available)
+
+        # Mock resolve_fuzzy_mode to raise ImportError when fuzzy=True
+        def mock_resolve_fuzzy_mode(fuzzy: bool | None) -> bool:
+            use_fuzzy = fuzzy if fuzzy is not None else False
+            if use_fuzzy:
+                msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
+                raise ImportError(msg)
+            return use_fuzzy
+
+        monkeypatch.setattr(_utils, "resolve_fuzzy_mode", mock_resolve_fuzzy_mode)
+        monkeypatch.setattr(cameo, "resolve_fuzzy_mode", mock_resolve_fuzzy_mode)
+        monkeypatch.setattr(countries, "resolve_fuzzy_mode", mock_resolve_fuzzy_mode)
+        monkeypatch.setattr(themes, "resolve_fuzzy_mode", mock_resolve_fuzzy_mode)
+        monkeypatch.setattr(languages, "resolve_fuzzy_mode", mock_resolve_fuzzy_mode)
+        monkeypatch.setattr(gcam, "resolve_fuzzy_mode", mock_resolve_fuzzy_mode)
+        monkeypatch.setattr(_base_tag_lookup, "resolve_fuzzy_mode", mock_resolve_fuzzy_mode)
 
         yield
 

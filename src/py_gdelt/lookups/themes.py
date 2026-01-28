@@ -11,7 +11,7 @@ import logging
 import re
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import fuzzy_search, is_fuzzy_available, load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import GKGThemeEntry
 
 
@@ -99,6 +99,7 @@ class GKGThemes:
     def search(
         self,
         query: str,
+        limit: int | None = None,
         *,
         fuzzy: bool | None = None,
         threshold: int = 60,
@@ -110,6 +111,7 @@ class GKGThemes:
 
         Args:
             query: Search query string.
+            limit: Maximum number of results to return. None for unlimited.
             fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
                 rapidfuzz is installed, otherwise falls back to substring matching.
                 True forces fuzzy matching (raises ImportError if not available).
@@ -122,57 +124,55 @@ class GKGThemes:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
-            return self._fuzzy_search(query, threshold)
-        return self._substring_search(query)
+            return self._fuzzy_search(query, limit, threshold)
+        return self._substring_search(query, limit)
 
-    def _substring_search(self, query: str) -> list[str]:
+    def _substring_search(self, query: str, limit: int | None) -> list[str]:
         """Perform substring-based search.
 
         Args:
             query: Search query string.
+            limit: Maximum number of results.
 
         Returns:
             List of matching theme codes.
         """
         query_lower = query.lower()
-        return [
+        results = [
             theme
             for theme, entry in self._themes_data.items()
             if query_lower in entry.description.lower()
         ]
+        if limit is not None:
+            return results[:limit]
+        return results
 
-    def _fuzzy_search(self, query: str, threshold: int) -> list[str]:
+    def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
         """Perform fuzzy search using rapidfuzz.
 
         Args:
             query: Search query string.
+            limit: Maximum number of results.
             threshold: Minimum score for fuzzy matches.
 
         Returns:
             List of matching theme codes sorted by score.
         """
         # Build candidate list with descriptions
-        candidates: dict[str, str] = {}
-        for theme, entry in self._themes_data.items():
-            candidates[theme] = entry.description
+        codes = list(self._themes_data.keys())
+        texts = [entry.description for entry in self._themes_data.values()]
 
         matches = fuzzy_search(
             query,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
+            limit=limit,
         )
 
-        # Map back to theme codes
-        desc_to_theme = {desc: theme for theme, desc in candidates.items()}
-        return [desc_to_theme[match] for match, _ in matches]
+        # Map back to theme codes using index
+        return [codes[idx] for _, _, idx in matches]
 
     def get_category(self, theme: str) -> str | None:
         """
@@ -227,13 +227,7 @@ class GKGThemes:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
             return self._fuzzy_suggest(theme, limit, threshold)
         return self._substring_suggest(theme, limit)
@@ -283,22 +277,20 @@ class GKGThemes:
             List of suggestions.
         """
         # Build candidate list with searchable text
-        candidates: dict[str, str] = {}
-        for theme_code, entry in self._themes_data.items():
-            candidates[theme_code] = f"{theme_code} {entry.description}"
+        codes = list(self._themes_data.keys())
+        texts = [f"{code} {entry.description}" for code, entry in self._themes_data.items()]
 
         matches = fuzzy_search(
             theme,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
             limit=limit,
         )
 
-        # Map back to formatted suggestions
-        text_to_theme = {text: code for code, text in candidates.items()}
+        # Map back to formatted suggestions using index
         suggestions: list[str] = []
-        for match, _ in matches:
-            theme_code = text_to_theme[match]
+        for _, _, idx in matches:
+            theme_code = codes[idx]
             entry = self._themes_data[theme_code]
             suggestions.append(f"{theme_code} ({entry.category})")
 

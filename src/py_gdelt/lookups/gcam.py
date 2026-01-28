@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import fuzzy_search, is_fuzzy_available, load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import GCAMEntry
 
 
@@ -103,6 +103,7 @@ class GCAMLookup:
     def search(
         self,
         query: str,
+        limit: int | None = None,
         *,
         fuzzy: bool | None = None,
         threshold: int = 60,
@@ -113,6 +114,7 @@ class GCAMLookup:
 
         Args:
             query: Search query string.
+            limit: Maximum number of results to return. None for unlimited.
             fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
                 rapidfuzz is installed, otherwise falls back to substring matching.
                 True forces fuzzy matching (raises ImportError if not available).
@@ -125,58 +127,58 @@ class GCAMLookup:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
-            return self._fuzzy_search(query, threshold)
-        return self._substring_search(query)
+            return self._fuzzy_search(query, limit, threshold)
+        return self._substring_search(query, limit)
 
-    def _substring_search(self, query: str) -> list[str]:
+    def _substring_search(self, query: str, limit: int | None) -> list[str]:
         """Perform substring-based search.
 
         Args:
             query: Search query string.
+            limit: Maximum number of results.
 
         Returns:
             List of matching variable codes.
         """
         query_lower = query.lower()
-        return [
+        results = [
             var
             for var, entry in self._gcam_data.items()
             if query_lower in entry.dictionary_name.lower()
             or query_lower in entry.dimension_name.lower()
         ]
+        if limit is not None:
+            return results[:limit]
+        return results
 
-    def _fuzzy_search(self, query: str, threshold: int) -> list[str]:
+    def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
         """Perform fuzzy search using rapidfuzz.
 
         Args:
             query: Search query string.
+            limit: Maximum number of results.
             threshold: Minimum score for fuzzy matches.
 
         Returns:
             List of matching variable codes sorted by score.
         """
         # Build candidate list with searchable text
-        candidates: dict[str, str] = {}
-        for var, entry in self._gcam_data.items():
-            candidates[var] = f"{entry.dictionary_name} {entry.dimension_name}"
+        codes = list(self._gcam_data.keys())
+        texts = [
+            f"{entry.dictionary_name} {entry.dimension_name}" for entry in self._gcam_data.values()
+        ]
 
         matches = fuzzy_search(
             query,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
+            limit=limit,
         )
 
-        # Map back to variable codes
-        text_to_var = {text: var for var, text in candidates.items()}
-        return [text_to_var[match] for match, _ in matches]
+        # Map back to variable codes using index
+        return [codes[idx] for _, _, idx in matches]
 
     def suggest(
         self,
@@ -206,13 +208,7 @@ class GCAMLookup:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
-
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
         if use_fuzzy:
             return self._fuzzy_suggest(code, limit, threshold)
         return self._prefix_suggest(code, limit)
@@ -251,20 +247,21 @@ class GCAMLookup:
             List of suggestions.
         """
         # Build candidate list with variable codes and names
-        candidates: dict[str, str] = {}
-        for var, entry in self._gcam_data.items():
-            candidates[var] = f"{var} {entry.dictionary_name} {entry.dimension_name}"
+        codes = list(self._gcam_data.keys())
+        texts = [
+            f"{var} {entry.dictionary_name} {entry.dimension_name}"
+            for var, entry in self._gcam_data.items()
+        ]
 
         matches = fuzzy_search(
             code,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
             limit=limit,
         )
 
-        # Map back to variable codes
-        text_to_var = {text: var for var, text in candidates.items()}
-        return [text_to_var[match] for match, _ in matches]
+        # Map back to variable codes using index
+        return [codes[idx] for _, _, idx in matches]
 
     def validate(self, code: str) -> None:
         """Validate GCAM variable code, raising exception if invalid.

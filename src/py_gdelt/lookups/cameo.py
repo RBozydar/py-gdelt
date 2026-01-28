@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Final
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import fuzzy_search, is_fuzzy_available, load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import CAMEOCodeEntry, GoldsteinEntry
 
 
@@ -164,12 +164,7 @@ class CAMEOCodes:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
 
         # CAMEO-specific: if query is numeric, prioritize exact code prefix matches first
         query_is_numeric = query.isdigit()
@@ -218,25 +213,25 @@ class CAMEOCodes:
             List of matching CAMEO codes sorted by score.
         """
         # Build searchable text for each code
-        candidates: dict[str, str] = {}
-        for code, entry in self._codes_data.items():
+        codes = list(self._codes_data.keys())
+        texts: list[str] = []
+        for entry in self._codes_data.values():
             text_parts = [entry.name, entry.description]
             if include_examples:
                 if entry.usage_notes:
                     text_parts.append(entry.usage_notes)
                 text_parts.extend(entry.examples)
-            candidates[code] = " ".join(text_parts)
+            texts.append(" ".join(text_parts))
 
         # Perform fuzzy search on the combined text
         matches = fuzzy_search(
             query,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
         )
 
-        # Map back to codes
-        text_to_code = {text: code for code, text in candidates.items()}
-        return [text_to_code[match] for match, _ in matches]
+        # Map back to codes using index
+        return [codes[idx] for _, _, idx in matches]
 
     def is_conflict(self, code: str) -> bool:
         """
@@ -323,12 +318,7 @@ class CAMEOCodes:
         Raises:
             ImportError: If fuzzy=True but rapidfuzz is not installed.
         """
-        # Determine matching mode
-        use_fuzzy = fuzzy if fuzzy is not None else is_fuzzy_available()
-
-        if use_fuzzy and not is_fuzzy_available():
-            msg = "Fuzzy matching requires rapidfuzz. Install with: pip install py-gdelt[fuzzy]"
-            raise ImportError(msg)
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
 
         suggestions: list[str] = []
 
@@ -394,28 +384,29 @@ class CAMEOCodes:
         if remaining <= 0:
             return suggestions
 
-        # Build candidate list
-        candidates: dict[str, str] = {}
+        # Build candidate list, excluding already-suggested codes
         existing = {s.split()[0] for s in suggestions}  # Extract codes from existing suggestions
+        codes: list[str] = []
+        texts: list[str] = []
 
         for cameo_code, entry in self._codes_data.items():
             if cameo_code not in existing:
-                candidates[cameo_code] = f"{cameo_code} {entry.name}"
+                codes.append(cameo_code)
+                texts.append(f"{cameo_code} {entry.name}")
 
-        if not candidates:
+        if not codes:
             return suggestions
 
         matches = fuzzy_search(
             code,
-            list(candidates.values()),
+            texts,
             threshold=threshold,
             limit=remaining,
         )
 
-        # Map back to formatted suggestions
-        text_to_code = {text: c for c, text in candidates.items()}
-        for match, _ in matches:
-            cameo_code = text_to_code[match]
+        # Map back to formatted suggestions using index
+        for _, _, idx in matches:
+            cameo_code = codes[idx]
             entry = self._codes_data[cameo_code]
             suggestions.append(f"{cameo_code} ({entry.name})")
 
