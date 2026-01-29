@@ -426,12 +426,13 @@ def _parse_gcam(gcam_str: str) -> dict[str, float]:
 
 
 def _parse_quotations(quotations_str: str) -> list[Quotation]:
-    """Parse quotations from pipe-delimited records.
+    """Parse quotations from pound-delimited records.
 
-    Each record has format: offset#length#verb#quote
+    Each record has format: offset|length|verb|quote
+    Records are separated by '#', fields within each record by '|'.
 
     Args:
-        quotations_str: Pipe-delimited quotation records
+        quotations_str: Pound-delimited quotation records
 
     Returns:
         List of Quotation objects
@@ -440,11 +441,11 @@ def _parse_quotations(quotations_str: str) -> list[Quotation]:
         return []
 
     result: list[Quotation] = []
-    for quote_record in quotations_str.split("|"):
+    for quote_record in quotations_str.split("#"):
         if not quote_record.strip():
             continue
 
-        parts = quote_record.split("#", 3)  # Split into max 4 parts
+        parts = quote_record.split("|", 3)  # Split into max 4 parts
         if len(parts) < 4:
             logger.warning("Incomplete quotation record: %s", quote_record)
             continue
