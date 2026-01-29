@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import TagCountEntry
 
 
@@ -47,6 +47,7 @@ class BaseTagLookup(ABC):
     def __init__(self) -> None:
         self._data: dict[str, TagCountEntry] | None = None
         self._keys_lower: dict[str, str] | None = None
+        self._fuzzy_candidates_cache: list[str] | None = None
 
     @property
     def _tags_data(self) -> dict[str, TagCountEntry]:
@@ -123,12 +124,44 @@ class BaseTagLookup(ABC):
         key = self._normalize_key(tag)
         return self._tags_data.get(key) if key else None
 
-    def search(self, query: str, limit: int | None = 100) -> list[str]:
-        """Search tags by substring match.
+    def search(
+        self,
+        query: str,
+        limit: int | None = 100,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
+        """Search tags by substring or fuzzy match.
+
+        Supports both substring matching and fuzzy matching (when rapidfuzz is installed).
 
         Args:
             query: Search query string (case-insensitive).
             limit: Maximum number of results to return. None for unlimited.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
+
+        Returns:
+            List of matching tag names.
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_search(query, limit, threshold)
+        return self._substring_search(query, limit)
+
+    def _substring_search(self, query: str, limit: int | None) -> list[str]:
+        """Perform substring-based search.
+
+        Args:
+            query: Search query string.
+            limit: Maximum number of results.
 
         Returns:
             List of matching tag names.
@@ -139,19 +172,71 @@ class BaseTagLookup(ABC):
             return results[:limit]
         return results
 
-    def suggest(self, query: str, limit: int = 3) -> list[str]:
+    @property
+    def _fuzzy_candidates(self) -> list[str]:
+        """Lazily cache candidate list for fuzzy matching."""
+        if self._fuzzy_candidates_cache is None:
+            self._fuzzy_candidates_cache = list(self._tags_data.keys())
+        return self._fuzzy_candidates_cache
+
+    def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
+        """Perform fuzzy search using rapidfuzz.
+
+        Args:
+            query: Search query string.
+            limit: Maximum number of results.
+            threshold: Minimum score for fuzzy matches.
+
+        Returns:
+            List of matching tag names sorted by score.
+        """
+        candidates = self._fuzzy_candidates
+        matches = fuzzy_search(query, candidates, threshold=threshold, limit=limit)
+        return [candidates[idx] for _, _, idx in matches]
+
+    def suggest(
+        self,
+        query: str,
+        limit: int = 3,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
         """Suggest similar tags for an invalid query.
 
-        Uses a two-stage matching strategy:
+        Uses fuzzy matching (when available) or a two-stage matching strategy:
         1. Prefix matches (highest priority)
         2. Contains matches (fallback)
 
         Args:
             query: The invalid tag to find suggestions for.
             limit: Maximum number of suggestions to return.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
 
         Returns:
             List of similar valid tags.
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_search(query, limit, threshold)
+        return self._substring_suggest(query, limit)
+
+    def _substring_suggest(self, query: str, limit: int) -> list[str]:
+        """Suggest using substring matching.
+
+        Args:
+            query: The query to find suggestions for.
+            limit: Maximum number of suggestions.
+
+        Returns:
+            List of suggestions.
         """
         query_lower = query.lower()
         suggestions: list[str] = []

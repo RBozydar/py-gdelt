@@ -46,6 +46,7 @@ module-name = "py_gdelt"
 bigquery = ["google-cloud-bigquery>=3.0"]
 pandas = ["pandas>=2.0"]
 mcp = ["mcp>=1.0"]
+fuzzy = ["rapidfuzz>=3.0"]
 dev = [
     "commitizen>=3.0",
     "geonamescache>=2.0",  # For regenerating countries.json (FIPS/ISO mappings)
@@ -60,6 +61,7 @@ dev = [
     "pytest-asyncio>=0.23",
     "pytest-cov>=4.0",
     "pytest-timeout>=2.0",
+    "rapidfuzz>=3.0",  # For testing fuzzy matching
     "respx>=0.21",
     "ruff>=0.8",
 ]
@@ -180,6 +182,7 @@ ignore = [
 "src/py_gdelt/sources/fetcher.py" = ["PLC0415"]  # Lazy parser imports
 "src/py_gdelt/filters.py" = ["PLC0415"]  # Lazy validation imports
 "src/py_gdelt/utils/streaming.py" = ["PLC0415"]  # Optional dependency (pandas)
+"src/py_gdelt/lookups/_utils.py" = ["PLC0415"]  # Optional dependency (rapidfuzz)
 
 # Test files get more flexibility
 "tests/**/*.py" = [
@@ -330,7 +333,7 @@ disallow_untyped_calls = false
 disallow_untyped_decorators = false
 
 [[tool.mypy.overrides]]
-module = ["google.cloud.*", "pandas.*"]
+module = ["google.cloud.*", "pandas.*", "rapidfuzz.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
