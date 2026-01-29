@@ -296,6 +296,18 @@ class TestJSONHelper:
             with pytest.raises(Exception):  # httpx raises JSONDecodeError
                 await endpoint._get_json("https://api.gdeltproject.org/test")
 
+    @respx.mock
+    async def test_get_json_returns_empty_dict_on_empty_response(self) -> None:
+        """Test _get_json returns empty dict for empty response body."""
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(200, content=b""),
+        )
+
+        async with TestEndpoint() as endpoint:
+            data = await endpoint._get_json("https://api.gdeltproject.org/test")
+            assert data == {}
+            assert isinstance(data, dict)
+
 
 class TestRetryBehavior:
     """Test retry logic for transient errors."""

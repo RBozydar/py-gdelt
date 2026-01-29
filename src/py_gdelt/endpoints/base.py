@@ -241,6 +241,8 @@ class BaseEndpoint(ABC):
             APIError: On other HTTP errors or invalid JSON
         """
         response = await self._get(url, params=params)
+        if not response.content:
+            return {}  # Empty response = no results
         return response.json()
 
     @abstractmethod
