@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7](https://github.com/RBozydar/py-gdelt/compare/gdelt-py-v0.1.6...gdelt-py-v0.1.7) (2026-01-29)
+
+
+### Features
+
+* **lookups:** add fuzzy matching with rapidfuzz ([#75](https://github.com/RBozydar/py-gdelt/issues/75)) ([eb7e9f7](https://github.com/RBozydar/py-gdelt/commit/eb7e9f75445ada955f90e318f1f6eb43ef953ab8))
+
 ## [0.1.6](https://github.com/RBozydar/py-gdelt/compare/gdelt-py-v0.1.5...gdelt-py-v0.1.6) (2026-01-25)
 
 
