@@ -11,7 +11,7 @@ import logging
 import re
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import GKGThemeEntry
 
 
@@ -37,6 +37,8 @@ class GKGThemes:
 
     def __init__(self) -> None:
         self._themes: dict[str, GKGThemeEntry] | None = None
+        self._fuzzy_search_cache: tuple[list[str], list[str]] | None = None
+        self._fuzzy_suggest_cache: tuple[list[str], list[str]] | None = None
 
     @property
     def _themes_data(self) -> dict[str, GKGThemeEntry]:
@@ -96,22 +98,91 @@ class GKGThemes:
         """
         return self._themes_data.get(theme.upper())
 
-    def search(self, query: str) -> list[str]:
+    def search(
+        self,
+        query: str,
+        limit: int | None = None,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
         """
-        Search themes by description (substring match).
+        Search themes by description.
+
+        Supports both substring matching and fuzzy matching (when rapidfuzz is installed).
 
         Args:
-            query: Search query string
+            query: Search query string.
+            limit: Maximum number of results to return. None for unlimited.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
 
         Returns:
-            List of theme codes matching the query
+            List of theme codes matching the query.
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_search(query, limit, threshold)
+        return self._substring_search(query, limit)
+
+    def _substring_search(self, query: str, limit: int | None) -> list[str]:
+        """Perform substring-based search.
+
+        Args:
+            query: Search query string.
+            limit: Maximum number of results.
+
+        Returns:
+            List of matching theme codes.
         """
         query_lower = query.lower()
-        return [
+        results = [
             theme
             for theme, entry in self._themes_data.items()
             if query_lower in entry.description.lower()
         ]
+        if limit is not None:
+            return results[:limit]
+        return results
+
+    @property
+    def _fuzzy_search_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy search."""
+        if self._fuzzy_search_cache is None:
+            codes = list(self._themes_data.keys())
+            texts = [entry.description for entry in self._themes_data.values()]
+            self._fuzzy_search_cache = (codes, texts)
+        return self._fuzzy_search_cache
+
+    @property
+    def _fuzzy_suggest_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy suggest."""
+        if self._fuzzy_suggest_cache is None:
+            codes = list(self._themes_data.keys())
+            texts = [f"{code} {entry.description}" for code, entry in self._themes_data.items()]
+            self._fuzzy_suggest_cache = (codes, texts)
+        return self._fuzzy_suggest_cache
+
+    def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
+        """Perform fuzzy search using rapidfuzz.
+
+        Args:
+            query: Search query string.
+            limit: Maximum number of results.
+            threshold: Minimum score for fuzzy matches.
+
+        Returns:
+            List of matching theme codes sorted by score.
+        """
+        codes, texts = self._fuzzy_search_candidates
+        matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
+        return [codes[idx] for _, _, idx in matches]
 
     def get_category(self, theme: str) -> str | None:
         """
@@ -138,17 +209,48 @@ class GKGThemes:
         """
         return [theme for theme, entry in self._themes_data.items() if entry.category == category]
 
-    def suggest(self, theme: str, limit: int = 3) -> list[str]:
+    def suggest(
+        self,
+        theme: str,
+        limit: int = 3,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
         """Suggest similar GKG themes based on input.
 
-        Uses fuzzy matching to find themes with similar prefixes or descriptions.
+        Uses fuzzy matching (when available) to find themes with similar prefixes
+        or descriptions.
 
         Args:
             theme: The invalid theme to find suggestions for.
             limit: Maximum number of suggestions to return.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
 
         Returns:
             List of suggestions in format "THEME (category)".
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_suggest(theme, limit, threshold)
+        return self._substring_suggest(theme, limit)
+
+    def _substring_suggest(self, theme: str, limit: int) -> list[str]:
+        """Suggest using substring matching.
+
+        Args:
+            theme: The theme to find suggestions for.
+            limit: Maximum number of suggestions.
+
+        Returns:
+            List of suggestions.
         """
         theme_upper = theme.upper()
         suggestions: list[str] = []
@@ -170,6 +272,28 @@ class GKGThemes:
                 suggestions.append(f"{theme_code} ({entry.category})")
                 if len(suggestions) >= limit:
                     return suggestions
+
+        return suggestions
+
+    def _fuzzy_suggest(self, theme: str, limit: int, threshold: int) -> list[str]:
+        """Suggest using fuzzy matching.
+
+        Args:
+            theme: The theme to find suggestions for.
+            limit: Maximum number of suggestions.
+            threshold: Minimum score for fuzzy matches.
+
+        Returns:
+            List of suggestions.
+        """
+        codes, texts = self._fuzzy_suggest_candidates
+        matches = fuzzy_search(theme, texts, threshold=threshold, limit=limit)
+
+        suggestions: list[str] = []
+        for _, _, idx in matches:
+            theme_code = codes[idx]
+            entry = self._themes_data[theme_code]
+            suggestions.append(f"{theme_code} ({entry.category})")
 
         return suggestions
 

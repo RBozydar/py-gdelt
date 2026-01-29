@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import GCAMEntry
 
 
@@ -25,6 +25,8 @@ class GCAMLookup:
     def __init__(self) -> None:
         self._data: dict[str, GCAMEntry] | None = None
         self._keys_lower: dict[str, str] | None = None
+        self._fuzzy_search_cache: tuple[list[str], list[str]] | None = None
+        self._fuzzy_suggest_cache: tuple[list[str], list[str]] | None = None
 
     @property
     def _gcam_data(self) -> dict[str, GCAMEntry]:
@@ -100,34 +102,140 @@ class GCAMLookup:
         key = self._normalize_key(variable)
         return self._gcam_data.get(key) if key else None
 
-    def search(self, query: str) -> list[str]:
-        """Search variables by dictionary name or dimension name (substring match).
+    def search(
+        self,
+        query: str,
+        limit: int | None = None,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
+        """Search variables by dictionary name or dimension name.
+
+        Supports both substring matching and fuzzy matching (when rapidfuzz is installed).
 
         Args:
-            query: Search query string
+            query: Search query string.
+            limit: Maximum number of results to return. None for unlimited.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
 
         Returns:
-            List of GCAM variable codes matching the query
+            List of GCAM variable codes matching the query.
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_search(query, limit, threshold)
+        return self._substring_search(query, limit)
+
+    def _substring_search(self, query: str, limit: int | None) -> list[str]:
+        """Perform substring-based search.
+
+        Args:
+            query: Search query string.
+            limit: Maximum number of results.
+
+        Returns:
+            List of matching variable codes.
         """
         query_lower = query.lower()
-        return [
+        results = [
             var
             for var, entry in self._gcam_data.items()
             if query_lower in entry.dictionary_name.lower()
             or query_lower in entry.dimension_name.lower()
         ]
+        if limit is not None:
+            return results[:limit]
+        return results
 
-    def suggest(self, code: str, limit: int = 3) -> list[str]:
-        """Suggest similar GCAM variables based on input.
+    @property
+    def _fuzzy_search_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy search."""
+        if self._fuzzy_search_cache is None:
+            codes = list(self._gcam_data.keys())
+            texts = [
+                f"{entry.dictionary_name} {entry.dimension_name}"
+                for entry in self._gcam_data.values()
+            ]
+            self._fuzzy_search_cache = (codes, texts)
+        return self._fuzzy_search_cache
 
-        Uses prefix matching to find variables with similar codes.
+    @property
+    def _fuzzy_suggest_candidates(self) -> tuple[list[str], list[str]]:
+        """Lazily cache candidate lists for fuzzy suggest."""
+        if self._fuzzy_suggest_cache is None:
+            codes = list(self._gcam_data.keys())
+            texts = [
+                f"{var} {entry.dictionary_name} {entry.dimension_name}"
+                for var, entry in self._gcam_data.items()
+            ]
+            self._fuzzy_suggest_cache = (codes, texts)
+        return self._fuzzy_suggest_cache
+
+    def _fuzzy_search(self, query: str, limit: int | None, threshold: int) -> list[str]:
+        """Perform fuzzy search using rapidfuzz.
 
         Args:
-            code: The code to find suggestions for
-            limit: Maximum number of suggestions to return
+            query: Search query string.
+            limit: Maximum number of results.
+            threshold: Minimum score for fuzzy matches.
 
         Returns:
-            List of GCAM variable codes
+            List of matching variable codes sorted by score.
+        """
+        codes, texts = self._fuzzy_search_candidates
+        matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
+        return [codes[idx] for _, _, idx in matches]
+
+    def suggest(
+        self,
+        code: str,
+        limit: int = 3,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
+        """Suggest similar GCAM variables based on input.
+
+        Uses fuzzy matching (when available) or prefix matching to find variables
+        with similar codes.
+
+        Args:
+            code: The code to find suggestions for.
+            limit: Maximum number of suggestions to return.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to prefix matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces prefix matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
+
+        Returns:
+            List of GCAM variable codes.
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_suggest(code, limit, threshold)
+        return self._prefix_suggest(code, limit)
+
+    def _prefix_suggest(self, code: str, limit: int) -> list[str]:
+        """Suggest using prefix matching.
+
+        Args:
+            code: The code to find suggestions for.
+            limit: Maximum number of suggestions.
+
+        Returns:
+            List of suggestions.
         """
         code_lower = code.lower()
         suggestions: list[str] = []
@@ -140,6 +248,21 @@ class GCAMLookup:
                     break
 
         return suggestions
+
+    def _fuzzy_suggest(self, code: str, limit: int, threshold: int) -> list[str]:
+        """Suggest using fuzzy matching.
+
+        Args:
+            code: The code to find suggestions for.
+            limit: Maximum number of suggestions.
+            threshold: Minimum score for fuzzy matches.
+
+        Returns:
+            List of suggestions.
+        """
+        codes, texts = self._fuzzy_suggest_candidates
+        matches = fuzzy_search(code, texts, threshold=threshold, limit=limit)
+        return [codes[idx] for _, _, idx in matches]
 
     def validate(self, code: str) -> None:
         """Validate GCAM variable code, raising exception if invalid.

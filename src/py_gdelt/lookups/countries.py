@@ -5,8 +5,10 @@ This module provides the Countries class for converting between FIPS and ISO
 country codes used in GDELT data.
 """
 
+from __future__ import annotations
+
 from py_gdelt.exceptions import InvalidCodeError
-from py_gdelt.lookups._utils import load_lookup_json
+from py_gdelt.lookups._utils import fuzzy_search, load_lookup_json, resolve_fuzzy_mode
 from py_gdelt.lookups.models import CountryEntry
 
 
@@ -231,21 +233,51 @@ class Countries:
             help_url="http://data.gdeltproject.org/api/v2/guides/LOOKUP-COUNTRIES.TXT",
         )
 
-    def suggest(self, code: str, limit: int = 3) -> list[str]:
+    def suggest(
+        self,
+        code: str,
+        limit: int = 3,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
         """
         Suggest similar country codes based on input.
 
-        Uses fuzzy matching to find codes with similar prefixes or names.
+        Uses fuzzy matching (when available) to find codes with similar prefixes or names.
 
         Args:
-            code: The invalid code to find suggestions for
-            limit: Maximum number of suggestions to return
+            code: The invalid code to find suggestions for.
+            limit: Maximum number of suggestions to return.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
 
         Returns:
-            List of suggestions in format "FIPS (Name)"
+            List of suggestions in format "FIPS (Name)".
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_suggest(code, limit, threshold)
+        return self._substring_suggest(code, limit)
+
+    def _substring_suggest(self, code: str, limit: int) -> list[str]:
+        """Suggest using substring matching.
+
+        Args:
+            code: The code to find suggestions for.
+            limit: Maximum number of suggestions.
+
+        Returns:
+            List of suggestions.
         """
         code_upper = code.upper()
-        suggestions = []
+        suggestions: list[str] = []
 
         # Strategy 1: Exact prefix match on FIPS or ISO3 (highest priority)
         for fips, entry in self._countries_data.items():
@@ -270,7 +302,45 @@ class Countries:
 
         return suggestions
 
-    def search(self, query: str, limit: int = 10) -> list[str]:
+    def _fuzzy_suggest(self, code: str, limit: int, threshold: int) -> list[str]:
+        """Suggest using fuzzy matching.
+
+        Args:
+            code: The code to find suggestions for.
+            limit: Maximum number of suggestions.
+            threshold: Minimum score for fuzzy matches.
+
+        Returns:
+            List of suggestions.
+        """
+        fips_codes = list(self._countries_data.keys())
+        texts = [
+            f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
+        ]
+
+        matches = fuzzy_search(
+            code,
+            texts,
+            threshold=threshold,
+            limit=limit,
+        )
+
+        suggestions: list[str] = []
+        for _, _, idx in matches:
+            fips = fips_codes[idx]
+            entry = self._countries_data[fips]
+            suggestions.append(f"{fips} ({entry.name})")
+
+        return suggestions
+
+    def search(
+        self,
+        query: str,
+        limit: int = 10,
+        *,
+        fuzzy: bool | None = None,
+        threshold: int = 60,
+    ) -> list[str]:
         """
         Search for countries by code or name.
 
@@ -281,6 +351,29 @@ class Countries:
         Args:
             query: Search term (can match code or name).
             limit: Maximum number of results to return.
+            fuzzy: Fuzzy matching mode. None (default) auto-detects: uses fuzzy if
+                rapidfuzz is installed, otherwise falls back to substring matching.
+                True forces fuzzy matching (raises ImportError if not available).
+                False forces substring matching.
+            threshold: Minimum score (0-100) for fuzzy matches.
+
+        Returns:
+            List of matching FIPS codes.
+
+        Raises:
+            ImportError: If fuzzy=True but rapidfuzz is not installed.
+        """
+        use_fuzzy = resolve_fuzzy_mode(fuzzy)
+        if use_fuzzy:
+            return self._fuzzy_search(query, limit, threshold)
+        return self._substring_search(query, limit)
+
+    def _substring_search(self, query: str, limit: int) -> list[str]:
+        """Perform substring-based search.
+
+        Args:
+            query: Search query string.
+            limit: Maximum number of results.
 
         Returns:
             List of matching FIPS codes.
@@ -325,3 +418,23 @@ class Countries:
                     return matches
 
         return matches
+
+    def _fuzzy_search(self, query: str, limit: int, threshold: int) -> list[str]:
+        """Perform fuzzy search using rapidfuzz.
+
+        Args:
+            query: Search query string.
+            limit: Maximum number of results.
+            threshold: Minimum score for fuzzy matches.
+
+        Returns:
+            List of matching FIPS codes sorted by score.
+        """
+        fips_codes = list(self._countries_data.keys())
+        texts = [
+            f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
+        ]
+
+        matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
+
+        return [fips_codes[idx] for _, _, idx in matches]
