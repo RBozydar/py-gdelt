@@ -439,6 +439,13 @@ class FileSource:
             # Expected errors (404, network issues) - log at debug level
             logger.debug("Failed to download %s: %s", url, e)
             return None
+        except RuntimeError as e:
+            # Handle client closed during shutdown (expected when breaking out of async for)
+            if "client has been closed" in str(e):
+                logger.debug("Client closed during download (shutdown in progress): %s", url)
+                return None
+            # Re-raise unexpected RuntimeErrors
+            raise
         except Exception:
             # Error boundary: catch unexpected errors, log and return None
             logger.exception("Unexpected error downloading %s", url)
