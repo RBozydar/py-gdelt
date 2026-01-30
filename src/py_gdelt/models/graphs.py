@@ -125,12 +125,14 @@ class GQGRecord(SchemaEvolutionMixin, BaseModel):
     Attributes:
         date: Publication date/time
         url: Source document URL
+        title: Document title if available
         lang: Language code
         quotes: List of extracted quotations with context
     """
 
     date: datetime
     url: str
+    title: str | None = None
     lang: str
     quotes: list[Quote] = Field(default_factory=list)
 
