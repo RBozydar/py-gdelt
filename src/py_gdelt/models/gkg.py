@@ -295,7 +295,9 @@ def _parse_entities(entities_str: str, entity_type: str) -> list[EntityMention]:
 def _parse_locations(locations_str: str) -> list[Location]:
     """Parse locations from semicolon-delimited location records.
 
-    Each location record has format: geo_type#name#country_code#adm1#adm2#lat#lon#feature_id
+    Handles two formats:
+    - 8 fields: geo_type#name#country_code#adm1#adm2#lat#lon#feature_id
+    - 7 fields: geo_type#name#country_code#adm1#lat#lon#feature_id (adm2 omitted)
 
     Args:
         locations_str: Semicolon-delimited location records
@@ -312,7 +314,7 @@ def _parse_locations(locations_str: str) -> list[Location]:
             continue
 
         parts = loc_record.split("#")
-        if len(parts) < 8:
+        if len(parts) < 7:
             logger.warning("Incomplete location record: %s", loc_record)
             continue
 
@@ -324,19 +326,28 @@ def _parse_locations(locations_str: str) -> list[Location]:
         name = parts[1] if parts[1] else None
         country_code = parts[2] if parts[2] else None
         adm1_code = parts[3] if parts[3] else None
-        adm2_code = parts[4] if parts[4] else None
+
+        # Handle both 7-field (no adm2_code) and 8-field formats
+        if len(parts) == 7:
+            # 7 fields: geo_type#name#country#adm1#lat#lon#feature_id
+            adm2_code = None
+            lat_str, lon_str, feature_id_str = parts[4], parts[5], parts[6]
+        else:
+            # 8+ fields: geo_type#name#country#adm1#adm2#lat#lon#feature_id
+            adm2_code = parts[4] if parts[4] else None
+            lat_str, lon_str, feature_id_str = parts[5], parts[6], parts[7]
 
         try:
-            lat = float(parts[5]) if parts[5] else None
+            lat = float(lat_str) if lat_str else None
         except ValueError:
             lat = None
 
         try:
-            lon = float(parts[6]) if parts[6] else None
+            lon = float(lon_str) if lon_str else None
         except ValueError:
             lon = None
 
-        feature_id = parts[7] if parts[7] else None
+        feature_id = feature_id_str if feature_id_str else None
 
         result.append(
             Location(

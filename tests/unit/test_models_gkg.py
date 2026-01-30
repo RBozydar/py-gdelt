@@ -436,6 +436,49 @@ class TestGKGRecordFromRaw:
         assert record.locations[1].lat == 51.5074
         assert record.locations[1].lon == -0.1278
 
+    def test_from_raw_locations_7_field_format(self) -> None:
+        """Test from_raw handles 7-field location records (missing adm2_code)."""
+        raw = _RawGKG(
+            gkg_record_id="20150101120000-1",
+            date="20150101120000",
+            source_collection_id="1",
+            source_common_name="Test",
+            document_identifier="http://example.com",
+            counts_v1="",
+            counts_v2="",
+            themes_v1="",
+            themes_v2_enhanced="",
+            locations_v1="",
+            locations_v2_enhanced="1#Iran#IR#IR#32#53#IR;2#California, United States#US#USCA#36.17#-119.746#CA",
+            persons_v1="",
+            persons_v2_enhanced="",
+            organizations_v1="",
+            organizations_v2_enhanced="",
+            tone="",
+            dates_v2="",
+            gcam="",
+        )
+        record = GKGRecord.from_raw(raw)
+        assert len(record.locations) == 2
+
+        # Iran - 7-field format
+        assert record.locations[0].geo_type == 1
+        assert record.locations[0].name == "Iran"
+        assert record.locations[0].country_code == "IR"
+        assert record.locations[0].adm1_code == "IR"
+        assert record.locations[0].adm2_code is None
+        assert record.locations[0].lat == 32
+        assert record.locations[0].lon == 53
+        assert record.locations[0].feature_id == "IR"
+
+        # California - 7-field format
+        assert record.locations[1].geo_type == 2
+        assert record.locations[1].name == "California, United States"
+        assert record.locations[1].adm2_code is None
+        assert record.locations[1].lat == 36.17
+        assert record.locations[1].lon == -119.746
+        assert record.locations[1].feature_id == "CA"
+
     def test_from_raw_tone_parsing(self) -> None:
         """Test from_raw parses tone correctly."""
         raw = _RawGKG(
