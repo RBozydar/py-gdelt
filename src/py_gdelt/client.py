@@ -185,7 +185,7 @@ class GDELTClient:
         await self._file_source.__aenter__()
 
         # Initialize BigQuery source if credentials are configured
-        if self.settings.bigquery_project and self.settings.bigquery_credentials:
+        if self.settings.bigquery_project or self.settings.bigquery_credentials:
             try:
                 self._bigquery_source = BigQuerySource(settings=self.settings)
                 logger.debug(
