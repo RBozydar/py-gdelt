@@ -74,8 +74,8 @@ class CountryEntry(BaseModel):
     Country code mapping with ISO standards and regional classification.
 
     Attributes:
-        iso3: ISO 3166-1 alpha-3 country code (e.g., "USA")
-        iso2: ISO 3166-1 alpha-2 country code (e.g., "US")
+        iso3: ISO 3166-1 alpha-3 country code (e.g., "USA"), None for territories
+        iso2: ISO 3166-1 alpha-2 country code (e.g., "US"), None for territories
         name: Common country name
         full_name: Official full country name
         region: Geographic or political region classification
@@ -83,8 +83,8 @@ class CountryEntry(BaseModel):
 
     model_config = {"frozen": True}
 
-    iso3: str
-    iso2: str
+    iso3: str | None = None
+    iso2: str | None = None
     name: str
     full_name: str | None = None
     region: str

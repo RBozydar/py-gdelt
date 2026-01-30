@@ -90,6 +90,13 @@
     "full_name": null,
     "region": "Oceania"
   },
+  "AT": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Ashmore and Cartier Islands",
+    "full_name": null,
+    "region": "Oceania"
+  },
   "AU": {
     "iso3": "AUT",
     "iso2": "AT",
@@ -103,6 +110,13 @@
     "name": "Anguilla",
     "full_name": null,
     "region": "North America"
+  },
+  "AX": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Akrotiri Sovereign Base Area",
+    "full_name": null,
+    "region": "Europe"
   },
   "AY": {
     "iso3": "ATA",
@@ -209,12 +223,26 @@
     "full_name": null,
     "region": "Oceania"
   },
+  "BQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Navassa Island",
+    "full_name": null,
+    "region": "North America"
+  },
   "BR": {
     "iso3": "BRA",
     "iso2": "BR",
     "name": "Brazil",
     "full_name": null,
     "region": "South America"
+  },
+  "BS": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Bassas da India",
+    "full_name": null,
+    "region": "Africa"
   },
   "BT": {
     "iso3": "BTN",
@@ -349,6 +377,13 @@
     "full_name": null,
     "region": "Oceania"
   },
+  "CR": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Coral Sea Islands",
+    "full_name": null,
+    "region": "Oceania"
+  },
   "CS": {
     "iso3": "CRI",
     "iso2": "CR",
@@ -412,12 +447,26 @@
     "full_name": null,
     "region": "North America"
   },
+  "DQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Jarvis Island",
+    "full_name": null,
+    "region": "Oceania"
+  },
   "DR": {
     "iso3": "DOM",
     "iso2": "DO",
     "name": "Dominican Republic",
     "full_name": null,
     "region": "North America"
+  },
+  "DX": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Dhekelia Sovereign Base Area",
+    "full_name": null,
+    "region": "Europe"
   },
   "EC": {
     "iso3": "ECU",
@@ -475,6 +524,13 @@
     "full_name": null,
     "region": "Africa"
   },
+  "EU": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Europa Island",
+    "full_name": null,
+    "region": "Africa"
+  },
   "EZ": {
     "iso3": "CZE",
     "iso2": "CZ",
@@ -528,6 +584,13 @@
     "iso3": "PYF",
     "iso2": "PF",
     "name": "French Polynesia",
+    "full_name": null,
+    "region": "Oceania"
+  },
+  "FQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Baker Island",
     "full_name": null,
     "region": "Oceania"
   },
@@ -608,6 +671,13 @@
     "full_name": null,
     "region": "Europe"
   },
+  "GO": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Glorioso Islands",
+    "full_name": null,
+    "region": "Africa"
+  },
   "GP": {
     "iso3": "GLP",
     "iso2": "GP",
@@ -650,6 +720,13 @@
     "full_name": null,
     "region": "South America"
   },
+  "GZ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Gaza Strip",
+    "full_name": null,
+    "region": "Middle East"
+  },
   "HA": {
     "iso3": "HTI",
     "iso2": "HT",
@@ -677,6 +754,13 @@
     "name": "Honduras",
     "full_name": null,
     "region": "North America"
+  },
+  "HQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Howland Island",
+    "full_name": null,
+    "region": "Oceania"
   },
   "HR": {
     "iso3": "HRV",
@@ -726,6 +810,13 @@
     "name": "British Indian Ocean Territory",
     "full_name": null,
     "region": "Asia"
+  },
+  "IP": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Clipperton Island",
+    "full_name": null,
+    "region": "North America"
   },
   "IR": {
     "iso3": "IRN",
@@ -783,12 +874,33 @@
     "full_name": null,
     "region": "North America"
   },
+  "JN": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Jan Mayen",
+    "full_name": null,
+    "region": "Europe"
+  },
   "JO": {
     "iso3": "JOR",
     "iso2": "JO",
     "name": "Jordan",
     "full_name": null,
     "region": "Middle East"
+  },
+  "JQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Johnston Atoll",
+    "full_name": null,
+    "region": "Oceania"
+  },
+  "JU": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Juan de Nova Island",
+    "full_name": null,
+    "region": "Africa"
   },
   "KE": {
     "iso3": "KEN",
@@ -810,6 +922,13 @@
     "name": "North Korea",
     "full_name": null,
     "region": "Asia"
+  },
+  "KQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Kingman Reef",
+    "full_name": null,
+    "region": "Oceania"
   },
   "KR": {
     "iso3": "KIR",
@@ -894,6 +1013,13 @@
     "name": "Slovakia",
     "full_name": null,
     "region": "Europe"
+  },
+  "LQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Palmyra Atoll",
+    "full_name": null,
+    "region": "Oceania"
   },
   "LS": {
     "iso3": "LIE",
@@ -1021,6 +1147,13 @@
     "full_name": null,
     "region": "Africa"
   },
+  "MQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Midway Islands",
+    "full_name": null,
+    "region": "Oceania"
+  },
   "MR": {
     "iso3": "MRT",
     "iso2": "MR",
@@ -1119,6 +1252,13 @@
     "full_name": null,
     "region": "Europe"
   },
+  "NM": {
+    "iso3": null,
+    "iso2": null,
+    "name": "No Mans Land",
+    "full_name": null,
+    "region": "Other"
+  },
   "NN": {
     "iso3": "SXM",
     "iso2": "SX",
@@ -1182,6 +1322,13 @@
     "full_name": null,
     "region": "Africa"
   },
+  "OS": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Oceans",
+    "full_name": null,
+    "region": "Other"
+  },
   "PA": {
     "iso3": "PRY",
     "iso2": "PY",
@@ -1202,6 +1349,27 @@
     "name": "Peru",
     "full_name": null,
     "region": "South America"
+  },
+  "PF": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Paracel Islands",
+    "full_name": null,
+    "region": "Asia"
+  },
+  "PG": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Spratly Islands",
+    "full_name": null,
+    "region": "Asia"
+  },
+  "PJ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Etorofu, Habomai, Kunashiri and Shikotan Islands",
+    "full_name": null,
+    "region": "Asia"
   },
   "PK": {
     "iso3": "PAK",
@@ -1476,6 +1644,13 @@
     "full_name": null,
     "region": "North America"
   },
+  "TE": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Tromelin Island",
+    "full_name": null,
+    "region": "Africa"
+  },
   "TH": {
     "iso3": "THA",
     "iso2": "TH",
@@ -1581,6 +1756,13 @@
     "full_name": null,
     "region": "North America"
   },
+  "UF": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Undersea Features",
+    "full_name": null,
+    "region": "Other"
+  },
   "UG": {
     "iso3": "UGA",
     "iso2": "UG",
@@ -1608,6 +1790,13 @@
     "name": "United States",
     "full_name": null,
     "region": "North America"
+  },
+  "UU": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Undesignated Sovereignty",
+    "full_name": null,
+    "region": "Other"
   },
   "UV": {
     "iso3": "BFA",
@@ -1699,6 +1888,13 @@
     "name": "Western Sahara",
     "full_name": null,
     "region": "Africa"
+  },
+  "WQ": {
+    "iso3": null,
+    "iso2": null,
+    "name": "Wake Island",
+    "full_name": null,
+    "region": "Oceania"
   },
   "WS": {
     "iso3": "WSM",

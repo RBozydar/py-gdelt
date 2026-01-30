@@ -42,7 +42,9 @@ class Countries:
         """Lazy build reverse mapping from ISO3 to FIPS."""
         if self._iso_to_fips_map is None:
             self._iso_to_fips_map = {
-                entry.iso3: fips for fips, entry in self._countries_data.items()
+                entry.iso3: fips
+                for fips, entry in self._countries_data.items()
+                if entry.iso3 is not None
             }
         return self._iso_to_fips_map
 
@@ -281,7 +283,8 @@ class Countries:
 
         # Strategy 1: Exact prefix match on FIPS or ISO3 (highest priority)
         for fips, entry in self._countries_data.items():
-            if fips.startswith(code_upper) or entry.iso3.startswith(code_upper):
+            iso3_match = entry.iso3 is not None and entry.iso3.startswith(code_upper)
+            if fips.startswith(code_upper) or iso3_match:
                 suggestions.append(f"{fips} ({entry.name})")
                 if len(suggestions) >= limit:
                     return suggestions
@@ -295,7 +298,8 @@ class Countries:
 
         # Strategy 3: Partial match (code is substring of FIPS/ISO3)
         for fips, entry in self._countries_data.items():
-            if code_upper in fips or code_upper in entry.iso3:
+            iso3_match = entry.iso3 is not None and code_upper in entry.iso3
+            if code_upper in fips or iso3_match:
                 suggestions.append(f"{fips} ({entry.name})")
                 if len(suggestions) >= limit:
                     return suggestions
@@ -315,7 +319,8 @@ class Countries:
         """
         fips_codes = list(self._countries_data.keys())
         texts = [
-            f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
+            f"{fips} {entry.iso3 or ''} {entry.name}"
+            for fips, entry in self._countries_data.items()
         ]
 
         matches = fuzzy_search(
@@ -384,7 +389,8 @@ class Countries:
 
         # Strategy 1: Exact FIPS or ISO3 match
         for fips, entry in self._countries_data.items():
-            if query_upper in (fips, entry.iso3) and fips not in seen:
+            codes = {fips, entry.iso3} if entry.iso3 else {fips}
+            if query_upper in codes and fips not in seen:
                 matches.append(fips)
                 seen.add(fips)
                 if len(matches) >= limit:
@@ -392,9 +398,8 @@ class Countries:
 
         # Strategy 2: FIPS or ISO3 prefix match
         for fips, entry in self._countries_data.items():
-            if (
-                fips.startswith(query_upper) or entry.iso3.startswith(query_upper)
-            ) and fips not in seen:
+            iso3_match = entry.iso3 is not None and entry.iso3.startswith(query_upper)
+            if (fips.startswith(query_upper) or iso3_match) and fips not in seen:
                 matches.append(fips)
                 seen.add(fips)
                 if len(matches) >= limit:
@@ -432,7 +437,8 @@ class Countries:
         """
         fips_codes = list(self._countries_data.keys())
         texts = [
-            f"{fips} {entry.iso3} {entry.name}" for fips, entry in self._countries_data.items()
+            f"{fips} {entry.iso3 or ''} {entry.name}"
+            for fips, entry in self._countries_data.items()
         ]
 
         matches = fuzzy_search(query, texts, threshold=threshold, limit=limit)
