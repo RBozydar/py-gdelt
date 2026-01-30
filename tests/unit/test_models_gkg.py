@@ -517,7 +517,7 @@ class TestGKGRecordFromRaw:
             tone="",
             dates_v2="",
             gcam="",
-            quotations="100#50#said#This is a quote|200#30#declared#Another quote here",
+            quotations="100|50|said|This is a quote#200|30|declared|Another quote here",
         )
         record = GKGRecord.from_raw(raw)
         assert len(record.quotations) == 2
@@ -769,11 +769,13 @@ class TestGKGRecordEdgeCases:
             tone="",
             dates_v2="",
             gcam="",
-            quotations="100#50#said#This has a # in it",
+            quotations="100|50|said|This has a pipe | in it",
         )
         record = GKGRecord.from_raw(raw)
         assert len(record.quotations) == 1
-        assert record.quotations[0].quote == "This has a # in it"
+        # Note: The parser uses # as record separator and | as field separator
+        # with max 4 splits, so pipe in quote text is preserved
+        assert record.quotations[0].quote == "This has a pipe | in it"
 
     def test_from_raw_empty_quotations(self) -> None:
         """Test from_raw handles empty quotations field."""

@@ -373,24 +373,26 @@ def _build_where_clause_for_gkg(
 
     if filter_obj.theme_prefix is not None:
         # Match themes starting with prefix (anchored to start or after semicolon delimiter)
-        conditions.append("REGEXP_CONTAINS(V2Themes, @theme_prefix_pattern)")
+        # Use LOWER() for case-insensitive matching (RE2 doesn't support (?i) reliably)
+        conditions.append("REGEXP_CONTAINS(LOWER(V2Themes), @theme_prefix_pattern)")
         parameters.append(
             bigquery.ScalarQueryParameter(
                 "theme_prefix_pattern",
                 "STRING",
-                f"(^|;){re.escape(filter_obj.theme_prefix)}",
+                f"(^|;){re.escape(filter_obj.theme_prefix.lower())}",
             ),
         )
 
     # Optional: Entity filters (persons, organizations)
+    # Use LOWER() for case-insensitive matching (RE2 doesn't support (?i) reliably)
     if filter_obj.persons is not None and len(filter_obj.persons) > 0:
-        person_pattern = "|".join(re.escape(p) for p in filter_obj.persons)
-        conditions.append("REGEXP_CONTAINS(V2Persons, @person_pattern)")
+        person_pattern = "|".join(re.escape(p.lower()) for p in filter_obj.persons)
+        conditions.append("REGEXP_CONTAINS(LOWER(V2Persons), @person_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("person_pattern", "STRING", person_pattern))
 
     if filter_obj.organizations is not None and len(filter_obj.organizations) > 0:
-        org_pattern = "|".join(re.escape(o) for o in filter_obj.organizations)
-        conditions.append("REGEXP_CONTAINS(V2Organizations, @org_pattern)")
+        org_pattern = "|".join(re.escape(o.lower()) for o in filter_obj.organizations)
+        conditions.append("REGEXP_CONTAINS(LOWER(V2Organizations), @org_pattern)")
         parameters.append(bigquery.ScalarQueryParameter("org_pattern", "STRING", org_pattern))
 
     # Optional: Country filter

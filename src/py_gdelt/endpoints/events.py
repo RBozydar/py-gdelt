@@ -137,6 +137,46 @@ class EventsEndpoint:
             fallback_enabled,
         )
 
+    def _matches_filter(self, record: Event, filter_obj: EventFilter) -> bool:
+        """Check if record matches filter criteria (client-side).
+
+        Applied when using file source. BigQuery applies these server-side.
+
+        Args:
+            record: Event to check.
+            filter_obj: Filter criteria.
+
+        Returns:
+            True if record matches all filter criteria.
+        """
+        # Actor country filters (exact match on FIPS codes)
+        actor1_country = record.actor1.country_code if record.actor1 else None
+        actor2_country = record.actor2.country_code if record.actor2 else None
+        action_country = record.action_geo.country_code if record.action_geo else None
+
+        # Check all country filters
+        if filter_obj.actor1_country and actor1_country != filter_obj.actor1_country:
+            return False
+        if filter_obj.actor2_country and actor2_country != filter_obj.actor2_country:
+            return False
+        if filter_obj.action_country and action_country != filter_obj.action_country:
+            return False
+
+        # Event code filters (exact match)
+        event_code_mismatch = (
+            (filter_obj.event_code and record.event_code != filter_obj.event_code)
+            or (filter_obj.event_root_code and record.event_root_code != filter_obj.event_root_code)
+            or (filter_obj.event_base_code and record.event_base_code != filter_obj.event_base_code)
+        )
+        if event_code_mismatch:
+            return False
+
+        # Tone filters (numeric range)
+        tone_out_of_range = (
+            filter_obj.min_tone is not None and record.avg_tone < filter_obj.min_tone
+        ) or (filter_obj.max_tone is not None and record.avg_tone > filter_obj.max_tone)
+        return not tone_out_of_range
+
     async def query(
         self,
         filter_obj: EventFilter,
@@ -211,6 +251,11 @@ class EventsEndpoint:
         events: list[Event] = []
         for raw_event in raw_events_list:
             event = Event.from_raw(raw_event)
+
+            # Apply client-side filtering (file source doesn't filter)
+            if not self._matches_filter(event, filter_obj):
+                continue
+
             events.append(event)
 
         logger.info("Converted %d events to Event models", len(events))
@@ -278,8 +323,13 @@ class EventsEndpoint:
         # Convert _RawEvent to Event at yield boundary
         count = 0
         async for raw_event in raw_events:
-            event = Event.from_raw(raw_event)
-            yield event
+            record = Event.from_raw(raw_event)
+
+            # Apply client-side filtering (file source doesn't filter)
+            if not self._matches_filter(record, filter_obj):
+                continue
+
+            yield record
             count += 1
 
         logger.info("Streamed %d events", count)

@@ -49,10 +49,10 @@ def sample_raw_event() -> _RawEvent:
         fraction_date="2024.0001",
         actor1_code="USA",
         actor1_name="UNITED STATES",
-        actor1_country_code="USA",
+        actor1_country_code="US",
         actor2_code="RUS",
         actor2_name="RUSSIA",
-        actor2_country_code="RUS",
+        actor2_country_code="RS",
         is_root_event="1",
         event_code="010",
         event_base_code="01",
@@ -82,10 +82,10 @@ def sample_raw_event_duplicate() -> _RawEvent:
         fraction_date="2024.0001",
         actor1_code="USA",
         actor1_name="UNITED STATES",
-        actor1_country_code="USA",
+        actor1_country_code="US",
         actor2_code="RUS",
         actor2_name="RUSSIA",
-        actor2_country_code="RUS",
+        actor2_country_code="RS",
         is_root_event="1",
         event_code="010",
         event_base_code="01",
@@ -472,7 +472,7 @@ class TestEventsEndpointIntegration:
         assert event.actor1 is not None
         assert event.actor1.code == "USA"
         assert event.actor1.name == "UNITED STATES"
-        assert event.actor1.country_code == "USA"
+        assert event.actor1.country_code == "US"
 
         assert event.actor2 is not None
         assert event.actor2.code == "RUS"
@@ -500,6 +500,8 @@ class TestEventsEndpointIntegration:
                     month_year="202401",
                     year="2024",
                     fraction_date="2024.0001",
+                    actor1_code="USA",
+                    actor1_country_code="US",
                     is_root_event="1",
                     event_code="010",
                     event_base_code="01",

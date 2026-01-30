@@ -119,6 +119,72 @@ class GKGEndpoint:
             error_policy,
         )
 
+    def _matches_filter(  # noqa: PLR0911
+        self,
+        record: GKGRecord,
+        filter_obj: GKGFilter,
+    ) -> bool:
+        """Check if record matches filter criteria (client-side).
+
+        Applied when using file source. BigQuery applies these server-side.
+        Text fields use case-insensitive matching for better UX.
+
+        Note:
+            Multi-value filters (persons, organizations, themes) use OR logic -
+            a record matches if ANY filter value is found in the record.
+
+        Args:
+            record: GKGRecord to check.
+            filter_obj: Filter criteria.
+
+        Returns:
+            True if record matches all filter criteria.
+        """
+        # Themes exact match filter (OR logic: any theme matches, case-insensitive)
+        if filter_obj.themes:
+            record_themes = {t.name.upper() for t in record.themes}
+            filter_themes = {t.upper() for t in filter_obj.themes}
+            if not record_themes & filter_themes:  # No intersection
+                return False
+
+        # Theme prefix filter (case-insensitive prefix match)
+        if filter_obj.theme_prefix:
+            prefix_lower = filter_obj.theme_prefix.lower()
+            if not any(t.name.lower().startswith(prefix_lower) for t in record.themes):
+                return False
+
+        # Persons filter (case-insensitive substring match, OR logic)
+        if filter_obj.persons:
+            filter_persons_lower = [fp.lower() for fp in filter_obj.persons]
+            record_persons_lower = [p.name.lower() for p in record.persons]
+            if not any(fp in rp for rp in record_persons_lower for fp in filter_persons_lower):
+                return False
+
+        # Organizations filter (case-insensitive substring match, OR logic)
+        if filter_obj.organizations:
+            filter_orgs_lower = [fo.lower() for fo in filter_obj.organizations]
+            record_orgs_lower = [o.name.lower() for o in record.organizations]
+            if not any(fo in ro for ro in record_orgs_lower for fo in filter_orgs_lower):
+                return False
+
+        # Country filter (exact match on FIPS in any location)
+        if filter_obj.country and not any(
+            loc.country_code == filter_obj.country for loc in record.locations
+        ):
+            return False
+
+        # Tone filters (numeric range)
+        tone_value = record.tone.tone if record.tone else None
+        if filter_obj.min_tone is not None and (
+            tone_value is None or tone_value < filter_obj.min_tone
+        ):
+            return False
+
+        return not (
+            filter_obj.max_tone is not None
+            and (tone_value is None or tone_value > filter_obj.max_tone)
+        )
+
     async def query(
         self,
         filter_obj: GKGFilter,
@@ -220,6 +286,11 @@ class GKGEndpoint:
             # Convert _RawGKG to GKGRecord at yield boundary
             try:
                 record = GKGRecord.from_raw(raw_gkg)
+
+                # Apply client-side filtering (file source doesn't filter)
+                if not self._matches_filter(record, filter_obj):
+                    continue
+
                 yield record
             except Exception as e:  # noqa: BLE001
                 # Error boundary: log conversion errors but continue processing other records

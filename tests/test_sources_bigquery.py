@@ -227,9 +227,12 @@ class TestWhereClauseBuilding:
     def test_theme_prefix_no_substring_match(self) -> None:
         """Verify theme_prefix doesn't match substrings in the middle of themes.
 
-        The pattern (^|;)PREFIX should only match when PREFIX appears at the
+        The pattern (^|;)prefix should only match when prefix appears at the
         start of the string or immediately after a semicolon delimiter.
-        This prevents "WATER" from matching "FRESHWATER".
+        This prevents "water" from matching "freshwater".
+
+        Note: Pattern is lowercased for case-insensitive matching (LOWER() is
+        applied to the column in the SQL query).
         """
         filter_obj = GKGFilter(
             date_range=DateRange(start=date(2024, 1, 1)),
@@ -238,19 +241,21 @@ class TestWhereClauseBuilding:
 
         _, parameters = _build_where_clause_for_gkg(filter_obj)
 
-        # Verify the pattern anchors at theme boundaries
+        # Verify the pattern anchors at theme boundaries and is lowercased
         param_dict = {p.name: p for p in parameters}
-        pattern = param_dict["theme_prefix_pattern"].value
-        assert pattern == r"(^|;)WATER"
+        pattern_value = param_dict["theme_prefix_pattern"].value
+        assert isinstance(pattern_value, str)
+        assert pattern_value == r"(^|;)water"
 
-        # Test with actual regex to confirm behavior
-        assert re.search(pattern, "WATER;OTHER")  # Should match (at start)
-        assert re.search(pattern, "WATER_SUPPLY")  # Should match (at start, prefix)
-        assert re.search(pattern, "OTHER;WATER")  # Should match (after semicolon)
-        assert re.search(pattern, "OTHER;WATER_SECURITY")  # Should match (after semicolon)
-        assert not re.search(pattern, "FRESHWATER")  # Should NOT match (in middle)
-        assert not re.search(pattern, "OTHER;FRESHWATER")  # Should NOT match (in middle)
-        assert not re.search(pattern, "DEWATER")  # Should NOT match (in middle)
+        # Test with actual regex to confirm behavior (using lowercase since
+        # LOWER() is applied to the column data in the actual SQL query)
+        assert re.search(pattern_value, "water;other")  # Should match (at start)
+        assert re.search(pattern_value, "water_supply")  # Should match (at start, prefix)
+        assert re.search(pattern_value, "other;water")  # Should match (after semicolon)
+        assert re.search(pattern_value, "other;water_security")  # Should match (after semicolon)
+        assert not re.search(pattern_value, "freshwater")  # Should NOT match (in middle)
+        assert not re.search(pattern_value, "other;freshwater")  # Should NOT match (in middle)
+        assert not re.search(pattern_value, "dewater")  # Should NOT match (in middle)
 
 
 class TestBigQuerySourceInit:

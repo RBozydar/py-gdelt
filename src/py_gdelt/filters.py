@@ -73,7 +73,29 @@ class DateRange(BaseModel):
 
 
 class EventFilter(BaseModel):
-    """Filter for Events/Mentions queries."""
+    """Filter for Events/Mentions queries.
+
+    All filter fields work with both file downloads and BigQuery:
+    - File source: Filters applied client-side after download
+    - BigQuery: Filters applied server-side for efficiency
+
+    Country codes (actor1_country, actor2_country, action_country) accept
+    both FIPS and ISO3 formats and are normalized to FIPS automatically.
+
+    Event codes are validated against CAMEO codebook.
+
+    Args:
+        date_range: Required date range for query.
+        actor1_country: Filter by Actor1 country (FIPS or ISO3).
+        actor2_country: Filter by Actor2 country (FIPS or ISO3).
+        event_code: Filter by CAMEO event code.
+        event_root_code: Filter by CAMEO root event code.
+        event_base_code: Filter by CAMEO base event code.
+        min_tone: Minimum average tone threshold.
+        max_tone: Maximum average tone threshold.
+        action_country: Filter by action location country (FIPS or ISO3).
+        include_translated: Include machine-translated articles (default: True).
+    """
 
     date_range: DateRange
 
@@ -125,7 +147,30 @@ class EventFilter(BaseModel):
 
 
 class GKGFilter(BaseModel):
-    """Filter for GKG queries."""
+    """Filter for GKG queries.
+
+    All filter fields work with both file downloads and BigQuery:
+    - File source: Filters applied client-side after download
+    - BigQuery: Filters applied server-side for efficiency
+
+    Text fields (persons, organizations, theme_prefix) use **case-insensitive
+    matching** - "Obama" matches "OBAMA", "obama", "Barack Obama", etc.
+
+    Multi-value filters use **OR logic** - a record matches if ANY value
+    in the list is found. For example, `persons=["Obama", "Biden"]` matches
+    records containing either "Obama" OR "Biden" (or both).
+
+    Args:
+        date_range: Required date range for query.
+        themes: List of exact GKG theme codes to match (OR logic, case-insensitive).
+        theme_prefix: Match themes starting with prefix (case-insensitive).
+        persons: Match records containing these person names (OR logic, case-insensitive substring).
+        organizations: Match records containing these org names (OR logic, case-insensitive substring).
+        country: Filter by country code (FIPS or ISO3, normalized to FIPS).
+        min_tone: Minimum tone threshold.
+        max_tone: Maximum tone threshold.
+        include_translated: Include machine-translated articles (default: True).
+    """
 
     date_range: DateRange
 
@@ -423,9 +468,13 @@ class GQGFilter(BaseModel):
     """Filter for Global Quotation Graph queries.
 
     Note:
-        GQG is a file-based dataset with no inherent date range limit.
-        Large date ranges will produce large result sets - use streaming
-        methods (``stream_gqg``) for memory efficiency.
+        The ``languages`` filter is applied client-side after download.
+        All records for the date range are fetched, then filtered by language.
+        Multi-value filters use OR logic.
+
+    Args:
+        date_range: Required date range for query.
+        languages: Filter by language codes (client-side, OR logic).
     """
 
     date_range: DateRange
@@ -436,9 +485,13 @@ class GEGFilter(BaseModel):
     """Filter for Global Entity Graph queries.
 
     Note:
-        GEG is a file-based dataset with no inherent date range limit.
-        Large date ranges will produce large result sets - use streaming
-        methods (``stream_geg``) for memory efficiency.
+        The ``languages`` filter is applied client-side after download.
+        All records for the date range are fetched, then filtered by language.
+        Multi-value filters use OR logic.
+
+    Args:
+        date_range: Required date range for query.
+        languages: Filter by language codes (client-side, OR logic).
     """
 
     date_range: DateRange
@@ -449,9 +502,13 @@ class GFGFilter(BaseModel):
     """Filter for Global Frontpage Graph queries.
 
     Note:
-        GFG is a file-based dataset with no inherent date range limit.
-        Large date ranges will produce large result sets - use streaming
-        methods (``stream_gfg``) for memory efficiency.
+        The ``languages`` filter is applied client-side after download.
+        All records for the date range are fetched, then filtered by language.
+        Multi-value filters use OR logic.
+
+    Args:
+        date_range: Required date range for query.
+        languages: Filter by language codes (client-side, OR logic).
     """
 
     date_range: DateRange
@@ -477,9 +534,13 @@ class GEMGFilter(BaseModel):
     """Filter for Global Embedded Metadata Graph queries.
 
     Note:
-        GEMG is a file-based dataset with no inherent date range limit.
-        Large date ranges will produce large result sets - use streaming
-        methods (``stream_gemg``) for memory efficiency.
+        The ``languages`` filter is applied client-side after download.
+        All records for the date range are fetched, then filtered by language.
+        Multi-value filters use OR logic.
+
+    Args:
+        date_range: Required date range for query.
+        languages: Filter by language codes (client-side, OR logic).
     """
 
     date_range: DateRange
@@ -490,9 +551,13 @@ class GALFilter(BaseModel):
     """Filter for Article List queries.
 
     Note:
-        GAL is a file-based dataset with no inherent date range limit.
-        Large date ranges will produce large result sets - use streaming
-        methods (``stream_gal``) for memory efficiency.
+        The ``languages`` filter is applied client-side after download.
+        All records for the date range are fetched, then filtered by language.
+        Multi-value filters use OR logic.
+
+    Args:
+        date_range: Required date range for query.
+        languages: Filter by language codes (client-side, OR logic).
     """
 
     date_range: DateRange
