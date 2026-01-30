@@ -27,7 +27,14 @@ from tenacity import (
 )
 
 from py_gdelt.config import GDELTSettings
-from py_gdelt.exceptions import APIError, APIUnavailableError, RateLimitError
+from py_gdelt.exceptions import (
+    APIError,
+    APIUnavailableError,
+    InvalidQueryError,
+    RateLimitError,
+    _enhance_query_error,
+    _is_query_error,
+)
 
 
 __all__ = ["BaseEndpoint"]
@@ -248,7 +255,11 @@ class BaseEndpoint(ABC):
             return response.json()
         except json.JSONDecodeError:
             # GDELT returns plain text error messages with HTTP 200
-            raise APIError(response.text.strip() or "Invalid JSON response") from None
+            raw_message = response.text.strip() or "Invalid JSON response"
+            if _is_query_error(raw_message):
+                message, hint = _enhance_query_error(raw_message)
+                raise InvalidQueryError(message, hint=hint) from None
+            raise APIError(raw_message) from None
 
     @abstractmethod
     async def _build_url(self, **kwargs: Any) -> str:

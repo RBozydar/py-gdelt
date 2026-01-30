@@ -88,7 +88,80 @@ class InvalidQueryError(APIError):
     Raised when API request parameters are invalid.
 
     This indicates a client-side error in query construction or parameters.
+
+    Args:
+        message: The original error message from GDELT API.
+        hint: Optional hint with guidance on how to fix the query.
     """
+
+    def __init__(self, message: str, hint: str | None = None) -> None:
+        super().__init__(message)
+        self.hint = hint
+
+    def __str__(self) -> str:
+        """Return string representation with hint if available."""
+        base_message = super().__str__()
+        if self.hint:
+            return f"{base_message}\n\nHint: {self.hint}"
+        return base_message
+
+
+# Query error patterns and their hints for GDELT DOC API
+_QUERY_ERROR_HINTS: dict[str, str] = {
+    "parentheses may only be used around or'd statements": (
+        "Parentheses can ONLY wrap OR groups like '(A OR B)'. "
+        "Remove parentheses from single terms or phrases.\n"
+        "  Wrong: '(climate change) AND policy'\n"
+        "  Right: '\"climate change\" AND policy'\n"
+        "  Right: '(climate OR weather) AND policy'"
+    ),
+    "illegal character": (
+        "Special characters (dashes, dots, etc.) require quotes.\n"
+        "  Wrong: 'US-EU relations' or 'F-16 fighter'\n"
+        "  Right: '\"US-EU\" relations' or '\"F-16\" fighter'"
+    ),
+    "query must contain at least one non-stopword": (
+        "Your query contains only common words (the, a, is, etc.). Add more specific search terms."
+    ),
+    "query is too long": ("Simplify your query by removing terms or using fewer OR groups."),
+}
+
+
+def _enhance_query_error(raw_message: str) -> tuple[str, str | None]:
+    """Enhance GDELT API error messages with actionable hints.
+
+    Args:
+        raw_message: The raw error message from GDELT API.
+
+    Returns:
+        Tuple of (message, hint) where hint may be None if no pattern matched.
+    """
+    message_lower = raw_message.lower()
+    for pattern, hint in _QUERY_ERROR_HINTS.items():
+        if pattern in message_lower:
+            return raw_message, hint
+    return raw_message, None
+
+
+def _is_query_error(raw_message: str) -> bool:
+    """Check if an error message indicates a query syntax error.
+
+    Args:
+        raw_message: The raw error message from GDELT API.
+
+    Returns:
+        True if this appears to be a query syntax error.
+    """
+    message_lower = raw_message.lower()
+    query_error_indicators = [
+        "parentheses",
+        "illegal character",
+        "query must contain",
+        "query is too",
+        "keyword",
+        "search term",
+    ]
+    return any(indicator in message_lower for indicator in query_error_indicators)
 
 
 class DataError(GDELTError):

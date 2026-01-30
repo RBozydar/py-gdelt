@@ -18,7 +18,12 @@ import respx
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.endpoints.base import BaseEndpoint
-from py_gdelt.exceptions import APIError, APIUnavailableError, RateLimitError
+from py_gdelt.exceptions import (
+    APIError,
+    APIUnavailableError,
+    InvalidQueryError,
+    RateLimitError,
+)
 
 
 class TestEndpoint(BaseEndpoint):
@@ -321,6 +326,54 @@ class TestJSONHelper:
             data = await endpoint._get_json("https://api.gdeltproject.org/test")
             assert data == {}
             assert isinstance(data, dict)
+
+    @respx.mock
+    async def test_get_json_raises_invalid_query_error_for_parentheses(self) -> None:
+        """Test _get_json raises InvalidQueryError with hint for parentheses error."""
+        error_msg = "Parentheses may only be used around OR'd statements."
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(200, text=error_msg),
+        )
+
+        async with TestEndpoint() as endpoint:
+            with pytest.raises(InvalidQueryError) as exc_info:
+                await endpoint._get_json("https://api.gdeltproject.org/test")
+
+            assert error_msg in str(exc_info.value)
+            assert exc_info.value.hint is not None
+            assert "OR groups" in exc_info.value.hint
+
+    @respx.mock
+    async def test_get_json_raises_invalid_query_error_for_illegal_char(self) -> None:
+        """Test _get_json raises InvalidQueryError with hint for illegal character."""
+        error_msg = "One or more keywords contained an illegal character"
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(200, text=error_msg),
+        )
+
+        async with TestEndpoint() as endpoint:
+            with pytest.raises(InvalidQueryError) as exc_info:
+                await endpoint._get_json("https://api.gdeltproject.org/test")
+
+            assert error_msg in str(exc_info.value)
+            assert exc_info.value.hint is not None
+            assert "quotes" in exc_info.value.hint
+
+    @respx.mock
+    async def test_get_json_raises_api_error_for_non_query_errors(self) -> None:
+        """Test _get_json raises APIError (not InvalidQueryError) for other errors."""
+        error_msg = "Unknown server error occurred"
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(200, text=error_msg),
+        )
+
+        async with TestEndpoint() as endpoint:
+            with pytest.raises(APIError) as exc_info:
+                await endpoint._get_json("https://api.gdeltproject.org/test")
+
+            # Should be APIError, not InvalidQueryError
+            assert type(exc_info.value) is APIError
+            assert error_msg in str(exc_info.value)
 
 
 class TestRetryBehavior:

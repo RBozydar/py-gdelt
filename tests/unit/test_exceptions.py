@@ -124,6 +124,85 @@ class TestInvalidQueryError:
         """InvalidQueryError should accept a message."""
         error = InvalidQueryError("Invalid parameters")
         assert str(error) == "Invalid parameters"
+        assert error.hint is None
+
+    def test_with_hint(self):
+        """InvalidQueryError should include hint in string output."""
+        error = InvalidQueryError(
+            "Parentheses may only be used around OR'd statements",
+            hint="Remove parentheses from single terms",
+        )
+        assert error.hint == "Remove parentheses from single terms"
+        assert "Parentheses may only be used" in str(error)
+        assert "Hint: Remove parentheses" in str(error)
+
+    def test_hint_formatting(self):
+        """Hint should be formatted with newline separator."""
+        error = InvalidQueryError("Error message", hint="Fix suggestion")
+        expected = "Error message\n\nHint: Fix suggestion"
+        assert str(error) == expected
+
+
+class TestQueryErrorHelpers:
+    """Tests for query error helper functions."""
+
+    def test_is_query_error_parentheses(self):
+        """Should detect parentheses errors."""
+        from py_gdelt.exceptions import _is_query_error
+
+        assert _is_query_error("Parentheses may only be used around OR'd statements")
+        assert _is_query_error("PARENTHESES error")  # Case insensitive
+
+    def test_is_query_error_illegal_character(self):
+        """Should detect illegal character errors."""
+        from py_gdelt.exceptions import _is_query_error
+
+        assert _is_query_error("One or more keywords contained an illegal character")
+        assert _is_query_error("ILLEGAL CHARACTER in query")
+
+    def test_is_query_error_keyword(self):
+        """Should detect keyword-related errors."""
+        from py_gdelt.exceptions import _is_query_error
+
+        assert _is_query_error("Your keyword is invalid")
+        assert _is_query_error("Query must contain valid search term")
+
+    def test_is_query_error_non_match(self):
+        """Should return False for non-query errors."""
+        from py_gdelt.exceptions import _is_query_error
+
+        assert not _is_query_error("Connection timeout")
+        assert not _is_query_error("Server error 500")
+        assert not _is_query_error("Rate limited")
+
+    def test_enhance_query_error_parentheses(self):
+        """Should provide hint for parentheses errors."""
+        from py_gdelt.exceptions import _enhance_query_error
+
+        message, hint = _enhance_query_error("Parentheses may only be used around OR'd statements")
+        assert message == "Parentheses may only be used around OR'd statements"
+        assert hint is not None
+        assert "OR groups" in hint
+        assert "Wrong:" in hint
+        assert "Right:" in hint
+
+    def test_enhance_query_error_illegal_character(self):
+        """Should provide hint for illegal character errors."""
+        from py_gdelt.exceptions import _enhance_query_error
+
+        message, hint = _enhance_query_error("One or more keywords contained an illegal character")
+        assert message == "One or more keywords contained an illegal character"
+        assert hint is not None
+        assert "quotes" in hint
+        assert "US-EU" in hint or "dashes" in hint
+
+    def test_enhance_query_error_no_match(self):
+        """Should return None hint for unknown errors."""
+        from py_gdelt.exceptions import _enhance_query_error
+
+        message, hint = _enhance_query_error("Unknown error occurred")
+        assert message == "Unknown error occurred"
+        assert hint is None
 
 
 class TestDataError:
