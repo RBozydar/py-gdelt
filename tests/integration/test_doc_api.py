@@ -7,6 +7,7 @@ Run with: pytest tests/integration/ -m integration
 import pytest
 
 from py_gdelt import GDELTClient
+from py_gdelt.exceptions import APIError
 from py_gdelt.filters import DocFilter
 
 
@@ -111,3 +112,34 @@ async def test_doc_search_with_domain_filter(gdelt_client: GDELTClient) -> None:
     bbc_articles = [a for a in articles if "bbc" in a.url.lower()]
     # At least some should be from BBC if domain filtering works
     assert len(bbc_articles) > 0 or len(articles) > 0, "Expected some articles"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.timeout(60)
+async def test_doc_search_raises_api_error_on_invalid_query(
+    gdelt_client: GDELTClient,
+) -> None:
+    """Test that invalid queries raise APIError with GDELT's plain text message.
+
+    GDELT returns HTTP 200 with plain text error messages for certain invalid
+    queries (e.g., keywords too short/long/common). This test verifies we
+    convert these to APIError with the message preserved.
+
+    Regression test for: https://github.com/RBozydar/py-gdelt/issues/XXX
+    """
+    # This query uses site: operator which GDELT considers "too common"
+    doc_filter = DocFilter(
+        query='site:carbonbrief.org "IPCC" "special report" "land" 2026',
+        timespan="7d",
+        max_results=5,
+    )
+
+    with pytest.raises(APIError) as exc_info:
+        await gdelt_client.doc.query(doc_filter)
+
+    # Verify the error message contains GDELT's explanation
+    error_message = str(exc_info.value).lower()
+    assert (
+        "too short" in error_message or "too long" in error_message or "too common" in error_message
+    ), f"Expected GDELT error message about keywords, got: {exc_info.value}"

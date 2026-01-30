@@ -286,15 +286,29 @@ class TestJSONHelper:
             assert isinstance(data, list)
 
     @respx.mock
-    async def test_get_json_raises_on_invalid_json(self) -> None:
-        """Test _get_json raises on invalid JSON response."""
+    async def test_get_json_raises_api_error_on_invalid_json(self) -> None:
+        """Test _get_json raises APIError with message on invalid JSON response."""
         respx.get("https://api.gdeltproject.org/test").mock(
             return_value=httpx.Response(200, text="not json"),
         )
 
         async with TestEndpoint() as endpoint:
-            with pytest.raises(Exception):  # httpx raises JSONDecodeError
+            with pytest.raises(APIError) as exc_info:
                 await endpoint._get_json("https://api.gdeltproject.org/test")
+            assert str(exc_info.value) == "not json"
+
+    @respx.mock
+    async def test_get_json_raises_api_error_on_gdelt_text_error(self) -> None:
+        """Test _get_json raises APIError for GDELT plain text error messages."""
+        error_msg = "One or more of your keywords were too short, too long or too common"
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(200, text=error_msg),
+        )
+
+        async with TestEndpoint() as endpoint:
+            with pytest.raises(APIError) as exc_info:
+                await endpoint._get_json("https://api.gdeltproject.org/test")
+            assert error_msg in str(exc_info.value)
 
     @respx.mock
     async def test_get_json_returns_empty_dict_on_empty_response(self) -> None:

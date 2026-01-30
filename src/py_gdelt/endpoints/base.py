@@ -13,6 +13,7 @@ the _build_url() method for their specific URL construction logic.
 
 from __future__ import annotations
 
+import json
 import logging
 from abc import ABC, abstractmethod
 from typing import Any
@@ -243,7 +244,11 @@ class BaseEndpoint(ABC):
         response = await self._get(url, params=params)
         if not response.content:
             return {}  # Empty response = no results
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            # GDELT returns plain text error messages with HTTP 200
+            raise APIError(response.text.strip() or "Invalid JSON response") from None
 
     @abstractmethod
     async def _build_url(self, **kwargs: Any) -> str:
