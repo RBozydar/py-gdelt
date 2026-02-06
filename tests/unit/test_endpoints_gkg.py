@@ -20,7 +20,7 @@ from py_gdelt.models.gkg import GKGRecord
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+    from collections.abc import AsyncIterator, Collection
 
 
 @pytest.fixture
@@ -151,6 +151,8 @@ class TestGKGEndpointQuery:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
@@ -209,6 +211,8 @@ class TestGKGEndpointQuery:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
             yield raw_gkg_2
@@ -234,6 +238,8 @@ class TestGKGEndpointQuery:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             # Yield nothing
             if False:  # type: ignore[unreachable]
@@ -264,6 +270,8 @@ class TestGKGEndpointQuery:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
@@ -321,6 +329,8 @@ class TestGKGEndpointQuery:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield bad_raw_gkg
 
@@ -347,6 +357,8 @@ class TestGKGEndpointStream:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
@@ -370,6 +382,8 @@ class TestGKGEndpointStream:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(5):
                 raw_gkg = _RawGKG(
@@ -425,6 +439,8 @@ class TestGKGEndpointStream:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(100):
                 raw_gkg = _RawGKG(
@@ -515,6 +531,8 @@ class TestGKGEndpointStream:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
             yield bad_raw_gkg  # This will fail conversion
@@ -543,6 +561,8 @@ class TestGKGEndpointSyncWrappers:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
@@ -565,6 +585,8 @@ class TestGKGEndpointSyncWrappers:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(3):
                 raw_gkg = _RawGKG(
@@ -624,6 +646,8 @@ class TestGKGEndpointErrorHandling:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             msg = "Rate limited"
             raise RateLimitError(msg, retry_after=60)
@@ -649,6 +673,8 @@ class TestGKGEndpointErrorHandling:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             msg = "API failed"
             raise APIError(msg)
@@ -674,6 +700,8 @@ class TestGKGEndpointErrorHandling:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             msg = "BigQuery not configured"
             raise ConfigurationError(msg)
@@ -710,6 +738,8 @@ class TestGKGEndpointIntegration:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 
@@ -748,6 +778,8 @@ class TestGKGEndpointIntegration:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             for i in range(50):
                 raw_gkg = _RawGKG(
@@ -811,6 +843,8 @@ class TestGKGEndpointIntegration:
             filter_obj: GKGFilter,
             *,
             use_bigquery: bool = False,
+            columns: Collection[str] | None = None,
+            limit: int | None = None,
         ) -> AsyncIterator[_RawGKG]:
             yield sample_raw_gkg
 

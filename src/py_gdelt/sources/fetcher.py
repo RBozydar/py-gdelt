@@ -26,10 +26,15 @@ from py_gdelt.exceptions import (
     RateLimitError,
 )
 from py_gdelt.filters import DateRange, EventFilter, GKGFilter, NGramsFilter
+from py_gdelt.sources.bigquery import (
+    _bq_row_to_raw_event,
+    _bq_row_to_raw_gkg,
+    _bq_row_to_raw_mention,
+)
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncIterator, Collection, Iterator
 
     from py_gdelt.models._internal import _RawEvent, _RawGKG, _RawMention, _RawNGram
     from py_gdelt.sources.bigquery import BigQuerySource
@@ -139,12 +144,23 @@ class DataFetcher:
             error_policy,
         )
 
+    @property
+    def bigquery_source(self) -> BigQuerySource | None:
+        """Return the BigQuery source instance, or None if not configured.
+
+        Returns:
+            The BigQuery source used for fallback and aggregation queries.
+        """
+        return self._bq
+
     async def fetch(
         self,
         filter_obj: EventFilter | GKGFilter,
         parser: Parser[R],
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[R]:
         """Generic fetch method with automatic fallback.
 
@@ -155,6 +171,11 @@ class DataFetcher:
             filter_obj: Filter with date range and query parameters
             parser: Parser instance to convert raw bytes into typed records
             use_bigquery: If True, skip file downloads and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, only those columns are SELECTed from BigQuery and raw
+                dicts are yielded instead of ``_Raw*`` dataclasses.  Ignored by file
+                source (files always return all columns).
+            limit: Maximum number of records to return (None for unlimited)
 
         Yields:
             R: Parsed records
@@ -172,13 +193,15 @@ class DataFetcher:
                 raise ConfigurationError(msg)
 
             logger.info("Using BigQuery directly (use_bigquery=True)")
-            async for record in self._fetch_from_bigquery(filter_obj, parser):
+            async for record in self._fetch_from_bigquery(
+                filter_obj, parser, columns=columns, limit=limit
+            ):
                 yield record
             return
 
         # Try file source first (primary source)
         try:
-            async for record in self._fetch_from_files(filter_obj, parser):
+            async for record in self._fetch_from_files(filter_obj, parser, limit=limit):
                 yield record
 
         except RateLimitError as e:
@@ -188,7 +211,9 @@ class DataFetcher:
                     "Rate limited on file source (retry_after=%s), falling back to BigQuery",
                     e.retry_after,
                 )
-                async for record in self._fetch_from_bigquery(filter_obj, parser):
+                async for record in self._fetch_from_bigquery(
+                    filter_obj, parser, columns=columns, limit=limit
+                ):
                     yield record
             else:
                 # No fallback available
@@ -203,7 +228,9 @@ class DataFetcher:
                     type(e).__name__,
                     e,
                 )
-                async for record in self._fetch_from_bigquery(filter_obj, parser):
+                async for record in self._fetch_from_bigquery(
+                    filter_obj, parser, columns=columns, limit=limit
+                ):
                     yield record
             else:
                 # No fallback available
@@ -214,12 +241,17 @@ class DataFetcher:
         self,
         filter_obj: EventFilter | GKGFilter,
         parser: Parser[R],
+        *,
+        limit: int | None = None,
     ) -> AsyncIterator[R]:
         """Fetch data from file source and parse.
 
         Args:
             filter_obj: Filter with date range and query parameters
             parser: Parser instance to convert raw bytes into typed records
+            limit: Maximum number of records to return (None for unlimited).
+                Accepted for interface consistency; truncation is applied at
+                the endpoint level.
 
         Yields:
             R: Parsed records
@@ -283,6 +315,9 @@ class DataFetcher:
         self,
         filter_obj: EventFilter | GKGFilter,
         parser: Parser[R],
+        *,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[R]:
         """Fetch data from BigQuery source.
 
@@ -290,12 +325,19 @@ class DataFetcher:
         use the parser here. Instead, we yield BigQuery row dictionaries directly.
         The caller is responsible for converting them to the appropriate type.
 
+        When ``columns`` is specified, raw BigQuery dicts are yielded directly
+        (partial rows cannot hydrate full ``_Raw*`` models).
+
         Args:
             filter_obj: Filter with date range and query parameters
             parser: Parser instance (not used for BigQuery, kept for interface consistency)
+            columns: Optional collection of column names for column projection.
+                When specified, raw BigQuery dicts are yielded instead of
+                ``_Raw*`` dataclasses.
+            limit: Maximum number of rows to return (None for unlimited)
 
         Yields:
-            R: Records from BigQuery (as dictionaries)
+            R: Records from BigQuery (as dictionaries or ``_Raw*`` dataclasses)
 
         Raises:
             ConfigurationError: If BigQuery not configured
@@ -308,16 +350,25 @@ class DataFetcher:
         # Query BigQuery based on filter type
         if isinstance(filter_obj, EventFilter):
             logger.debug("Querying BigQuery events table")
-            async for row in self._bq.query_events(filter_obj):
-                # BigQuery returns dict, yield as-is
-                # Note: Type T might not match dict, caller should handle conversion
-                yield row  # type: ignore[misc]
+            if columns is not None:
+                # Column projection: yield raw BQ dicts (can't hydrate partial _Raw* models)
+                async for row in self._bq.query_events(
+                    filter_obj, columns=list(columns), limit=limit
+                ):
+                    yield row  # type: ignore[misc]
+            else:
+                # Full query: convert to _Raw* dataclass
+                async for row in self._bq.query_events(filter_obj, limit=limit):
+                    yield _bq_row_to_raw_event(row)  # type: ignore[misc]
 
         elif isinstance(filter_obj, GKGFilter):
             logger.debug("Querying BigQuery GKG table")
-            async for row in self._bq.query_gkg(filter_obj):
-                # BigQuery returns dict, yield as-is
-                yield row  # type: ignore[misc]
+            if columns is not None:
+                async for row in self._bq.query_gkg(filter_obj, columns=list(columns), limit=limit):
+                    yield row  # type: ignore[misc]
+            else:
+                async for row in self._bq.query_gkg(filter_obj, limit=limit):
+                    yield _bq_row_to_raw_gkg(row)  # type: ignore[misc]
 
         else:  # pragma: no cover
             # Defensive: unreachable given current type union
@@ -350,6 +401,8 @@ class DataFetcher:
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[_RawEvent]:
         """Fetch GDELT Events with automatic fallback.
 
@@ -360,9 +413,12 @@ class DataFetcher:
         Args:
             filter_obj: Event filter with date range and query parameters
             use_bigquery: If True, skip files and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of ``_RawEvent``.
+            limit: Maximum number of records to return (None for unlimited)
 
         Yields:
-            _RawEvent: Event instances
+            _RawEvent: Event instances (or raw dicts when ``columns`` is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -380,7 +436,9 @@ class DataFetcher:
         from py_gdelt.parsers import EventsParser
 
         parser = EventsParser()
-        async for event in self.fetch(filter_obj, parser, use_bigquery=use_bigquery):
+        async for event in self.fetch(
+            filter_obj, parser, use_bigquery=use_bigquery, columns=columns, limit=limit
+        ):
             yield event
 
     async def fetch_mentions(
@@ -389,6 +447,8 @@ class DataFetcher:
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[_RawMention]:
         """Fetch GDELT Mentions for a specific event.
 
@@ -399,9 +459,12 @@ class DataFetcher:
             global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range (other fields ignored for mentions)
             use_bigquery: If True, skip files and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of ``_RawMention``.
+            limit: Maximum number of records to return (None for unlimited)
 
         Yields:
-            _RawMention: Mention instances
+            _RawMention: Mention instances (or raw dicts when ``columns`` is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -431,19 +494,30 @@ class DataFetcher:
 
         # Query BigQuery mentions table
         logger.info("Querying mentions for event %s", global_event_id)
-        async for row in self._bq.query_mentions(
-            global_event_id=global_event_id,
-            date_range=filter_obj.date_range,
-        ):
-            # BigQuery returns dict, we need to convert to _RawMention
-            # For now, yield the dict directly - conversion will happen at API boundary
-            yield row  # type: ignore[misc]
+        if columns is not None:
+            # Column projection: yield raw BQ dicts
+            async for row in self._bq.query_mentions(
+                global_event_id=global_event_id,
+                columns=list(columns),
+                date_range=filter_obj.date_range,
+                limit=limit,
+            ):
+                yield row  # type: ignore[misc]
+        else:
+            async for row in self._bq.query_mentions(
+                global_event_id=global_event_id,
+                date_range=filter_obj.date_range,
+                limit=limit,
+            ):
+                yield _bq_row_to_raw_mention(row)
 
     async def fetch_gkg(
         self,
         filter_obj: GKGFilter,
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[_RawGKG]:
         """Fetch GDELT GKG (Global Knowledge Graph) records with automatic fallback.
 
@@ -454,9 +528,12 @@ class DataFetcher:
         Args:
             filter_obj: GKG filter with date range and query parameters
             use_bigquery: If True, skip files and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of ``_RawGKG``.
+            limit: Maximum number of records to return (None for unlimited)
 
         Yields:
-            _RawGKG: GKG record instances
+            _RawGKG: GKG record instances (or raw dicts when ``columns`` is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -474,7 +551,9 @@ class DataFetcher:
         from py_gdelt.parsers import GKGParser
 
         parser = GKGParser()
-        async for gkg in self.fetch(filter_obj, parser, use_bigquery=use_bigquery):
+        async for gkg in self.fetch(
+            filter_obj, parser, use_bigquery=use_bigquery, columns=columns, limit=limit
+        ):
             yield gkg
 
     async def fetch_ngrams(

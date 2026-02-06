@@ -387,11 +387,17 @@ class Mention(BaseModel):
                 return False
             return value.strip() == "1"
 
-        # Parse event_time (YYYYMMDDHHMMSS)
-        event_time = parse_gdelt_datetime(raw.event_time_full)
+        # Parse event_time (YYYYMMDDHHMMSS preferred, fall back to YYYYMMDD date)
+        # BigQuery eventmentions table lacks *FullDate columns, so event_time_full
+        # may be empty. Fall back to the 8-digit event_time_date in that case.
+        event_time_value = raw.event_time_full if raw.event_time_full else raw.event_time_date
+        event_time = parse_gdelt_datetime(event_time_value)
 
-        # Parse mention_time (YYYYMMDDHHMMSS)
-        mention_time = parse_gdelt_datetime(raw.mention_time_full)
+        # Parse mention_time (same fallback logic)
+        mention_time_value = (
+            raw.mention_time_full if raw.mention_time_full else raw.mention_time_date
+        )
+        mention_time = parse_gdelt_datetime(mention_time_value)
 
         # Parse char offsets (can be empty string)
         actor1_offset = (

@@ -61,10 +61,11 @@ from py_gdelt.utils.dedup import (
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncIterator, Collection, Iterator
 
     from py_gdelt.filters import EventFilter
     from py_gdelt.models._internal import _RawEvent
+    from py_gdelt.sources.aggregation import Aggregation, AggregationResult
     from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.fetcher import DataFetcher
     from py_gdelt.sources.files import FileSource
@@ -184,6 +185,8 @@ class EventsEndpoint:
         deduplicate: bool = False,
         dedupe_strategy: DedupeStrategy | None = None,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> FetchResult[Event]:
         """Query GDELT Events with automatic fallback.
 
@@ -198,11 +201,14 @@ class EventsEndpoint:
             deduplicate: If True, deduplicate events based on dedupe_strategy
             dedupe_strategy: Deduplication strategy (default: URL_DATE_LOCATION)
             use_bigquery: If True, skip files and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are returned instead of Event models.
+                Requires ``use_bigquery=True`` for meaningful effect.
+            limit: Maximum number of events to return (None for unlimited)
 
         Returns:
-            FetchResult containing Event instances. Use .data to access the list,
-            .failed to see any failed requests, and .complete to check if all
-            requests succeeded.
+            FetchResult containing Event instances (or raw dicts when ``columns``
+            is specified). Use ``.data`` to access the list.
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -219,6 +225,21 @@ class EventsEndpoint:
             >>> for event in result:
             ...     print(event.global_event_id)
         """
+        # Column projection mode: return raw dicts, skip dedup/filter
+        if columns is not None:
+            raw_rows: list[dict[str, Any]] = [
+                raw_event  # type: ignore[misc]
+                async for raw_event in self._fetcher.fetch_events(
+                    filter_obj,
+                    use_bigquery=use_bigquery,
+                    columns=columns,
+                    limit=limit,
+                )
+            ]
+            if limit is not None:
+                raw_rows = raw_rows[:limit]
+            return FetchResult(data=raw_rows)  # type: ignore[arg-type]
+
         # Default dedupe strategy
         if deduplicate and dedupe_strategy is None:
             dedupe_strategy = DedupeStrategy.URL_DATE_LOCATION
@@ -229,6 +250,7 @@ class EventsEndpoint:
             async for raw_event in self._fetcher.fetch_events(
                 filter_obj,
                 use_bigquery=use_bigquery,
+                limit=limit,
             )
         ]
 
@@ -258,6 +280,10 @@ class EventsEndpoint:
 
             events.append(event)
 
+        # Apply limit after dedup and filter
+        if limit is not None:
+            events = events[:limit]
+
         logger.info("Converted %d events to Event models", len(events))
 
         # Return as FetchResult (no failed requests tracked yet)
@@ -270,6 +296,8 @@ class EventsEndpoint:
         deduplicate: bool = False,
         dedupe_strategy: DedupeStrategy | None = None,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[Event]:
         """Stream GDELT Events with memory-efficient iteration.
 
@@ -285,9 +313,14 @@ class EventsEndpoint:
             deduplicate: If True, deduplicate events based on dedupe_strategy
             dedupe_strategy: Deduplication strategy (default: URL_DATE_LOCATION)
             use_bigquery: If True, skip files and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of Event models.
+                Requires ``use_bigquery=True`` for meaningful effect.
+            limit: Maximum number of events to yield (None for unlimited)
 
         Yields:
-            Event: Individual Event instances matching the filter
+            Event: Individual Event instances matching the filter (or raw dicts
+            when ``columns`` is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -313,6 +346,8 @@ class EventsEndpoint:
         raw_events = self._fetcher.fetch_events(
             filter_obj,
             use_bigquery=use_bigquery,
+            columns=columns,
+            limit=limit,
         )
 
         # Apply deduplication if requested
@@ -323,14 +358,22 @@ class EventsEndpoint:
         # Convert _RawEvent to Event at yield boundary
         count = 0
         async for raw_event in raw_events:
-            record = Event.from_raw(raw_event)
+            if columns is not None:
+                # Column projection: yield raw dict directly
+                yield raw_event  # type: ignore[misc]
+                count += 1
+            else:
+                record = Event.from_raw(raw_event)
 
-            # Apply client-side filtering (file source doesn't filter)
-            if not self._matches_filter(record, filter_obj):
-                continue
+                # Apply client-side filtering (file source doesn't filter)
+                if not self._matches_filter(record, filter_obj):
+                    continue
 
-            yield record
-            count += 1
+                yield record
+                count += 1
+
+            if limit is not None and count >= limit:
+                return
 
         logger.info("Streamed %d events", count)
 
@@ -341,6 +384,8 @@ class EventsEndpoint:
         deduplicate: bool = False,
         dedupe_strategy: DedupeStrategy | None = None,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> FetchResult[Event]:
         """Synchronous wrapper for query().
 
@@ -352,9 +397,13 @@ class EventsEndpoint:
             deduplicate: If True, deduplicate events based on dedupe_strategy
             dedupe_strategy: Deduplication strategy (default: URL_DATE_LOCATION)
             use_bigquery: If True, skip files and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are returned instead of Event models.
+            limit: Maximum number of events to return (None for unlimited)
 
         Returns:
-            FetchResult containing Event instances
+            FetchResult containing Event instances (or raw dicts when ``columns``
+            is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -377,6 +426,8 @@ class EventsEndpoint:
                 deduplicate=deduplicate,
                 dedupe_strategy=dedupe_strategy,
                 use_bigquery=use_bigquery,
+                columns=columns,
+                limit=limit,
             ),
         )
 
@@ -387,6 +438,8 @@ class EventsEndpoint:
         deduplicate: bool = False,
         dedupe_strategy: DedupeStrategy | None = None,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> Iterator[Event]:
         """Synchronous wrapper for stream().
 
@@ -402,9 +455,13 @@ class EventsEndpoint:
             deduplicate: If True, deduplicate events based on dedupe_strategy
             dedupe_strategy: Deduplication strategy (default: URL_DATE_LOCATION)
             use_bigquery: If True, skip files and use BigQuery directly
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of Event models.
+            limit: Maximum number of events to yield (None for unlimited)
 
         Returns:
-            Iterator that yields Event instances for each matching event
+            Iterator that yields Event instances (or raw dicts when ``columns``
+            is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available
@@ -428,6 +485,8 @@ class EventsEndpoint:
                 deduplicate=deduplicate,
                 dedupe_strategy=dedupe_strategy,
                 use_bigquery=use_bigquery,
+                columns=columns,
+                limit=limit,
             ):
                 yield event
 
@@ -444,6 +503,116 @@ class EventsEndpoint:
                     break
         finally:
             loop.close()
+
+    async def aggregate(
+        self,
+        filter_obj: EventFilter,
+        *,
+        group_by: list[str],
+        aggregations: list[Aggregation],
+        order_by: str | None = None,
+        ascending: bool = False,
+        limit: int | None = None,
+    ) -> AggregationResult:
+        """Run an aggregation query against the GDELT Events table via BigQuery.
+
+        Builds a ``GROUP BY`` query with the specified aggregation functions.
+        Requires BigQuery credentials to be configured.
+
+        Args:
+            filter_obj: Event filter with date range and query parameters.
+            group_by: Column names to group by (validated against events allowlist).
+            aggregations: List of aggregation specifications.
+            order_by: Column or alias to order results by. Defaults to the
+                first aggregation alias (descending) when ``limit`` is set.
+            ascending: If True, sort ascending; otherwise descending.
+            limit: Maximum number of result rows.
+
+        Returns:
+            AggregationResult with rows, group_by columns, and metadata.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or query execution fails.
+            SecurityError: If an alias fails sanitization.
+
+        Example:
+            >>> from py_gdelt.sources.aggregation import AggFunc, Aggregation
+            >>> result = await endpoint.aggregate(
+            ...     filter_obj,
+            ...     group_by=["EventRootCode"],
+            ...     aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            ...     limit=10,
+            ... )
+            >>> for row in result.rows:
+            ...     print(row["EventRootCode"], row["cnt"])
+        """
+        from py_gdelt.exceptions import ConfigurationError
+
+        if self._fetcher.bigquery_source is None:
+            msg = (
+                "Aggregation queries require BigQuery credentials. "
+                "Please configure GDELT_BIGQUERY_PROJECT and optionally "
+                "GDELT_BIGQUERY_CREDENTIALS."
+            )
+            raise ConfigurationError(msg)
+
+        return await self._fetcher.bigquery_source.aggregate_events(
+            filter_obj,
+            group_by=group_by,
+            aggregations=aggregations,
+            order_by=order_by,
+            ascending=ascending,
+            limit=limit,
+        )
+
+    def aggregate_sync(
+        self,
+        filter_obj: EventFilter,
+        *,
+        group_by: list[str],
+        aggregations: list[Aggregation],
+        order_by: str | None = None,
+        ascending: bool = False,
+        limit: int | None = None,
+    ) -> AggregationResult:
+        """Synchronous wrapper for aggregate().
+
+        Args:
+            filter_obj: Event filter with date range and query parameters.
+            group_by: Column names to group by (validated against events allowlist).
+            aggregations: List of aggregation specifications.
+            order_by: Column or alias to order results by.
+            ascending: If True, sort ascending; otherwise descending.
+            limit: Maximum number of result rows.
+
+        Returns:
+            AggregationResult with rows, group_by columns, and metadata.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or query execution fails.
+            SecurityError: If an alias fails sanitization.
+            RuntimeError: If called from within an already running event loop.
+
+        Example:
+            >>> result = endpoint.aggregate_sync(
+            ...     filter_obj,
+            ...     group_by=["EventRootCode"],
+            ...     aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            ...     limit=10,
+            ... )
+        """
+        return asyncio.run(
+            self.aggregate(
+                filter_obj,
+                group_by=group_by,
+                aggregations=aggregations,
+                order_by=order_by,
+                ascending=ascending,
+                limit=limit,
+            ),
+        )
 
     async def _build_url(self, **kwargs: Any) -> str:
         """Build URL for events endpoint.

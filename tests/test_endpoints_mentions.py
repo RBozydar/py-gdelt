@@ -69,13 +69,16 @@ def sample_raw_mention() -> _RawMention:
 
 @pytest.fixture
 def sample_bigquery_row() -> dict:
-    """Create sample BigQuery row dict for testing."""
+    """Create sample BigQuery row dict for testing.
+
+    Uses the exact column names from the BigQuery eventmentions table
+    (matching _BQ_MENTION_MAP keys in bigquery.py). Note that BQ
+    eventmentions lacks EventTimeFullDate and MentionTimeFullDate columns.
+    """
     return {
-        "GlobalEventID": 123456789,
+        "GLOBALEVENTID": 123456789,
         "EventTimeDate": 20240101,
-        "EventTimeFullDate": 20240101120000,
         "MentionTimeDate": 20240101,
-        "MentionTimeFullDate": 20240101130000,
         "MentionType": 1,
         "MentionSourceName": "BBC News",
         "MentionIdentifier": "https://www.bbc.com/news/article",
@@ -245,16 +248,16 @@ class TestMentionsEndpointQuery:
         assert [m.source_name for m in result.data] == ["Source 0", "Source 1", "Source 2"]
 
     @pytest.mark.asyncio
-    async def test_query_with_bigquery_dict(
+    async def test_query_with_bigquery_converted_mention(
         self,
         mock_file_source: MagicMock,
         event_filter: EventFilter,
-        sample_bigquery_row: dict,
+        sample_raw_mention: _RawMention,
     ) -> None:
-        """Test query() handles BigQuery dict results."""
+        """Test query() handles _RawMention objects from BigQuery path."""
 
         async def mock_fetch_mentions(*args, **kwargs):
-            yield sample_bigquery_row
+            yield sample_raw_mention
 
         endpoint = MentionsEndpoint(file_source=mock_file_source)
         endpoint._fetcher.fetch_mentions = mock_fetch_mentions
@@ -350,16 +353,16 @@ class TestMentionsEndpointStream:
             break
 
     @pytest.mark.asyncio
-    async def test_stream_handles_bigquery_dicts(
+    async def test_stream_handles_bigquery_converted_mentions(
         self,
         mock_file_source: MagicMock,
         event_filter: EventFilter,
-        sample_bigquery_row: dict,
+        sample_raw_mention: _RawMention,
     ) -> None:
-        """Test that stream() handles BigQuery dict results."""
+        """Test that stream() handles _RawMention objects from BigQuery path."""
 
         async def mock_fetch_mentions(*args, **kwargs):
-            yield sample_bigquery_row
+            yield sample_raw_mention
 
         endpoint = MentionsEndpoint(file_source=mock_file_source)
         endpoint._fetcher.fetch_mentions = mock_fetch_mentions
@@ -493,55 +496,58 @@ class TestMentionsEndpointSyncWrappers:
         assert all(isinstance(m, Mention) for m in mentions)
 
 
-class TestMentionsEndpointDictConversion:
-    """Test _dict_to_mention() helper method."""
+class TestBigQueryMentionConversion:
+    """Test _bq_row_to_raw_mention() and Mention.from_raw() pipeline."""
 
-    def test_dict_to_mention_converts_bigquery_row(
+    def test_bq_row_to_raw_mention_converts_bigquery_row(
         self,
-        mock_file_source: MagicMock,
         sample_bigquery_row: dict,
     ) -> None:
-        """Test that _dict_to_mention() converts BigQuery row correctly."""
-        endpoint = MentionsEndpoint(file_source=mock_file_source)
-        mention = endpoint._dict_to_mention(sample_bigquery_row)
+        """Test that _bq_row_to_raw_mention() + Mention.from_raw() converts BigQuery row correctly."""
+        from py_gdelt.sources.bigquery import _bq_row_to_raw_mention
 
+        raw = _bq_row_to_raw_mention(sample_bigquery_row)
+        assert isinstance(raw, _RawMention)
+
+        mention = Mention.from_raw(raw)
         assert isinstance(mention, Mention)
         assert mention.global_event_id == 123456789
         assert mention.source_name == "BBC News"
         assert mention.confidence == 85
         assert mention.doc_tone == -2.5
 
-    def test_dict_to_mention_handles_missing_fields(
+    def test_bq_row_to_raw_mention_handles_missing_fields(
         self,
-        mock_file_source: MagicMock,
     ) -> None:
-        """Test that _dict_to_mention() handles missing fields gracefully."""
+        """Test that _bq_row_to_raw_mention() handles missing fields gracefully."""
+        from py_gdelt.sources.bigquery import _bq_row_to_raw_mention
+
         minimal_row = {
-            "GlobalEventID": 123,
-            "EventTimeFullDate": 20240101120000,
-            "MentionTimeFullDate": 20240101130000,
+            "GLOBALEVENTID": 123,
+            "EventTimeDate": 20240101,
+            "MentionTimeDate": 20240101,
             "MentionSourceName": "Test Source",
             "MentionIdentifier": "https://test.com",
         }
 
-        endpoint = MentionsEndpoint(file_source=mock_file_source)
-        mention = endpoint._dict_to_mention(minimal_row)
+        raw = _bq_row_to_raw_mention(minimal_row)
+        assert isinstance(raw, _RawMention)
 
+        mention = Mention.from_raw(raw)
         assert isinstance(mention, Mention)
         assert mention.global_event_id == 123
         assert mention.source_name == "Test Source"
 
-    def test_dict_to_mention_converts_types(
+    def test_bq_row_to_raw_mention_converts_types(
         self,
-        mock_file_source: MagicMock,
     ) -> None:
-        """Test that _dict_to_mention() converts types correctly."""
+        """Test that _bq_row_to_raw_mention() + Mention.from_raw() converts types correctly."""
+        from py_gdelt.sources.bigquery import _bq_row_to_raw_mention
+
         row = {
-            "GlobalEventID": 123,
+            "GLOBALEVENTID": 123,
             "EventTimeDate": 20240101,
-            "EventTimeFullDate": 20240101120000,
             "MentionTimeDate": 20240101,
-            "MentionTimeFullDate": 20240101130000,
             "MentionType": 1,
             "MentionSourceName": "Test",
             "MentionIdentifier": "https://test.com",
@@ -555,8 +561,8 @@ class TestMentionsEndpointDictConversion:
             "MentionDocTone": 5.5,
         }
 
-        endpoint = MentionsEndpoint(file_source=mock_file_source)
-        mention = endpoint._dict_to_mention(row)
+        raw = _bq_row_to_raw_mention(row)
+        mention = Mention.from_raw(raw)
 
         assert mention.global_event_id == 123
         assert mention.mention_type == 1

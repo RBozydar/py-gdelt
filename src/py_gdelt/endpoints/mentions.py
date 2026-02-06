@@ -20,7 +20,7 @@ from py_gdelt.models.events import Mention
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncIterator, Collection, Iterator
 
     from py_gdelt.config import GDELTSettings
     from py_gdelt.filters import EventFilter
@@ -117,6 +117,8 @@ class MentionsEndpoint:
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> FetchResult[Mention]:
         """Query mentions for a specific event and return all results.
 
@@ -127,9 +129,13 @@ class MentionsEndpoint:
             global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True, recommended for mentions)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are returned instead of Mention models.
+            limit: Maximum number of mentions to return (None for unlimited)
 
         Returns:
-            FetchResult[Mention]: Container with list of Mention objects and failure tracking
+            FetchResult[Mention]: Container with list of Mention objects (or raw dicts
+            when ``columns`` is specified)
 
         Raises:
             ConfigurationError: If BigQuery not configured but required
@@ -152,6 +158,22 @@ class MentionsEndpoint:
             use_bigquery,
         )
 
+        # Column projection mode: return raw dicts, skip model conversion
+        if columns is not None:
+            raw_rows: list[dict[str, Any]] = [
+                raw_mention  # type: ignore[misc]
+                async for raw_mention in self._fetcher.fetch_mentions(
+                    global_event_id=global_event_id,
+                    filter_obj=filter_obj,
+                    use_bigquery=use_bigquery,
+                    columns=columns,
+                    limit=limit,
+                )
+            ]
+            if limit is not None:
+                raw_rows = raw_rows[:limit]
+            return FetchResult(data=raw_rows, failed=[])  # type: ignore[arg-type]
+
         # Collect all mentions
         mentions: list[Mention] = [
             mention
@@ -159,6 +181,7 @@ class MentionsEndpoint:
                 global_event_id=global_event_id,
                 filter_obj=filter_obj,
                 use_bigquery=use_bigquery,
+                limit=limit,
             )
         ]
 
@@ -178,6 +201,8 @@ class MentionsEndpoint:
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[Mention]:
         """Stream mentions for a specific event.
 
@@ -188,9 +213,13 @@ class MentionsEndpoint:
             global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True, recommended for mentions)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of Mention models.
+            limit: Maximum number of mentions to yield (None for unlimited)
 
         Yields:
-            Mention: Individual mention records with full type safety
+            Mention: Individual mention records with full type safety (or raw dicts
+            when ``columns`` is specified)
 
         Raises:
             ConfigurationError: If BigQuery not configured but required
@@ -213,75 +242,30 @@ class MentionsEndpoint:
 
         mentions_count = 0
 
-        # Use DataFetcher to query mentions
-        # Note: fetch_mentions() returns AsyncIterator[_RawMention] (or dict from BigQuery)
-        raw_mentions: AsyncIterator[_RawMention | dict[str, Any]] = self._fetcher.fetch_mentions(
+        # DataFetcher.fetch_mentions() now yields _RawMention for all sources
+        raw_mentions: AsyncIterator[_RawMention] = self._fetcher.fetch_mentions(
             global_event_id=global_event_id,
             filter_obj=filter_obj,
             use_bigquery=use_bigquery,
+            columns=columns,
+            limit=limit,
         )
 
         # Convert _RawMention to Mention at yield boundary
         async for raw_mention in raw_mentions:
-            # DataFetcher.fetch_mentions() returns dicts from BigQuery
-            # We need to convert them to Mention
-            # For now, assume BigQuery returns compatible dict structure
-            if isinstance(raw_mention, dict):
-                # BigQuery returns dict - convert to Mention directly
-                # This is a simplified implementation - in production, we'd need proper BigQuery row mapping
-                mention = self._dict_to_mention(raw_mention)
+            if columns is not None:
+                # Column projection: yield raw dict directly
+                yield raw_mention  # type: ignore[misc]
+                mentions_count += 1
             else:
-                # File source would return _RawMention (though mentions don't come from files typically)
                 mention = Mention.from_raw(raw_mention)
+                mentions_count += 1
+                yield mention
 
-            mentions_count += 1
-            yield mention
+            if limit is not None and mentions_count >= limit:
+                return
 
         logger.debug("Streamed %d mentions for event %s", mentions_count, global_event_id)
-
-    def _dict_to_mention(self, row: dict[str, Any]) -> Mention:
-        """Convert BigQuery row dict to Mention model.
-
-        This is a helper to bridge the gap between BigQuery result dicts and our Pydantic models.
-        BigQuery returns rows as dictionaries, which we need to map to our internal structure.
-
-        Args:
-            row: BigQuery row as dictionary
-
-        Returns:
-            Mention: Validated Mention instance
-
-        Note:
-            This is a temporary implementation. In production, we'd use a proper BigQuery row mapper
-            that handles field name translations and type conversions.
-        """
-        # Import here to avoid circular dependency
-        from py_gdelt.models._internal import _RawMention
-
-        # Map BigQuery column names to _RawMention fields
-        # BigQuery uses different naming (e.g., EventTimeDate vs event_time_date)
-        raw_mention = _RawMention(
-            global_event_id=str(row.get("GlobalEventID", "")),
-            event_time_date=str(row.get("EventTimeDate", "")),
-            event_time_full=str(row.get("EventTimeFullDate", "")),
-            mention_time_date=str(row.get("MentionTimeDate", "")),
-            mention_time_full=str(row.get("MentionTimeFullDate", "")),
-            mention_type=str(row.get("MentionType", "1")),
-            mention_source_name=str(row.get("MentionSourceName", "")),
-            mention_identifier=str(row.get("MentionIdentifier", "")),
-            sentence_id=str(row.get("SentenceID", "0")),
-            actor1_char_offset=str(row.get("Actor1CharOffset", "")),
-            actor2_char_offset=str(row.get("Actor2CharOffset", "")),
-            action_char_offset=str(row.get("ActionCharOffset", "")),
-            in_raw_text=str(row.get("InRawText", "0")),
-            confidence=str(row.get("Confidence", "50")),
-            mention_doc_length=str(row.get("MentionDocLen", "0")),
-            mention_doc_tone=str(row.get("MentionDocTone", "0.0")),
-            mention_doc_translation_info=row.get("MentionDocTranslationInfo"),
-            extras=row.get("Extras"),
-        )
-
-        return Mention.from_raw(raw_mention)
 
     def query_sync(
         self,
@@ -289,6 +273,8 @@ class MentionsEndpoint:
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> FetchResult[Mention]:
         """Synchronous wrapper for query().
 
@@ -299,9 +285,13 @@ class MentionsEndpoint:
             global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are returned instead of Mention models.
+            limit: Maximum number of mentions to return (None for unlimited)
 
         Returns:
-            FetchResult[Mention]: Container with list of Mention objects
+            FetchResult[Mention]: Container with list of Mention objects (or raw dicts
+            when ``columns`` is specified)
 
         Raises:
             ConfigurationError: If BigQuery not configured but required
@@ -320,6 +310,8 @@ class MentionsEndpoint:
                 global_event_id=global_event_id,
                 filter_obj=filter_obj,
                 use_bigquery=use_bigquery,
+                columns=columns,
+                limit=limit,
             ),
         )
 
@@ -329,6 +321,8 @@ class MentionsEndpoint:
         filter_obj: EventFilter,
         *,
         use_bigquery: bool = True,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> Iterator[Mention]:
         """Synchronous wrapper for stream().
 
@@ -343,9 +337,13 @@ class MentionsEndpoint:
             global_event_id: Global event ID to fetch mentions for (integer)
             filter_obj: Filter with date range for the query window
             use_bigquery: If True, use BigQuery directly (default: True)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of Mention models.
+            limit: Maximum number of mentions to yield (None for unlimited)
 
         Returns:
-            Iterator of individual Mention records
+            Iterator of individual Mention records (or raw dicts when ``columns``
+            is specified)
 
         Raises:
             ConfigurationError: If BigQuery not configured but required
@@ -366,6 +364,8 @@ class MentionsEndpoint:
                 global_event_id=global_event_id,
                 filter_obj=filter_obj,
                 use_bigquery=use_bigquery,
+                columns=columns,
+                limit=limit,
             ):
                 yield mention
 

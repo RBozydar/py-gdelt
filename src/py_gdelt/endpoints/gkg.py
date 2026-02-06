@@ -19,10 +19,11 @@ from py_gdelt.models.gkg import GKGRecord
 
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncIterator, Collection, Iterator
 
     from py_gdelt.config import GDELTSettings
     from py_gdelt.filters import GKGFilter
+    from py_gdelt.sources.aggregation import Aggregation, AggregationResult, GKGUnnestField
     from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.fetcher import ErrorPolicy
     from py_gdelt.sources.files import FileSource
@@ -190,6 +191,8 @@ class GKGEndpoint:
         filter_obj: GKGFilter,
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> FetchResult[GKGRecord]:
         """Query GKG data with automatic fallback and return all results.
 
@@ -203,9 +206,14 @@ class GKGEndpoint:
         Args:
             filter_obj: GKG filter with date range and query parameters
             use_bigquery: If True, skip files and use BigQuery directly (default: False)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are returned instead of GKGRecord models.
+                Requires ``use_bigquery=True`` for meaningful effect.
+            limit: Maximum number of records to return (None for unlimited)
 
         Returns:
-            FetchResult[GKGRecord] containing all matching records and any failures
+            FetchResult[GKGRecord] containing all matching records (or raw dicts
+            when ``columns`` is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available/enabled
@@ -228,9 +236,29 @@ class GKGEndpoint:
             >>> for record in result:
             ...     print(record.record_id, record.tone.tone if record.tone else None)
         """
+        # Column projection mode: return raw dicts, skip model conversion/filter
+        if columns is not None:
+            raw_rows: list[dict[str, Any]] = [
+                raw_gkg
+                async for raw_gkg in self._fetcher.fetch_gkg(
+                    filter_obj,
+                    use_bigquery=use_bigquery,
+                    columns=columns,
+                    limit=limit,
+                )
+            ]
+            if limit is not None:
+                raw_rows = raw_rows[:limit]
+            return FetchResult(data=raw_rows, failed=[])  # type: ignore[arg-type]
+
         records: list[GKGRecord] = [
-            record async for record in self.stream(filter_obj, use_bigquery=use_bigquery)
+            record
+            async for record in self.stream(filter_obj, use_bigquery=use_bigquery, limit=limit)
         ]
+
+        # Apply limit after client-side filtering
+        if limit is not None:
+            records = records[:limit]
 
         logger.info("GKG query completed: %d records fetched", len(records))
 
@@ -242,6 +270,8 @@ class GKGEndpoint:
         filter_obj: GKGFilter,
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> AsyncIterator[GKGRecord]:
         """Stream GKG records with automatic fallback.
 
@@ -255,9 +285,14 @@ class GKGEndpoint:
         Args:
             filter_obj: GKG filter with date range and query parameters
             use_bigquery: If True, skip files and use BigQuery directly (default: False)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of GKGRecord models.
+                Requires ``use_bigquery=True`` for meaningful effect.
+            limit: Maximum number of records to yield (None for unlimited)
 
         Yields:
-            GKGRecord: Individual GKG records matching the filter criteria
+            GKGRecord: Individual GKG records matching the filter criteria (or raw dicts
+            when ``columns`` is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available/enabled
@@ -281,8 +316,21 @@ class GKGEndpoint:
         """
         logger.debug("Starting GKG stream for filter: %s", filter_obj)
 
+        count = 0
+        # Build kwargs conditionally so columns is only passed when specified
+        fetch_kwargs: dict[str, Any] = {"use_bigquery": use_bigquery, "limit": limit}
+        if columns is not None:
+            fetch_kwargs["columns"] = columns
         # Use DataFetcher to fetch raw GKG records
-        async for raw_gkg in self._fetcher.fetch_gkg(filter_obj, use_bigquery=use_bigquery):
+        async for raw_gkg in self._fetcher.fetch_gkg(filter_obj, **fetch_kwargs):
+            if columns is not None:
+                # Column projection: yield raw dict directly
+                yield raw_gkg
+                count += 1
+                if limit is not None and count >= limit:
+                    return
+                continue
+
             # Convert _RawGKG to GKGRecord at yield boundary
             try:
                 record = GKGRecord.from_raw(raw_gkg)
@@ -292,6 +340,10 @@ class GKGEndpoint:
                     continue
 
                 yield record
+                count += 1
+
+                if limit is not None and count >= limit:
+                    return
             except Exception as e:  # noqa: BLE001
                 # Error boundary: log conversion errors but continue processing other records
                 logger.warning("Failed to convert raw GKG record to GKGRecord: %s", e)
@@ -302,6 +354,8 @@ class GKGEndpoint:
         filter_obj: GKGFilter,
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> FetchResult[GKGRecord]:
         """Synchronous wrapper for query().
 
@@ -311,9 +365,13 @@ class GKGEndpoint:
         Args:
             filter_obj: GKG filter with date range and query parameters
             use_bigquery: If True, skip files and use BigQuery directly (default: False)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are returned instead of GKGRecord models.
+            limit: Maximum number of records to return (None for unlimited)
 
         Returns:
-            FetchResult[GKGRecord] containing all matching records and any failures
+            FetchResult[GKGRecord] containing all matching records (or raw dicts
+            when ``columns`` is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available/enabled
@@ -334,13 +392,17 @@ class GKGEndpoint:
             >>> for record in result:
             ...     print(record.record_id)
         """
-        return asyncio.run(self.query(filter_obj, use_bigquery=use_bigquery))
+        return asyncio.run(
+            self.query(filter_obj, use_bigquery=use_bigquery, columns=columns, limit=limit)
+        )
 
     def stream_sync(
         self,
         filter_obj: GKGFilter,
         *,
         use_bigquery: bool = False,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
     ) -> Iterator[GKGRecord]:
         """Synchronous wrapper for stream().
 
@@ -353,9 +415,13 @@ class GKGEndpoint:
         Args:
             filter_obj: GKG filter with date range and query parameters
             use_bigquery: If True, skip files and use BigQuery directly (default: False)
+            columns: Optional collection of BigQuery column names for column projection.
+                When specified, raw dicts are yielded instead of GKGRecord models.
+            limit: Maximum number of records to yield (None for unlimited)
 
         Returns:
-            Iterator of GKGRecord instances for each matching record
+            Iterator of GKGRecord instances (or raw dicts when ``columns``
+            is specified)
 
         Raises:
             RateLimitError: If rate limited and fallback not available/enabled
@@ -380,7 +446,9 @@ class GKGEndpoint:
 
         async def _async_generator() -> AsyncIterator[GKGRecord]:
             """Internal async generator for sync wrapper."""
-            async for record in self.stream(filter_obj, use_bigquery=use_bigquery):
+            async for record in self.stream(
+                filter_obj, use_bigquery=use_bigquery, columns=columns, limit=limit
+            ):
                 yield record
 
         # Run async generator and yield results synchronously
@@ -396,3 +464,119 @@ class GKGEndpoint:
                     break
         finally:
             loop.close()
+
+    async def aggregate(
+        self,
+        filter_obj: GKGFilter,
+        *,
+        group_by: list[str | GKGUnnestField],
+        aggregations: list[Aggregation],
+        order_by: str | None = None,
+        ascending: bool = False,
+        limit: int | None = None,
+    ) -> AggregationResult:
+        """Run an aggregation query against the GDELT GKG table via BigQuery.
+
+        Supports UNNEST(SPLIT(...)) for semicolon-delimited GKG fields such as
+        themes, persons, and organizations. At most one ``GKGUnnestField`` may
+        appear in ``group_by`` per query.
+
+        Requires BigQuery credentials to be configured.
+
+        Args:
+            filter_obj: GKG filter with date range and query parameters.
+            group_by: Column names or ``GKGUnnestField`` values to group by.
+            aggregations: List of aggregation specifications.
+            order_by: Column or alias to order results by. Defaults to the
+                first aggregation alias (descending) when ``limit`` is set.
+            ascending: If True, sort ascending; otherwise descending.
+            limit: Maximum number of result rows.
+
+        Returns:
+            AggregationResult with rows, group_by columns, and metadata.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or query execution fails.
+            SecurityError: If an alias fails sanitization.
+
+        Example:
+            >>> from py_gdelt.sources.aggregation import (
+            ...     AggFunc, Aggregation, GKGUnnestField,
+            ... )
+            >>> result = await endpoint.aggregate(
+            ...     filter_obj,
+            ...     group_by=[GKGUnnestField.THEMES],
+            ...     aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            ...     limit=20,
+            ... )
+            >>> for row in result.rows:
+            ...     print(row["themes"], row["cnt"])
+        """
+        from py_gdelt.exceptions import ConfigurationError
+
+        bq: BigQuerySource | None = self._fetcher.bigquery_source
+        if bq is None:
+            msg = (
+                "Aggregation queries require BigQuery credentials. "
+                "Please configure GDELT_BIGQUERY_PROJECT and optionally "
+                "GDELT_BIGQUERY_CREDENTIALS."
+            )
+            raise ConfigurationError(msg)
+
+        return await bq.aggregate_gkg(
+            filter_obj,
+            group_by=group_by,
+            aggregations=aggregations,
+            order_by=order_by,
+            ascending=ascending,
+            limit=limit,
+        )
+
+    def aggregate_sync(
+        self,
+        filter_obj: GKGFilter,
+        *,
+        group_by: list[str | GKGUnnestField],
+        aggregations: list[Aggregation],
+        order_by: str | None = None,
+        ascending: bool = False,
+        limit: int | None = None,
+    ) -> AggregationResult:
+        """Synchronous wrapper for aggregate().
+
+        Args:
+            filter_obj: GKG filter with date range and query parameters.
+            group_by: Column names or ``GKGUnnestField`` values to group by.
+            aggregations: List of aggregation specifications.
+            order_by: Column or alias to order results by.
+            ascending: If True, sort ascending; otherwise descending.
+            limit: Maximum number of result rows.
+
+        Returns:
+            AggregationResult with rows, group_by columns, and metadata.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or query execution fails.
+            SecurityError: If an alias fails sanitization.
+            RuntimeError: If called from within an already running event loop.
+
+        Example:
+            >>> result = endpoint.aggregate_sync(
+            ...     filter_obj,
+            ...     group_by=[GKGUnnestField.THEMES],
+            ...     aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            ...     limit=20,
+            ... )
+        """
+        return asyncio.run(
+            self.aggregate(
+                filter_obj,
+                group_by=group_by,
+                aggregations=aggregations,
+                order_by=order_by,
+                ascending=ascending,
+                limit=limit,
+            ),
+        )

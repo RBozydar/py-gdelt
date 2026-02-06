@@ -284,7 +284,7 @@ class TestDataFetcherFallback:
         events = [event async for event in fetcher.fetch(event_filter, mock_parser)]
 
         assert len(events) == 1
-        assert events[0]["GLOBALEVENTID"] == "123"
+        assert events[0].global_event_id == "123"
 
     @pytest.mark.asyncio
     async def test_fallback_on_api_error(
@@ -317,7 +317,7 @@ class TestDataFetcherFallback:
         events = [event async for event in fetcher.fetch(event_filter, mock_parser)]
 
         assert len(events) == 1
-        assert events[0]["GLOBALEVENTID"] == "456"
+        assert events[0].global_event_id == "456"
 
     @pytest.mark.asyncio
     async def test_no_fallback_when_disabled(
@@ -403,7 +403,7 @@ class TestDataFetcherUseBigQuery:
         ]
 
         assert len(events) == 1
-        assert events[0]["GLOBALEVENTID"] == "789"
+        assert events[0].global_event_id == "789"
 
         # Verify file source was NOT called
         mock_file_source.get_files_for_date_range.assert_not_called()
@@ -509,7 +509,7 @@ class TestDataFetcherConvenienceMethods:
         """Test fetch_mentions with BigQuery configured."""
 
         # Mock BigQuery to return mentions
-        async def mock_query_mentions(global_event_id, columns=None, date_range=None):  # type: ignore[no-untyped-def]
+        async def mock_query_mentions(global_event_id, columns=None, date_range=None, limit=None):  # type: ignore[no-untyped-def]
             yield {
                 "GLOBALEVENTID": global_event_id,
                 "MentionTimeDate": "20240101",
@@ -528,7 +528,7 @@ class TestDataFetcherConvenienceMethods:
         mentions = [mention async for mention in fetcher.fetch_mentions("123", event_filter)]
 
         assert len(mentions) == 1
-        assert mentions[0]["GLOBALEVENTID"] == "123"
+        assert mentions[0].global_event_id == "123"
 
     @pytest.mark.asyncio
     async def test_fetch_ngrams(

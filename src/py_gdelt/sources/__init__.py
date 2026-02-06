@@ -6,9 +6,29 @@ This package provides different sources for fetching GDELT data:
 - DataFetcher: Orchestrator with automatic fallback between sources
 """
 
+from py_gdelt.sources.aggregation import (
+    AggFunc,
+    Aggregation,
+    AggregationResult,
+    GKGUnnestField,
+)
 from py_gdelt.sources.bigquery import BigQuerySource
+from py_gdelt.sources.columns import EventColumns, GKGColumns, MentionColumns
 from py_gdelt.sources.fetcher import DataFetcher, ErrorPolicy, Parser
 from py_gdelt.sources.files import FileSource
 
 
-__all__ = ["BigQuerySource", "DataFetcher", "ErrorPolicy", "FileSource", "Parser"]
+__all__ = [
+    "AggFunc",
+    "Aggregation",
+    "AggregationResult",
+    "BigQuerySource",
+    "DataFetcher",
+    "ErrorPolicy",
+    "EventColumns",
+    "FileSource",
+    "GKGColumns",
+    "GKGUnnestField",
+    "MentionColumns",
+    "Parser",
+]

@@ -5,13 +5,16 @@ This module tests the BigQuery data source with a focus on:
 - Credential handling: Validation, error messages, ADC vs explicit credentials
 - Query building: WHERE clause generation, parameter binding
 - Async execution: run_in_executor usage, streaming results
+- BQ name mapping: PascalCase to snake_case conversion for _Raw* dataclasses
+- Aggregation: GROUP BY queries, UNNEST, aliases, ORDER BY
+- Column profiles: Predefined column subsets
 """
 
 import re
 from datetime import date
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from google.cloud import bigquery
@@ -20,13 +23,26 @@ from google.cloud.exceptions import GoogleCloudError
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import BigQueryError, ConfigurationError, SecurityError
 from py_gdelt.filters import DateRange, EventFilter, GKGFilter
+from py_gdelt.sources.aggregation import (
+    AggFunc,
+    Aggregation,
+    GKGUnnestField,
+)
 from py_gdelt.sources.bigquery import (
+    _BQ_EVENT_MAP,
+    _BQ_GKG_MAP,
+    _BQ_MENTION_MAP,
+    ALLOWED_COLUMNS,
     BigQuerySource,
+    _bq_row_to_raw_event,
+    _bq_row_to_raw_gkg,
+    _bq_row_to_raw_mention,
     _build_where_clause_for_events,
     _build_where_clause_for_gkg,
     _validate_columns,
     _validate_credential_path,
 )
+from py_gdelt.sources.columns import EventColumns, GKGColumns, MentionColumns
 
 
 @pytest.fixture
@@ -629,3 +645,646 @@ class TestSecurityFeatures:
             error_msg = str(e)
             assert "credentials.json" not in error_msg.lower()
             assert "service_account" not in error_msg.lower()
+
+
+class TestBQNameMapping:
+    """Test BigQuery column name → _Raw* field name mapping."""
+
+    def test_bq_event_map_keys_match_allowed_columns(self) -> None:
+        assert set(_BQ_EVENT_MAP.keys()) == ALLOWED_COLUMNS["events"]
+
+    def test_bq_gkg_map_keys_match_allowed_columns(self) -> None:
+        assert set(_BQ_GKG_MAP.keys()) == ALLOWED_COLUMNS["gkg"]
+
+    def test_bq_mention_map_keys_match_allowed_columns(self) -> None:
+        assert set(_BQ_MENTION_MAP.keys()) == ALLOWED_COLUMNS["eventmentions"]
+
+    def test_bq_row_to_raw_event_basic(self) -> None:
+        row = {
+            "GLOBALEVENTID": "123456",
+            "SQLDATE": "20240101",
+            "MonthYear": "202401",
+            "Year": "2024",
+            "FractionDate": "2024.0001",
+            "Actor1Code": "USA",
+            "Actor1Name": "UNITED STATES",
+            "Actor1CountryCode": "US",
+            "IsRootEvent": "1",
+            "EventCode": "010",
+            "EventBaseCode": "01",
+            "EventRootCode": "01",
+            "QuadClass": "1",
+            "GoldsteinScale": "3.5",
+            "NumMentions": "10",
+            "NumSources": "5",
+            "NumArticles": "8",
+            "AvgTone": "2.5",
+            "DATEADDED": "20240101120000",
+            "SOURCEURL": "http://example.com",
+        }
+
+        raw = _bq_row_to_raw_event(row)
+        assert raw.global_event_id == "123456"
+        assert raw.sql_date == "20240101"
+        assert raw.actor1_code == "USA"
+        assert raw.actor1_name == "UNITED STATES"
+        assert raw.event_code == "010"
+        assert raw.avg_tone == "2.5"
+        assert raw.source_url == "http://example.com"
+
+    def test_bq_row_to_raw_event_none_required_field(self) -> None:
+        row: dict[str, Any] = {
+            "GLOBALEVENTID": None,
+            "SQLDATE": "20240101",
+            "MonthYear": "202401",
+            "Year": "2024",
+            "FractionDate": "2024.0001",
+            "IsRootEvent": "1",
+            "EventCode": "010",
+            "EventBaseCode": "01",
+            "EventRootCode": "01",
+            "QuadClass": "1",
+            "GoldsteinScale": "3.5",
+            "NumMentions": "10",
+            "NumSources": "5",
+            "NumArticles": "8",
+            "AvgTone": "2.5",
+            "DATEADDED": "20240101120000",
+        }
+
+        raw = _bq_row_to_raw_event(row)
+        # None on a required field should become ""
+        assert raw.global_event_id == ""
+
+    def test_bq_row_to_raw_event_none_optional_field(self) -> None:
+        row: dict[str, Any] = {
+            "GLOBALEVENTID": "123",
+            "SQLDATE": "20240101",
+            "MonthYear": "202401",
+            "Year": "2024",
+            "FractionDate": "2024.0001",
+            "Actor1Code": None,
+            "Actor1Name": None,
+            "IsRootEvent": "1",
+            "EventCode": "010",
+            "EventBaseCode": "01",
+            "EventRootCode": "01",
+            "QuadClass": "1",
+            "GoldsteinScale": "3.5",
+            "NumMentions": "10",
+            "NumSources": "5",
+            "NumArticles": "8",
+            "AvgTone": "2.5",
+            "DATEADDED": "20240101120000",
+        }
+
+        raw = _bq_row_to_raw_event(row)
+        # None on optional fields should stay None
+        assert raw.actor1_code is None
+        assert raw.actor1_name is None
+
+    def test_bq_row_to_raw_event_unknown_columns_dropped(self) -> None:
+        row: dict[str, Any] = {
+            "GLOBALEVENTID": "123",
+            "SQLDATE": "20240101",
+            "MonthYear": "202401",
+            "Year": "2024",
+            "FractionDate": "2024.0001",
+            "IsRootEvent": "1",
+            "EventCode": "010",
+            "EventBaseCode": "01",
+            "EventRootCode": "01",
+            "QuadClass": "1",
+            "GoldsteinScale": "3.5",
+            "NumMentions": "10",
+            "NumSources": "5",
+            "NumArticles": "8",
+            "AvgTone": "2.5",
+            "DATEADDED": "20240101120000",
+            "UnknownColumn": "should_be_dropped",
+            "AnotherExtra": 42,
+        }
+
+        # Should not raise despite extra keys
+        raw = _bq_row_to_raw_event(row)
+        assert raw.global_event_id == "123"
+        # Extra keys should not appear as attributes
+        assert not hasattr(raw, "unknown_column")
+        assert not hasattr(raw, "another_extra")
+
+    def test_bq_row_to_raw_gkg_basic(self) -> None:
+        row = {
+            "GKGRECORDID": "20240101-abc",
+            "DATE": "20240101120000",
+            "SourceCollectionIdentifier": "1",
+            "SourceCommonName": "example.com",
+            "DocumentIdentifier": "http://example.com/article",
+            "Counts": "",
+            "V2Counts": "",
+            "Themes": "ENV_CLIMATECHANGE",
+            "V2Themes": "ENV_CLIMATECHANGE,1",
+            "Locations": "",
+            "V2Locations": "",
+            "Persons": "",
+            "V2Persons": "",
+            "Organizations": "",
+            "V2Organizations": "",
+            "V2Tone": "-2.5,3.0,5.5,1.0,10.0,5.0,200",
+            "Dates": "",
+            "GCAM": "",
+        }
+
+        raw = _bq_row_to_raw_gkg(row)
+        assert raw.gkg_record_id == "20240101-abc"
+        assert raw.source_common_name == "example.com"
+        assert raw.tone == "-2.5,3.0,5.5,1.0,10.0,5.0,200"
+        # Optional fields not present should be None
+        assert raw.sharing_image is None
+        assert raw.quotations is None
+
+    def test_bq_row_to_raw_mention_basic(self) -> None:
+        row = {
+            "GLOBALEVENTID": "123456",
+            "EventTimeDate": "20240101120000",
+            "MentionTimeDate": "20240101130000",
+            "MentionType": "1",
+            "MentionSourceName": "bbc.co.uk",
+            "MentionIdentifier": "http://bbc.co.uk/article",
+            "SentenceID": "3",
+            "Actor1CharOffset": "100",
+            "Actor2CharOffset": "200",
+            "ActionCharOffset": "150",
+            "InRawText": "1",
+            "Confidence": "80",
+            "MentionDocLen": "5000",
+            "MentionDocTone": "-1.5",
+        }
+
+        raw = _bq_row_to_raw_mention(row)
+        assert raw.global_event_id == "123456"
+        assert raw.mention_source_name == "bbc.co.uk"
+        assert raw.confidence == "80"
+        # Optional fields not present should be None
+        assert raw.mention_doc_translation_info is None
+        assert raw.extras is None
+
+    def test_bq_row_to_raw_mention_sets_empty_time_full(self) -> None:
+        row = {
+            "GLOBALEVENTID": "123",
+            "EventTimeDate": "20240101120000",
+            "MentionTimeDate": "20240101130000",
+            "MentionType": "1",
+            "MentionSourceName": "cnn.com",
+            "MentionIdentifier": "http://cnn.com/article",
+            "SentenceID": "1",
+            "Actor1CharOffset": "50",
+            "Actor2CharOffset": "100",
+            "ActionCharOffset": "75",
+            "InRawText": "1",
+            "Confidence": "90",
+            "MentionDocLen": "3000",
+            "MentionDocTone": "0.5",
+        }
+
+        raw = _bq_row_to_raw_mention(row)
+        # BQ eventmentions table lacks these columns; they should be empty strings
+        assert raw.event_time_full == ""
+        assert raw.mention_time_full == ""
+
+
+class TestBigQueryAggregation:
+    """Test BigQuery aggregation query building and execution."""
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_basic(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 5000
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [
+                    {"EventRootCode": "14", "cnt": 100},
+                    {"EventRootCode": "01", "cnt": 50},
+                ],
+            ),
+        )
+
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        result = await source.aggregate_events(
+            filter_obj,
+            group_by=["EventRootCode"],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            limit=10,
+        )
+
+        assert result.total_rows == 2
+        assert result.rows[0]["EventRootCode"] == "14"
+        assert result.bytes_processed == 5000
+
+        # Verify SQL structure
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        assert "GROUP BY" in query
+        assert "EventRootCode" in query
+        assert "COUNT(*) AS cnt" in query
+        assert "LIMIT 10" in query
+        assert "ORDER BY" in query  # auto-order when limit set
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_invalid_group_by(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            await source.aggregate_events(
+                filter_obj,
+                group_by=["InvalidColumn"],
+                aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            )
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_invalid_agg_column(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            await source.aggregate_events(
+                filter_obj,
+                group_by=["EventRootCode"],
+                aggregations=[
+                    Aggregation(func=AggFunc.AVG, column="NonexistentColumn", alias="avg_bad"),
+                ],
+            )
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_invalid_alias(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(SecurityError, match="Invalid alias"):
+            await source.aggregate_events(
+                filter_obj,
+                group_by=["EventRootCode"],
+                aggregations=[
+                    Aggregation(func=AggFunc.COUNT, alias="cnt; DROP TABLE --"),
+                ],
+            )
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_count_distinct(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 3000
+        mock_job.__iter__ = Mock(return_value=iter([{"EventRootCode": "14", "unique_actors": 42}]))
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        await source.aggregate_events(
+            filter_obj,
+            group_by=["EventRootCode"],
+            aggregations=[
+                Aggregation(
+                    func=AggFunc.COUNT_DISTINCT,
+                    column="Actor1CountryCode",
+                    alias="unique_actors",
+                ),
+            ],
+        )
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        assert "COUNT(DISTINCT Actor1CountryCode)" in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_auto_alias(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 1000
+        mock_job.__iter__ = Mock(return_value=iter([{"EventRootCode": "14", "count_star": 10}]))
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        # No alias provided - should auto-generate
+        await source.aggregate_events(
+            filter_obj,
+            group_by=["EventRootCode"],
+            aggregations=[Aggregation(func=AggFunc.COUNT)],
+        )
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        # Auto-generated alias should be "count_star"
+        assert "COUNT(*) AS count_star" in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_limit_with_default_order(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 1000
+        mock_job.__iter__ = Mock(return_value=iter([]))
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        await source.aggregate_events(
+            filter_obj,
+            group_by=["EventRootCode"],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            limit=5,
+        )
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        # When limit is set and no explicit order_by, should order by first agg alias DESC
+        assert "ORDER BY cnt DESC" in query
+        assert "LIMIT 5" in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_explicit_order(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 1000
+        mock_job.__iter__ = Mock(return_value=iter([]))
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        await source.aggregate_events(
+            filter_obj,
+            group_by=["EventRootCode"],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            order_by="cnt",
+            ascending=True,
+        )
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        assert "ORDER BY cnt ASC" in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_flat_columns(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 2000
+        mock_job.__iter__ = Mock(
+            return_value=iter([{"SourceCommonName": "bbc.co.uk", "cnt": 500}]),
+        )
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        result = await source.aggregate_gkg(
+            filter_obj,
+            group_by=["SourceCommonName"],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+        )
+
+        assert result.total_rows == 1
+        assert result.rows[0]["SourceCommonName"] == "bbc.co.uk"
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        assert "GROUP BY" in query
+        assert "SourceCommonName" in query
+        # No UNNEST for flat columns
+        assert "UNNEST" not in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_with_unnest(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 8000
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [
+                    {"themes": "ENV_CLIMATECHANGE", "cnt": 1000},
+                    {"themes": "TAX_POLICY", "cnt": 500},
+                ],
+            ),
+        )
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        result = await source.aggregate_gkg(
+            filter_obj,
+            group_by=[GKGUnnestField.THEMES],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            limit=20,
+        )
+
+        assert result.total_rows == 2
+        assert result.group_by == ["themes"]
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        assert "UNNEST(SPLIT(" in query
+        assert "V2Themes" in query
+        assert "SPLIT(item" in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_multiple_unnest_fields_error(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(BigQueryError, match="Only one GKGUnnestField"):
+            await source.aggregate_gkg(
+                filter_obj,
+                group_by=[GKGUnnestField.THEMES, GKGUnnestField.PERSONS],
+                aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            )
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_unnest_filters_empty(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 1000
+        mock_job.__iter__ = Mock(return_value=iter([]))
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        await source.aggregate_gkg(
+            filter_obj,
+            group_by=[GKGUnnestField.ORGANIZATIONS],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+        )
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        # Should filter out empty string items from UNNEST
+        assert "item != ''" in query
+
+
+class TestColumnProfiles:
+    """Test predefined column subsets are valid subsets of allowed columns."""
+
+    def test_event_columns_core_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["events"] >= EventColumns.CORE
+
+    def test_event_columns_actors_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["events"] >= EventColumns.ACTORS
+
+    def test_event_columns_geography_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["events"] >= EventColumns.GEOGRAPHY
+
+    def test_event_columns_metrics_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["events"] >= EventColumns.METRICS
+
+    def test_gkg_columns_core_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["gkg"] >= GKGColumns.CORE
+
+    def test_gkg_columns_entities_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["gkg"] >= GKGColumns.ENTITIES
+
+    def test_gkg_columns_full_text_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["gkg"] >= GKGColumns.FULL_TEXT
+
+    def test_mention_columns_core_subset_of_allowed(self) -> None:
+        assert ALLOWED_COLUMNS["eventmentions"] >= MentionColumns.CORE
+
+
+class TestEndpointAggregateNoBigQuery:
+    """Test that endpoint aggregate methods raise when BigQuery is not configured."""
+
+    @pytest.mark.asyncio
+    async def test_events_aggregate_no_bigquery_raises(self) -> None:
+        from py_gdelt.endpoints.events import EventsEndpoint
+
+        mock_file_source = MagicMock()
+        endpoint = EventsEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=None,
+        )
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(ConfigurationError, match="Aggregation queries require BigQuery"):
+            await endpoint.aggregate(
+                filter_obj,
+                group_by=["EventRootCode"],
+                aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            )
+
+    @pytest.mark.asyncio
+    async def test_gkg_aggregate_no_bigquery_raises(self) -> None:
+        from py_gdelt.endpoints.gkg import GKGEndpoint
+
+        mock_file_source = MagicMock()
+        endpoint = GKGEndpoint(file_source=mock_file_source, bigquery_source=None)
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(ConfigurationError, match="Aggregation queries require BigQuery"):
+            await endpoint.aggregate(
+                filter_obj,
+                group_by=["SourceCommonName"],
+                aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            )
