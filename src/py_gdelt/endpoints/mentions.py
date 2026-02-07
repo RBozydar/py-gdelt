@@ -23,11 +23,12 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Collection, Iterator
 
     from py_gdelt.config import GDELTSettings
-    from py_gdelt.filters import EventFilter
+    from py_gdelt.filters import DateRange, EventFilter
     from py_gdelt.models._internal import _RawMention
     from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.fetcher import DataFetcher, ErrorPolicy
     from py_gdelt.sources.files import FileSource
+    from py_gdelt.sources.metadata import QueryEstimate
 
 __all__ = ["MentionsEndpoint"]
 
@@ -382,3 +383,89 @@ class MentionsEndpoint:
                     break
         finally:
             loop.close()
+
+    async def estimate(
+        self,
+        global_event_id: int,
+        *,
+        columns: Collection[str] | None = None,
+        date_range: DateRange | None = None,
+        limit: int | None = None,
+    ) -> QueryEstimate:
+        """Estimate the cost of a Mentions query via a BigQuery dry run.
+
+        Performs a BigQuery dry run to determine how many bytes the query would
+        scan. No data is read and no charges are incurred.
+
+        Args:
+            global_event_id: Global event ID to query mentions for.
+            columns: Optional column names for projection (defaults to all).
+            date_range: Optional date range for partition pruning.
+            limit: Maximum number of rows the query would return.
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or the dry run fails.
+
+        Example:
+            >>> estimate = await endpoint.estimate(123456789, limit=1000)
+            >>> print(f"Would scan {estimate.bytes_processed} bytes")
+            >>> print(estimate.query)
+        """
+        from py_gdelt.exceptions import ConfigurationError
+
+        if self._fetcher.bigquery_source is None:
+            msg = (
+                "Estimate queries require BigQuery credentials. "
+                "Please configure GDELT_BIGQUERY_PROJECT and optionally "
+                "GDELT_BIGQUERY_CREDENTIALS."
+            )
+            raise ConfigurationError(msg)
+
+        columns_list = list(columns) if columns is not None else None
+        return await self._fetcher.bigquery_source.estimate_mentions(
+            global_event_id,
+            columns=columns_list,
+            date_range=date_range,
+            limit=limit,
+        )
+
+    def estimate_sync(
+        self,
+        global_event_id: int,
+        *,
+        columns: Collection[str] | None = None,
+        date_range: DateRange | None = None,
+        limit: int | None = None,
+    ) -> QueryEstimate:
+        """Synchronous wrapper for estimate().
+
+        Args:
+            global_event_id: Global event ID to query mentions for.
+            columns: Optional column names for projection (defaults to all).
+            date_range: Optional date range for partition pruning.
+            limit: Maximum number of rows the query would return.
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or the dry run fails.
+            RuntimeError: If called from within an already running event loop.
+
+        Example:
+            >>> estimate = endpoint.estimate_sync(123456789, limit=1000)
+            >>> print(f"Would scan {estimate.bytes_processed} bytes")
+        """
+        return asyncio.run(
+            self.estimate(
+                global_event_id,
+                columns=columns,
+                date_range=date_range,
+                limit=limit,
+            ),
+        )

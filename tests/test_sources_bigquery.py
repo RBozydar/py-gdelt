@@ -4,14 +4,18 @@ This module tests the BigQuery data source with a focus on:
 - Security: Parameterized queries, column validation, path validation
 - Credential handling: Validation, error messages, ADC vs explicit credentials
 - Query building: WHERE clause generation, parameter binding
+- SQL builder helpers: _build_events_sql, _build_gkg_sql, _build_mentions_sql
+- Dry run estimation: _execute_dry_run, estimate_events, estimate_gkg, estimate_mentions
 - Async execution: run_in_executor usage, streaming results
 - BQ name mapping: PascalCase to snake_case conversion for _Raw* dataclasses
 - Aggregation: GROUP BY queries, UNNEST, aliases, ORDER BY
 - Column profiles: Predefined column subsets
+- QueryMetadata / QueryEstimate model validation
+- last_query_metadata lifecycle
 """
 
 import re
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -19,6 +23,7 @@ from unittest.mock import MagicMock, Mock
 import pytest
 from google.cloud import bigquery
 from google.cloud.exceptions import GoogleCloudError
+from pydantic import ValidationError
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import BigQueryError, ConfigurationError, SecurityError
@@ -43,6 +48,7 @@ from py_gdelt.sources.bigquery import (
     _validate_credential_path,
 )
 from py_gdelt.sources.columns import EventColumns, GKGColumns, MentionColumns
+from py_gdelt.sources.metadata import QueryEstimate, QueryMetadata
 
 
 @pytest.fixture
@@ -1288,3 +1294,827 @@ class TestEndpointAggregateNoBigQuery:
                 group_by=["SourceCommonName"],
                 aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
             )
+
+
+class TestBuildEventsSql:
+    """Test the _build_events_sql helper."""
+
+    def test_returns_default_columns_when_none(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that passing columns=None selects all allowed event columns."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        query, _ = source._build_events_sql(filter_obj, columns=None, limit=None)
+
+        for col in sorted(ALLOWED_COLUMNS["events"]):
+            assert col in query
+
+    def test_respects_explicit_columns(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that explicit columns are used in SELECT."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        query, _ = source._build_events_sql(
+            filter_obj,
+            columns=["GLOBALEVENTID", "EventCode"],
+            limit=None,
+        )
+
+        assert "GLOBALEVENTID" in query
+        assert "EventCode" in query
+        # Should not contain other columns
+        assert "Actor1Name" not in query
+
+    def test_includes_limit(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that LIMIT clause is appended when specified."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        query, _ = source._build_events_sql(filter_obj, columns=None, limit=50)
+
+        assert "LIMIT 50" in query
+
+    def test_no_limit_when_none(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that no LIMIT clause when limit is None."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        query, _ = source._build_events_sql(filter_obj, columns=None, limit=None)
+
+        assert "LIMIT" not in query
+
+    def test_invalid_columns_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that invalid columns raise BigQueryError."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            source._build_events_sql(
+                filter_obj,
+                columns=["GLOBALEVENTID", "INVALID_COL"],
+                limit=None,
+            )
+
+    def test_parameters_include_filters(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that query parameters include all filter values."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = EventFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            actor1_country="USA",
+        )
+
+        query, parameters = source._build_events_sql(filter_obj, columns=None, limit=None)
+
+        assert "@actor1_country" in query
+        param_names = {p.name for p in parameters}
+        assert "start_date" in param_names
+        assert "end_date" in param_names
+        assert "actor1_country" in param_names
+
+
+class TestBuildGkgSql:
+    """Test the _build_gkg_sql helper."""
+
+    def test_returns_default_columns_when_none(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that passing columns=None selects all allowed GKG columns."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        query, _ = source._build_gkg_sql(filter_obj, columns=None, limit=None)
+
+        for col in sorted(ALLOWED_COLUMNS["gkg"]):
+            assert col in query
+
+    def test_includes_theme_filter_parameters(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that GKG theme filter generates correct parameters."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = GKGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            themes=["ENV_CLIMATECHANGE"],
+        )
+
+        query, parameters = source._build_gkg_sql(filter_obj, columns=None, limit=None)
+
+        assert "@theme_pattern" in query
+        param_dict = {p.name: p for p in parameters}
+        assert "theme_pattern" in param_dict
+
+    def test_invalid_columns_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that invalid columns raise BigQueryError."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            source._build_gkg_sql(
+                filter_obj,
+                columns=["GKGRECORDID", "INVALID_COL"],
+                limit=None,
+            )
+
+
+class TestBuildMentionsSql:
+    """Test the _build_mentions_sql helper."""
+
+    def test_returns_default_columns_when_none(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that passing columns=None selects all allowed mention columns."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+
+        query, _ = source._build_mentions_sql(
+            global_event_id=123,
+            columns=None,
+            date_range=None,
+            limit=None,
+        )
+
+        for col in sorted(ALLOWED_COLUMNS["eventmentions"]):
+            assert col in query
+
+    def test_includes_event_id_parameter(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that global_event_id is passed as INT64 parameter."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+
+        query, parameters = source._build_mentions_sql(
+            global_event_id=999,
+            columns=None,
+            date_range=None,
+            limit=None,
+        )
+
+        assert "GLOBALEVENTID = @event_id" in query
+        param_dict = {p.name: p for p in parameters}
+        assert param_dict["event_id"].type_ == "INT64"
+        assert param_dict["event_id"].value == 999
+
+    def test_includes_date_range_parameters(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that date_range adds partition time parameters."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+
+        query, parameters = source._build_mentions_sql(
+            global_event_id=123,
+            columns=None,
+            date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7)),
+            limit=None,
+        )
+
+        assert "_PARTITIONTIME >= @start_date" in query
+        assert "_PARTITIONTIME <= @end_date" in query
+        param_names = {p.name for p in parameters}
+        assert "start_date" in param_names
+        assert "end_date" in param_names
+
+    def test_no_date_range_parameters_when_none(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that no partition parameters when date_range is None."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+
+        query, parameters = source._build_mentions_sql(
+            global_event_id=123,
+            columns=None,
+            date_range=None,
+            limit=None,
+        )
+
+        assert "_PARTITIONTIME" not in query
+        param_names = {p.name for p in parameters}
+        assert "start_date" not in param_names
+
+    def test_invalid_columns_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that invalid columns raise BigQueryError."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            source._build_mentions_sql(
+                global_event_id=123,
+                columns=["GLOBALEVENTID", "INVALID_COL"],
+                date_range=None,
+                limit=None,
+            )
+
+
+class TestExecuteDryRun:
+    """Test the _execute_dry_run method."""
+
+    @pytest.mark.asyncio
+    async def test_returns_query_estimate(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that dry run returns a QueryEstimate with bytes and SQL."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 1_048_576
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        result = await source._execute_dry_run("SELECT 1", [])
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 1_048_576
+        assert result.query == "SELECT 1"
+
+    @pytest.mark.asyncio
+    async def test_strips_query_whitespace(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that the query string is stripped in the estimate."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 500
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        result = await source._execute_dry_run("  SELECT 1  \n", [])
+
+        assert result.query == "SELECT 1"
+
+    @pytest.mark.asyncio
+    async def test_uses_dry_run_config(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that job config sets dry_run=True and use_query_cache=False."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 100
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        await source._execute_dry_run("SELECT 1", [])
+
+        call_args = mock_bigquery_client.query.call_args
+        job_config = call_args[1]["job_config"]
+        assert job_config.dry_run is True
+        assert job_config.use_query_cache is False
+
+    @pytest.mark.asyncio
+    async def test_does_not_apply_maximum_bytes_billed(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that dry run does not set maximum_bytes_billed."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 100
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+            maximum_bytes_billed=1_000_000,
+        )
+        source._credentials_validated = True
+
+        await source._execute_dry_run("SELECT 1", [])
+
+        call_args = mock_bigquery_client.query.call_args
+        job_config = call_args[1]["job_config"]
+        assert job_config.maximum_bytes_billed is None
+
+    @pytest.mark.asyncio
+    async def test_handles_none_bytes_processed(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that None total_bytes_processed defaults to 0."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = None
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        result = await source._execute_dry_run("SELECT 1", [])
+
+        assert result.bytes_processed == 0
+
+    @pytest.mark.asyncio
+    async def test_google_cloud_error_raises_bigquery_error(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that GoogleCloudError is wrapped as BigQueryError."""
+        mock_bigquery_client.query.side_effect = GoogleCloudError("Dry run failed")  # type: ignore[no-untyped-call]
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        with pytest.raises(BigQueryError, match="dry run failed"):
+            await source._execute_dry_run("SELECT 1", [])
+
+
+class TestEstimateMethods:
+    """Test estimate_events, estimate_gkg, and estimate_mentions."""
+
+    @pytest.mark.asyncio
+    async def test_estimate_events_calls_builder_and_dry_run(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that estimate_events uses _build_events_sql and _execute_dry_run."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 2_000_000
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            actor1_country="USA",
+        )
+
+        result = await source.estimate_events(filter_obj, limit=100)
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 2_000_000
+        assert "@start_date" in result.query
+        assert "@actor1_country" in result.query
+        assert "LIMIT 100" in result.query
+
+        # Verify dry_run config was used
+        call_args = mock_bigquery_client.query.call_args
+        job_config = call_args[1]["job_config"]
+        assert job_config.dry_run is True
+
+    @pytest.mark.asyncio
+    async def test_estimate_events_with_columns(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test estimate_events with explicit column list."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 500_000
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        result = await source.estimate_events(
+            filter_obj,
+            columns=["GLOBALEVENTID", "EventCode"],
+        )
+
+        assert "GLOBALEVENTID" in result.query
+        assert "EventCode" in result.query
+
+    @pytest.mark.asyncio
+    async def test_estimate_events_invalid_columns_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that invalid columns raise BigQueryError before dry run."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            await source.estimate_events(filter_obj, columns=["INVALID_COL"])
+
+        # Client should not have been called
+        mock_bigquery_client.query.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_estimate_gkg_calls_builder_and_dry_run(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that estimate_gkg uses _build_gkg_sql and _execute_dry_run."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 3_000_000
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            themes=["ENV_CLIMATECHANGE"],
+        )
+
+        result = await source.estimate_gkg(filter_obj, limit=50)
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 3_000_000
+        assert "@theme_pattern" in result.query
+        assert "LIMIT 50" in result.query
+
+    @pytest.mark.asyncio
+    async def test_estimate_gkg_invalid_columns_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that invalid GKG columns raise BigQueryError."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            await source.estimate_gkg(filter_obj, columns=["INVALID_COL"])
+
+    @pytest.mark.asyncio
+    async def test_estimate_mentions_calls_builder_and_dry_run(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that estimate_mentions uses _build_mentions_sql and _execute_dry_run."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 1_500_000
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        result = await source.estimate_mentions(
+            global_event_id=123456789,
+            date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7)),
+            limit=100,
+        )
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 1_500_000
+        assert "@event_id" in result.query
+        assert "@start_date" in result.query
+        assert "LIMIT 100" in result.query
+
+    @pytest.mark.asyncio
+    async def test_estimate_mentions_without_date_range(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test estimate_mentions without a date range."""
+        mock_job = Mock()
+        mock_job.total_bytes_processed = 800_000
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        result = await source.estimate_mentions(global_event_id=123)
+
+        assert isinstance(result, QueryEstimate)
+        assert "_PARTITIONTIME" not in result.query
+
+    @pytest.mark.asyncio
+    async def test_estimate_mentions_invalid_columns_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that invalid mention columns raise BigQueryError."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        with pytest.raises(BigQueryError, match="Invalid columns"):
+            await source.estimate_mentions(
+                global_event_id=123,
+                columns=["INVALID_COL"],
+            )
+
+    @pytest.mark.asyncio
+    async def test_estimate_without_credentials_raises(self) -> None:
+        """Test that estimate raises ConfigurationError without credentials."""
+        settings = GDELTSettings(
+            bigquery_project=None,
+            bigquery_credentials=None,
+        )
+        source = BigQuerySource(settings=settings)
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        with pytest.raises(ConfigurationError, match="not configured"):
+            await source.estimate_events(filter_obj)
+
+
+class TestQueryMetadata:
+    """Test QueryMetadata Pydantic model."""
+
+    def test_default_values(self) -> None:
+        """Test that all fields are None by default."""
+        meta = QueryMetadata()
+        assert meta.bytes_processed is None
+        assert meta.bytes_billed is None
+        assert meta.cache_hit is None
+        assert meta.slot_millis is None
+        assert meta.total_rows is None
+        assert meta.started is None
+        assert meta.ended is None
+        assert meta.statement_type is None
+
+    def test_full_construction(self) -> None:
+        """Test construction with all fields populated."""
+        started = datetime(2024, 1, 1, 12, 0, 0)
+        ended = datetime(2024, 1, 1, 12, 0, 5)
+
+        meta = QueryMetadata(
+            bytes_processed=1_000_000,
+            bytes_billed=10_485_760,
+            cache_hit=False,
+            slot_millis=5000,
+            total_rows=42,
+            started=started,
+            ended=ended,
+            statement_type="SELECT",
+        )
+
+        assert meta.bytes_processed == 1_000_000
+        assert meta.bytes_billed == 10_485_760
+        assert meta.cache_hit is False
+        assert meta.slot_millis == 5000
+        assert meta.total_rows == 42
+        assert meta.started == started
+        assert meta.ended == ended
+        assert meta.statement_type == "SELECT"
+
+    def test_partial_construction(self) -> None:
+        """Test construction with only some fields populated."""
+        meta = QueryMetadata(
+            bytes_processed=500,
+            cache_hit=True,
+        )
+
+        assert meta.bytes_processed == 500
+        assert meta.cache_hit is True
+        assert meta.bytes_billed is None
+        assert meta.slot_millis is None
+        assert meta.total_rows is None
+        assert meta.started is None
+        assert meta.ended is None
+        assert meta.statement_type is None
+
+
+class TestQueryEstimateModel:
+    """Test QueryEstimate Pydantic model."""
+
+    def test_construction(self) -> None:
+        """Test construction with required fields."""
+        estimate = QueryEstimate(
+            bytes_processed=2_000_000,
+            query="SELECT * FROM table WHERE x = @param",
+        )
+
+        assert estimate.bytes_processed == 2_000_000
+        assert estimate.query == "SELECT * FROM table WHERE x = @param"
+
+    def test_bytes_processed_required(self) -> None:
+        """Test that bytes_processed is required."""
+        with pytest.raises(ValidationError):
+            QueryEstimate(query="SELECT 1")  # type: ignore[call-arg]
+
+    def test_query_required(self) -> None:
+        """Test that query is required."""
+        with pytest.raises(ValidationError):
+            QueryEstimate(bytes_processed=100)  # type: ignore[call-arg]
+
+
+class TestLastQueryMetadata:
+    """Test last_query_metadata lifecycle on BigQuerySource."""
+
+    def test_none_before_any_query(self) -> None:
+        """Test that last_query_metadata is None before any query."""
+        source = BigQuerySource()
+        assert source.last_query_metadata is None
+
+    @pytest.mark.asyncio
+    async def test_populated_after_execute_query(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+    ) -> None:
+        """Test that last_query_metadata is populated after _execute_query."""
+        # Build a mock query job with metadata attributes
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 1000
+        mock_job.total_bytes_billed = 10_485_760
+        mock_job.cache_hit = True
+        mock_job.slot_millis = 250
+        mock_job.total_rows = 5
+        mock_job.started = datetime(2024, 1, 1, 12, 0, 0)
+        mock_job.ended = datetime(2024, 1, 1, 12, 0, 1)
+        mock_job.statement_type = "SELECT"
+        mock_job.__iter__ = Mock(return_value=iter([]))
+
+        mock_client = Mock(spec=bigquery.Client)
+        mock_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_client,
+        )
+        source._credentials_validated = True
+
+        # Verify metadata is None before query
+        assert source.last_query_metadata is None
+
+        # Execute a query (consume the async generator)
+        _ = [row async for row in source._execute_query("SELECT 1", [])]
+
+        # Verify metadata is now populated
+        meta = source.last_query_metadata
+        assert meta is not None
+        assert meta.bytes_processed == 1000
+        assert meta.bytes_billed == 10_485_760
+        assert meta.cache_hit is True
+        assert meta.slot_millis == 250
+        assert meta.total_rows == 5
+        assert meta.started == datetime(2024, 1, 1, 12, 0, 0)
+        assert meta.ended == datetime(2024, 1, 1, 12, 0, 1)
+        assert meta.statement_type == "SELECT"
+
+    @pytest.mark.asyncio
+    async def test_populated_after_execute_query_batch(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+    ) -> None:
+        """Test that last_query_metadata is populated after _execute_query_batch."""
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 2000
+        mock_job.total_bytes_billed = 10_485_760
+        mock_job.cache_hit = False
+        mock_job.slot_millis = 500
+        mock_job.total_rows = 10
+        mock_job.started = datetime(2024, 1, 1, 13, 0, 0)
+        mock_job.ended = datetime(2024, 1, 1, 13, 0, 2)
+        mock_job.statement_type = "SELECT"
+        mock_job.__iter__ = Mock(return_value=iter([]))
+
+        mock_client = Mock(spec=bigquery.Client)
+        mock_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_client,
+        )
+        source._credentials_validated = True
+
+        # Verify metadata is None before query
+        assert source.last_query_metadata is None
+
+        # Execute a batch query
+        _rows, _bytes_processed = await source._execute_query_batch("SELECT 1", [])
+
+        # Verify metadata is now populated
+        meta = source.last_query_metadata
+        assert meta is not None
+        assert meta.bytes_processed == 2000
+        assert meta.bytes_billed == 10_485_760
+        assert meta.cache_hit is False
+        assert meta.slot_millis == 500
+        assert meta.total_rows == 10
+        assert meta.statement_type == "SELECT"

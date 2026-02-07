@@ -396,3 +396,26 @@ class TestGDELTClientIntegration:
                 assert client.events is not None
                 assert client.doc is not None
                 assert client.lookups is not None
+
+
+class TestGDELTClientBigQueryProperty:
+    """Test client.bigquery property access."""
+
+    @pytest.mark.asyncio
+    async def test_bigquery_property_returns_source(self) -> None:
+        """Test that client.bigquery returns BigQuerySource when configured."""
+        settings = GDELTSettings(
+            bigquery_project="test-project",
+            bigquery_credentials="/fake/path.json",
+        )
+
+        mock_bq_instance = MagicMock()
+        with patch("py_gdelt.client.BigQuerySource", return_value=mock_bq_instance):
+            async with GDELTClient(settings=settings) as client:
+                assert client.bigquery is mock_bq_instance
+
+    @pytest.mark.asyncio
+    async def test_bigquery_property_returns_none(self) -> None:
+        """Test that client.bigquery returns None when not configured."""
+        async with GDELTClient() as client:
+            assert client.bigquery is None

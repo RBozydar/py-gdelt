@@ -780,3 +780,24 @@ class GDELTClient:
             ...     iso_code = client.lookups.countries.fips_to_iso3("US")  # "USA"
         """
         return Lookups()
+
+    @property
+    def bigquery(self) -> BigQuerySource | None:
+        """Access the BigQuery source for query metadata and cost estimates.
+
+        Provides direct access to the BigQuery source instance, which exposes
+        ``last_query_metadata`` for inspecting the most recent query statistics
+        and ``estimate_*`` methods for pre-execution cost estimation via dry runs.
+
+        Returns:
+            BigQuerySource instance, or None if BigQuery is not configured.
+
+        Example:
+            >>> async with GDELTClient(settings=settings) as client:
+            ...     # Check last query metadata after a BigQuery query
+            ...     result = await client.events.query(filter_obj, use_bigquery=True)
+            ...     if client.bigquery:
+            ...         meta = client.bigquery.last_query_metadata
+            ...         print(f"Bytes billed: {meta.bytes_billed}")
+        """
+        return self._bigquery_source

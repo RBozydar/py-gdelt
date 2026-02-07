@@ -16,6 +16,7 @@ from py_gdelt.sources.bigquery import BigQuerySource
 from py_gdelt.sources.columns import EventColumns, GKGColumns, MentionColumns
 from py_gdelt.sources.fetcher import DataFetcher, ErrorPolicy, Parser
 from py_gdelt.sources.files import FileSource
+from py_gdelt.sources.metadata import QueryEstimate, QueryMetadata
 
 
 __all__ = [
@@ -31,4 +32,6 @@ __all__ = [
     "GKGUnnestField",
     "MentionColumns",
     "Parser",
+    "QueryEstimate",
+    "QueryMetadata",
 ]

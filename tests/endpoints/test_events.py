@@ -9,10 +9,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from py_gdelt.endpoints.events import EventsEndpoint
+from py_gdelt.exceptions import ConfigurationError
 from py_gdelt.filters import DateRange, EventFilter
 from py_gdelt.models._internal import _RawEvent
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Event
+from py_gdelt.sources.metadata import QueryEstimate
 from py_gdelt.utils.dedup import DedupeStrategy
 
 
@@ -529,3 +531,68 @@ class TestEventsEndpointIntegration:
         for i, event in enumerate(result.data):
             assert event.global_event_id == i
             assert isinstance(event, Event)
+
+
+class TestEventsEstimate:
+    """Test EventsEndpoint.estimate() method."""
+
+    @pytest.mark.asyncio
+    async def test_estimate_raises_without_bigquery(
+        self,
+        mock_file_source: MagicMock,
+        event_filter: EventFilter,
+    ) -> None:
+        """Test that estimate() raises ConfigurationError without BigQuery."""
+        endpoint = EventsEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=None,
+        )
+
+        with pytest.raises(ConfigurationError, match="Estimate queries require BigQuery"):
+            await endpoint.estimate(event_filter)
+
+    @pytest.mark.asyncio
+    async def test_estimate_delegates_to_bigquery(
+        self,
+        mock_file_source: MagicMock,
+        mock_bigquery_source: MagicMock,
+        event_filter: EventFilter,
+    ) -> None:
+        """Test that estimate() delegates to bigquery_source.estimate_events()."""
+        expected_estimate = QueryEstimate(bytes_processed=5_000_000, query="SELECT ...")
+        mock_bigquery_source.estimate_events = AsyncMock(return_value=expected_estimate)
+
+        endpoint = EventsEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=mock_bigquery_source,
+        )
+
+        result = await endpoint.estimate(event_filter, columns=["GLOBALEVENTID"], limit=100)
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 5_000_000
+        mock_bigquery_source.estimate_events.assert_awaited_once_with(
+            event_filter,
+            columns=["GLOBALEVENTID"],
+            limit=100,
+        )
+
+    def test_estimate_sync_wraps_async(
+        self,
+        mock_file_source: MagicMock,
+        mock_bigquery_source: MagicMock,
+        event_filter: EventFilter,
+    ) -> None:
+        """Test that estimate_sync() calls estimate() internally."""
+        expected_estimate = QueryEstimate(bytes_processed=3_000_000, query="SELECT ...")
+        mock_bigquery_source.estimate_events = AsyncMock(return_value=expected_estimate)
+
+        endpoint = EventsEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=mock_bigquery_source,
+        )
+
+        result = endpoint.estimate_sync(event_filter)
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 3_000_000

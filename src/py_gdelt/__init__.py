@@ -26,6 +26,7 @@ from py_gdelt.sources.aggregation import (
     GKGUnnestField,
 )
 from py_gdelt.sources.columns import EventColumns, GKGColumns, MentionColumns
+from py_gdelt.sources.metadata import QueryEstimate, QueryMetadata
 
 
 __version__ = "0.1.3"
@@ -53,6 +54,9 @@ __all__ = [
     "InvalidQueryError",
     "MentionColumns",
     "ParseError",
+    # Query metadata
+    "QueryEstimate",
+    "QueryMetadata",
     "RateLimitError",
     "ValidationError",
     # Version

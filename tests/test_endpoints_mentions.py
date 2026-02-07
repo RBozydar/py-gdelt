@@ -10,10 +10,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from py_gdelt.endpoints.mentions import MentionsEndpoint
+from py_gdelt.exceptions import ConfigurationError
 from py_gdelt.filters import DateRange, EventFilter
 from py_gdelt.models._internal import _RawMention
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Mention
+from py_gdelt.sources.metadata import QueryEstimate
 
 
 @pytest.fixture
@@ -647,3 +649,52 @@ class TestMentionsEndpointEdgeCases:
         )
 
         assert len(result) == 1
+
+
+class TestMentionsEstimate:
+    """Test MentionsEndpoint.estimate() method."""
+
+    @pytest.mark.asyncio
+    async def test_estimate_raises_without_bigquery(
+        self,
+        mock_file_source: MagicMock,
+    ) -> None:
+        """Test that estimate() raises ConfigurationError without BigQuery."""
+        endpoint = MentionsEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=None,
+        )
+
+        with pytest.raises(ConfigurationError, match="Estimate queries require BigQuery"):
+            await endpoint.estimate(global_event_id=123456789)
+
+    @pytest.mark.asyncio
+    async def test_estimate_delegates_to_bigquery(
+        self,
+        mock_file_source: MagicMock,
+        mock_bigquery_source: MagicMock,
+    ) -> None:
+        """Test that estimate() delegates to bigquery_source.estimate_mentions()."""
+        expected_estimate = QueryEstimate(bytes_processed=4_000_000, query="SELECT ...")
+        mock_bigquery_source.estimate_mentions = AsyncMock(return_value=expected_estimate)
+
+        endpoint = MentionsEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=mock_bigquery_source,
+        )
+
+        date_range = DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
+        result = await endpoint.estimate(
+            global_event_id=123456789,
+            date_range=date_range,
+            limit=50,
+        )
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 4_000_000
+        mock_bigquery_source.estimate_mentions.assert_awaited_once_with(
+            123456789,
+            columns=None,
+            date_range=date_range,
+            limit=50,
+        )

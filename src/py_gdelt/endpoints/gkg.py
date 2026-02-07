@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from py_gdelt.sources.bigquery import BigQuerySource
     from py_gdelt.sources.fetcher import ErrorPolicy
     from py_gdelt.sources.files import FileSource
+    from py_gdelt.sources.metadata import QueryEstimate
 
 __all__ = ["GKGEndpoint"]
 
@@ -577,6 +578,87 @@ class GKGEndpoint:
                 aggregations=aggregations,
                 order_by=order_by,
                 ascending=ascending,
+                limit=limit,
+            ),
+        )
+
+    async def estimate(
+        self,
+        filter_obj: GKGFilter,
+        *,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
+    ) -> QueryEstimate:
+        """Estimate the cost of a GKG query via a BigQuery dry run.
+
+        Performs a BigQuery dry run to determine how many bytes the query would
+        scan. No data is read and no charges are incurred.
+
+        Args:
+            filter_obj: GKG filter with date range and query parameters.
+            columns: Optional column names for projection (defaults to all).
+            limit: Maximum number of rows the query would return.
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or the dry run fails.
+
+        Example:
+            >>> estimate = await endpoint.estimate(filter_obj, limit=1000)
+            >>> print(f"Would scan {estimate.bytes_processed} bytes")
+            >>> print(estimate.query)
+        """
+        from py_gdelt.exceptions import ConfigurationError
+
+        bq: BigQuerySource | None = self._fetcher.bigquery_source
+        if bq is None:
+            msg = (
+                "Estimate queries require BigQuery credentials. "
+                "Please configure GDELT_BIGQUERY_PROJECT and optionally "
+                "GDELT_BIGQUERY_CREDENTIALS."
+            )
+            raise ConfigurationError(msg)
+
+        columns_list = list(columns) if columns is not None else None
+        return await bq.estimate_gkg(
+            filter_obj,
+            columns=columns_list,
+            limit=limit,
+        )
+
+    def estimate_sync(
+        self,
+        filter_obj: GKGFilter,
+        *,
+        columns: Collection[str] | None = None,
+        limit: int | None = None,
+    ) -> QueryEstimate:
+        """Synchronous wrapper for estimate().
+
+        Args:
+            filter_obj: GKG filter with date range and query parameters.
+            columns: Optional column names for projection (defaults to all).
+            limit: Maximum number of rows the query would return.
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            ConfigurationError: If BigQuery credentials are not configured.
+            BigQueryError: If column names are invalid or the dry run fails.
+            RuntimeError: If called from within an already running event loop.
+
+        Example:
+            >>> estimate = endpoint.estimate_sync(filter_obj, limit=1000)
+            >>> print(f"Would scan {estimate.bytes_processed} bytes")
+        """
+        return asyncio.run(
+            self.estimate(
+                filter_obj,
+                columns=columns,
                 limit=limit,
             ),
         )

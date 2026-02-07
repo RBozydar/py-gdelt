@@ -29,6 +29,7 @@ from typing import Any, Final, Literal, NamedTuple
 from google.cloud import bigquery
 from google.cloud.exceptions import GoogleCloudError
 from google.oauth2 import service_account
+from pydantic import ValidationError
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import BigQueryError, ConfigurationError, SecurityError
@@ -42,6 +43,7 @@ from py_gdelt.sources.aggregation import (
     AggregationResult,
     GKGUnnestField,
 )
+from py_gdelt.sources.metadata import QueryEstimate, QueryMetadata
 
 
 __all__ = ["BigQuerySource", "TableType"]
@@ -760,6 +762,21 @@ class BigQuerySource:
         self._owns_client = client is None
         self._credentials_validated = False
         self._maximum_bytes_billed = maximum_bytes_billed
+        self._last_query_metadata: QueryMetadata | None = None
+
+    @property
+    def last_query_metadata(self) -> QueryMetadata | None:
+        """Metadata from the most recently completed query.
+
+        Returns ``None`` if no query has been executed yet.  After any
+        successful call to ``_execute_query`` or ``_execute_query_batch``,
+        this property exposes timing, cost, and row-count statistics
+        captured from the BigQuery ``QueryJob``.
+
+        Returns:
+            QueryMetadata | None: Captured metadata, or None before first query.
+        """
+        return self._last_query_metadata
 
     async def __aenter__(self) -> "BigQuerySource":
         """Async context manager entry.
@@ -855,6 +872,150 @@ class BigQuerySource:
         self._credentials_validated = True
         logger.debug("BigQuery credentials configuration validated")
 
+    # ── SQL builder helpers ─────────────────────────────────────────────────
+    #
+    # Each ``_build_*_sql`` method constructs the full SQL string and
+    # parameter list for a given table.  They are pure (non-async, no I/O)
+    # and are shared by both ``query_*`` and ``estimate_*`` methods.
+
+    def _build_events_sql(
+        self,
+        filter_obj: EventFilter,
+        columns: list[str] | None,
+        limit: int | None,
+    ) -> tuple[str, list[bigquery.ScalarQueryParameter]]:
+        """Build SQL and parameters for an Events table query.
+
+        Args:
+            filter_obj: Event filter with query parameters.
+            columns: List of columns to select (defaults to all allowed columns).
+            limit: Maximum number of rows to return (None for unlimited).
+
+        Returns:
+            Tuple of (query_string, query_parameters).
+
+        Raises:
+            BigQueryError: If any column is not in the events allowlist.
+        """
+        if columns is None:
+            columns = sorted(ALLOWED_COLUMNS["events"])
+
+        _validate_columns(columns, "events")
+
+        where_clause, parameters = _build_where_clause_for_events(filter_obj)
+        column_list = ", ".join(columns)
+
+        query = f"""
+            SELECT {column_list}
+            FROM `{TABLES["events"]}`
+            WHERE {where_clause}
+        """
+
+        if limit is not None:
+            query += f"\nLIMIT {limit:d}"
+
+        return query, parameters
+
+    def _build_gkg_sql(
+        self,
+        filter_obj: GKGFilter,
+        columns: list[str] | None,
+        limit: int | None,
+    ) -> tuple[str, list[bigquery.ScalarQueryParameter]]:
+        """Build SQL and parameters for a GKG table query.
+
+        Args:
+            filter_obj: GKG filter with query parameters.
+            columns: List of columns to select (defaults to all allowed columns).
+            limit: Maximum number of rows to return (None for unlimited).
+
+        Returns:
+            Tuple of (query_string, query_parameters).
+
+        Raises:
+            BigQueryError: If any column is not in the GKG allowlist.
+        """
+        if columns is None:
+            columns = sorted(ALLOWED_COLUMNS["gkg"])
+
+        _validate_columns(columns, "gkg")
+
+        where_clause, parameters = _build_where_clause_for_gkg(filter_obj)
+        column_list = ", ".join(columns)
+
+        query = f"""
+            SELECT {column_list}
+            FROM `{TABLES["gkg"]}`
+            WHERE {where_clause}
+        """
+
+        if limit is not None:
+            query += f"\nLIMIT {limit:d}"
+
+        return query, parameters
+
+    def _build_mentions_sql(
+        self,
+        global_event_id: int,
+        columns: list[str] | None,
+        date_range: DateRange | None,
+        limit: int | None,
+    ) -> tuple[str, list[bigquery.ScalarQueryParameter]]:
+        """Build SQL and parameters for an EventMentions table query.
+
+        Args:
+            global_event_id: Global event ID to query mentions for (INT64).
+            columns: List of columns to select (defaults to all allowed columns).
+            date_range: Optional date range for partition pruning.
+            limit: Maximum number of rows to return (None for unlimited).
+
+        Returns:
+            Tuple of (query_string, query_parameters).
+
+        Raises:
+            BigQueryError: If any column is not in the eventmentions allowlist.
+        """
+        if columns is None:
+            columns = sorted(ALLOWED_COLUMNS["eventmentions"])
+
+        _validate_columns(columns, "eventmentions")
+
+        conditions: list[str] = ["GLOBALEVENTID = @event_id"]
+        parameters: list[bigquery.ScalarQueryParameter] = [
+            bigquery.ScalarQueryParameter("event_id", "INT64", global_event_id),
+        ]
+
+        if date_range is not None:
+            conditions.append("_PARTITIONTIME >= @start_date")
+            conditions.append("_PARTITIONTIME <= @end_date")
+
+            start_datetime = datetime.combine(date_range.start, datetime.min.time())
+            end_date = date_range.end or date_range.start
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+
+            parameters.extend(
+                [
+                    bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
+                    bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
+                ],
+            )
+
+        where_clause = " AND ".join(conditions)
+        column_list = ", ".join(columns)
+
+        query = f"""
+            SELECT {column_list}
+            FROM `{TABLES["eventmentions"]}`
+            WHERE {where_clause}
+        """
+
+        if limit is not None:
+            query += f"\nLIMIT {limit:d}"
+
+        return query, parameters
+
+    # ── Public query methods ─────────────────────────────────────────────
+
     async def query_events(
         self,
         filter_obj: EventFilter,
@@ -888,31 +1049,8 @@ class BigQuerySource:
             >>> async for row in source.query_events(filter_obj, limit=100):
             ...     print(row["GLOBALEVENTID"], row["EventCode"])
         """
-        # Default to all allowed columns
-        if columns is None:
-            columns = sorted(ALLOWED_COLUMNS["events"])
+        query, parameters = self._build_events_sql(filter_obj, columns, limit)
 
-        # Validate columns
-        _validate_columns(columns, "events")
-
-        # Build WHERE clause with parameters
-        where_clause, parameters = _build_where_clause_for_events(filter_obj)
-
-        # Build SELECT clause (columns are validated, safe to use directly)
-        column_list = ", ".join(columns)
-
-        # Build complete query
-        query = f"""
-            SELECT {column_list}
-            FROM `{TABLES["events"]}`
-            WHERE {where_clause}
-        """
-
-        # Add LIMIT if specified
-        if limit is not None:
-            query += f"\nLIMIT {limit:d}"
-
-        # Execute query and stream results
         async for row in self._execute_query(query, parameters):
             yield row
 
@@ -949,31 +1087,8 @@ class BigQuerySource:
             >>> async for row in source.query_gkg(filter_obj, limit=100):
             ...     print(row["GKGRECORDID"], row["V2Themes"])
         """
-        # Default to all allowed columns
-        if columns is None:
-            columns = sorted(ALLOWED_COLUMNS["gkg"])
+        query, parameters = self._build_gkg_sql(filter_obj, columns, limit)
 
-        # Validate columns
-        _validate_columns(columns, "gkg")
-
-        # Build WHERE clause with parameters
-        where_clause, parameters = _build_where_clause_for_gkg(filter_obj)
-
-        # Build SELECT clause (columns are validated, safe to use directly)
-        column_list = ", ".join(columns)
-
-        # Build complete query
-        query = f"""
-            SELECT {column_list}
-            FROM `{TABLES["gkg"]}`
-            WHERE {where_clause}
-        """
-
-        # Add LIMIT if specified
-        if limit is not None:
-            query += f"\nLIMIT {limit:d}"
-
-        # Execute query and stream results
         async for row in self._execute_query(query, parameters):
             yield row
 
@@ -1010,52 +1125,167 @@ class BigQuerySource:
             ... ):
             ...     print(mention["MentionTimeDate"], mention["MentionSourceName"])
         """
-        # Default to all allowed columns
-        if columns is None:
-            columns = sorted(ALLOWED_COLUMNS["eventmentions"])
+        query, parameters = self._build_mentions_sql(global_event_id, columns, date_range, limit)
 
-        # Validate columns
-        _validate_columns(columns, "eventmentions")
-
-        # Build WHERE clause
-        conditions: list[str] = ["GLOBALEVENTID = @event_id"]
-        parameters: list[bigquery.ScalarQueryParameter] = [
-            bigquery.ScalarQueryParameter("event_id", "INT64", global_event_id),
-        ]
-
-        # Add date range filter if provided (for partition pruning)
-        if date_range is not None:
-            conditions.append("_PARTITIONTIME >= @start_date")
-            conditions.append("_PARTITIONTIME <= @end_date")
-
-            start_datetime = datetime.combine(date_range.start, datetime.min.time())
-            end_date = date_range.end or date_range.start
-            end_datetime = datetime.combine(end_date, datetime.max.time())
-
-            parameters.extend(
-                [
-                    bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime),
-                    bigquery.ScalarQueryParameter("end_date", "TIMESTAMP", end_datetime),
-                ],
-            )
-
-        where_clause = " AND ".join(conditions)
-        column_list = ", ".join(columns)
-
-        # Build query
-        query = f"""
-            SELECT {column_list}
-            FROM `{TABLES["eventmentions"]}`
-            WHERE {where_clause}
-        """
-
-        # Add LIMIT if specified
-        if limit is not None:
-            query += f"\nLIMIT {limit:d}"
-
-        # Execute query and stream results
         async for row in self._execute_query(query, parameters):
             yield row
+
+    # ── Public estimate methods ──────────────────────────────────────────
+
+    async def estimate_events(
+        self,
+        filter_obj: EventFilter,
+        columns: list[str] | None = None,
+        limit: int | None = None,
+    ) -> QueryEstimate:
+        """Estimate the cost of an Events table query without executing it.
+
+        Performs a BigQuery dry run to determine how many bytes the query
+        would scan.  No data is read and no charges are incurred.
+
+        Args:
+            filter_obj: Event filter with query parameters.
+            columns: List of columns to select (defaults to all allowed columns).
+            limit: Maximum number of rows to return (None for unlimited).
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            BigQueryError: If column names are invalid or dry run fails.
+            ConfigurationError: If credentials are not configured.
+        """
+        query, parameters = self._build_events_sql(filter_obj, columns, limit)
+        return await self._execute_dry_run(query, parameters)
+
+    async def estimate_gkg(
+        self,
+        filter_obj: GKGFilter,
+        columns: list[str] | None = None,
+        limit: int | None = None,
+    ) -> QueryEstimate:
+        """Estimate the cost of a GKG table query without executing it.
+
+        Performs a BigQuery dry run to determine how many bytes the query
+        would scan.  No data is read and no charges are incurred.
+
+        Args:
+            filter_obj: GKG filter with query parameters.
+            columns: List of columns to select (defaults to all allowed columns).
+            limit: Maximum number of rows to return (None for unlimited).
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            BigQueryError: If column names are invalid or dry run fails.
+            ConfigurationError: If credentials are not configured.
+        """
+        query, parameters = self._build_gkg_sql(filter_obj, columns, limit)
+        return await self._execute_dry_run(query, parameters)
+
+    async def estimate_mentions(
+        self,
+        global_event_id: int,
+        columns: list[str] | None = None,
+        date_range: DateRange | None = None,
+        limit: int | None = None,
+    ) -> QueryEstimate:
+        """Estimate the cost of a Mentions table query without executing it.
+
+        Performs a BigQuery dry run to determine how many bytes the query
+        would scan.  No data is read and no charges are incurred.
+
+        Args:
+            global_event_id: Global event ID to query mentions for (INT64).
+            columns: List of columns to select (defaults to all allowed columns).
+            date_range: Optional date range for partition pruning.
+            limit: Maximum number of rows to return (None for unlimited).
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            BigQueryError: If column names are invalid or dry run fails.
+            ConfigurationError: If credentials are not configured.
+        """
+        query, parameters = self._build_mentions_sql(global_event_id, columns, date_range, limit)
+        return await self._execute_dry_run(query, parameters)
+
+    @staticmethod
+    def _extract_query_metadata(query_job: bigquery.QueryJob) -> QueryMetadata | None:
+        """Extract metadata from a completed BigQuery query job.
+
+        Uses ``getattr`` with ``None`` defaults for all attributes since
+        BigQuery may not populate every statistic for all query types.
+        Construction is wrapped in a try/except so that unexpected attribute
+        types never disrupt query execution.
+
+        Args:
+            query_job: A completed BigQuery query job.
+
+        Returns:
+            QueryMetadata | None: Captured metadata, or None if extraction fails.
+        """
+        try:
+            return QueryMetadata(
+                bytes_processed=getattr(query_job, "total_bytes_processed", None),
+                bytes_billed=getattr(query_job, "total_bytes_billed", None),
+                cache_hit=getattr(query_job, "cache_hit", None),
+                slot_millis=getattr(query_job, "slot_millis", None),
+                total_rows=getattr(query_job, "total_rows", None),
+                started=getattr(query_job, "started", None),
+                ended=getattr(query_job, "ended", None),
+                statement_type=getattr(query_job, "statement_type", None),
+            )
+        except ValidationError:
+            logger.warning("Failed to extract query metadata from job")
+            return None
+
+    async def _execute_dry_run(
+        self,
+        query: str,
+        parameters: list[bigquery.ScalarQueryParameter],
+    ) -> QueryEstimate:
+        """Execute a BigQuery dry run and return the cost estimate.
+
+        A dry run validates the query and reports how many bytes would be
+        scanned without actually executing it.  No data is read and no
+        charges are incurred.
+
+        Args:
+            query: SQL query string (should use parameterized placeholders).
+            parameters: List of query parameters.
+
+        Returns:
+            QueryEstimate with estimated bytes and the query SQL.
+
+        Raises:
+            BigQueryError: If the dry run fails.
+        """
+        client = self._get_or_create_client()
+
+        job_config = bigquery.QueryJobConfig(
+            dry_run=True,
+            use_query_cache=False,
+            query_parameters=parameters,
+        )
+
+        try:
+            loop = asyncio.get_event_loop()
+            query_job = await loop.run_in_executor(
+                None,
+                lambda: client.query(query, job_config=job_config),
+            )
+
+            return QueryEstimate(
+                bytes_processed=query_job.total_bytes_processed or 0,
+                query=query.strip(),
+            )
+        except GoogleCloudError as e:
+            logger.error("BigQuery dry run failed: %s", e)  # noqa: TRY400
+            msg = f"BigQuery dry run failed: {e}"
+            raise BigQueryError(msg) from e
 
     async def _execute_query(
         self,
@@ -1101,6 +1331,9 @@ class BigQuerySource:
 
             # Wait for query to complete
             await loop.run_in_executor(None, query_job.result)
+
+            # Capture query metadata
+            self._last_query_metadata = self._extract_query_metadata(query_job)
 
             # Log query results (use getattr for optional attributes)
             total_rows = getattr(query_job, "total_rows", None)
@@ -1177,6 +1410,9 @@ class BigQuerySource:
             msg = f"Unexpected error executing query: {e}"
             raise BigQueryError(msg) from e
         else:
+            # Capture query metadata
+            self._last_query_metadata = self._extract_query_metadata(query_job)
+
             rows = [dict(row.items()) for row in query_job]
             bytes_processed: int | None = getattr(query_job, "total_bytes_processed", None)
 

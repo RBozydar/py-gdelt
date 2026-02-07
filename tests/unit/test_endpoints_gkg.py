@@ -17,6 +17,7 @@ from py_gdelt.exceptions import APIError, ConfigurationError, RateLimitError
 from py_gdelt.filters import DateRange, GKGFilter
 from py_gdelt.models._internal import _RawGKG
 from py_gdelt.models.gkg import GKGRecord
+from py_gdelt.sources.metadata import QueryEstimate
 
 
 if TYPE_CHECKING:
@@ -856,3 +857,48 @@ class TestGKGEndpointIntegration:
             assert len(record.themes) > 0
             assert any(t.name == "ENV_CLIMATECHANGE" for t in record.themes)
             assert record.primary_theme == "ENV_CLIMATECHANGE"
+
+
+class TestGKGEstimate:
+    """Test GKGEndpoint.estimate() method."""
+
+    @pytest.mark.asyncio
+    async def test_estimate_raises_without_bigquery(
+        self,
+        mock_file_source: MagicMock,
+        gkg_filter: GKGFilter,
+    ) -> None:
+        """Test that estimate() raises ConfigurationError without BigQuery."""
+        endpoint = GKGEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=None,
+        )
+
+        with pytest.raises(ConfigurationError, match="Estimate queries require BigQuery"):
+            await endpoint.estimate(gkg_filter)
+
+    @pytest.mark.asyncio
+    async def test_estimate_delegates_to_bigquery(
+        self,
+        mock_file_source: MagicMock,
+        mock_bigquery_source: MagicMock,
+        gkg_filter: GKGFilter,
+    ) -> None:
+        """Test that estimate() delegates to bigquery_source.estimate_gkg()."""
+        expected_estimate = QueryEstimate(bytes_processed=8_000_000, query="SELECT ...")
+        mock_bigquery_source.estimate_gkg = AsyncMock(return_value=expected_estimate)
+
+        endpoint = GKGEndpoint(
+            file_source=mock_file_source,
+            bigquery_source=mock_bigquery_source,
+        )
+
+        result = await endpoint.estimate(gkg_filter, columns=["GKGRECORDID"], limit=50)
+
+        assert isinstance(result, QueryEstimate)
+        assert result.bytes_processed == 8_000_000
+        mock_bigquery_source.estimate_gkg.assert_awaited_once_with(
+            gkg_filter,
+            columns=["GKGRECORDID"],
+            limit=50,
+        )
