@@ -47,6 +47,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
+from py_gdelt.analytics._events_mixin import EventsAnalyticsMixin
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.events import Event
 from py_gdelt.utils.dedup import (
@@ -76,7 +77,7 @@ __all__ = ["EventsEndpoint"]
 logger = logging.getLogger(__name__)
 
 
-class EventsEndpoint:
+class EventsEndpoint(EventsAnalyticsMixin):
     """Endpoint for querying GDELT Events data.
 
     This endpoint orchestrates querying GDELT Events data from multiple sources

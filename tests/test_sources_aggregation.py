@@ -32,8 +32,10 @@ class TestAggFuncEnum:
         assert AggFunc.MIN == "MIN"
         assert AggFunc.MAX == "MAX"
         assert AggFunc.COUNT_DISTINCT == "COUNT_DISTINCT"
+        assert AggFunc.APPROX_COUNT_DISTINCT == "APPROX_COUNT_DISTINCT"
+        assert AggFunc.STDDEV == "STDDEV"
         # Verify exhaustive membership
-        assert len(AggFunc) == 6
+        assert len(AggFunc) == 8
 
 
 class TestAggregationModel:

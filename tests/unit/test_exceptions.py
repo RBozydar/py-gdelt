@@ -10,6 +10,7 @@ from py_gdelt.exceptions import (
     APIError,
     APIUnavailableError,
     BigQueryError,
+    BudgetExceededError,
     ConfigurationError,
     DataError,
     GDELTError,
@@ -347,6 +348,23 @@ class TestBigQueryError:
         assert str(error) == "Query execution failed"
 
 
+class TestBudgetExceededError:
+    """Tests for BudgetExceededError."""
+
+    def test_inheritance(self):
+        """BudgetExceededError should inherit from BigQueryError."""
+        assert issubclass(BudgetExceededError, BigQueryError)
+
+    def test_also_inherits_from_gdelt_error(self):
+        """BudgetExceededError should be catchable as GDELTError."""
+        assert issubclass(BudgetExceededError, GDELTError)
+
+    def test_basic_initialization(self):
+        """BudgetExceededError should accept a message."""
+        error = BudgetExceededError("Session budget exceeded")
+        assert str(error) == "Session budget exceeded"
+
+
 class TestSecurityError:
     """Tests for SecurityError."""
 
@@ -432,6 +450,7 @@ class TestExceptionExports:
             "InvalidCodeError",
             "ConfigurationError",
             "BigQueryError",
+            "BudgetExceededError",
             "SecurityError",
         }
         assert hasattr(exceptions, "__all__")

@@ -4,12 +4,24 @@ py-gdelt: Python client library for GDELT (Global Database of Events, Language, 
 This library provides unified access to all GDELT data sources with a modern, type-safe API.
 """
 
+from py_gdelt.analytics import (
+    ComparisonResult,
+    DyadResult,
+    EventMetric,
+    ExtremeEventsResult,
+    PartitionedTopNResult,
+    SessionCostTracker,
+    TimeGranularity,
+    TimeSeriesResult,
+    TrendResult,
+)
 from py_gdelt.client import GDELTClient
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import (
     APIError,
     APIUnavailableError,
     BigQueryError,
+    BudgetExceededError,
     ConfigurationError,
     DataError,
     GDELTError,
@@ -39,10 +51,16 @@ __all__ = [
     "Aggregation",
     "AggregationResult",
     "BigQueryError",
+    "BudgetExceededError",
+    # Analytics result types
+    "ComparisonResult",
     "ConfigurationError",
     "DataError",
+    "DyadResult",
     # Column profiles
     "EventColumns",
+    "EventMetric",
+    "ExtremeEventsResult",
     # Main client
     "GDELTClient",
     # Exceptions
@@ -54,10 +72,15 @@ __all__ = [
     "InvalidQueryError",
     "MentionColumns",
     "ParseError",
+    "PartitionedTopNResult",
     # Query metadata
     "QueryEstimate",
     "QueryMetadata",
     "RateLimitError",
+    "SessionCostTracker",
+    "TimeGranularity",
+    "TimeSeriesResult",
+    "TrendResult",
     "ValidationError",
     # Version
     "__version__",

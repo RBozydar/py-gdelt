@@ -23,6 +23,7 @@ __all__ = [
     "APIError",
     "APIUnavailableError",
     "BigQueryError",
+    "BudgetExceededError",
     "ConfigurationError",
     "DataError",
     "GDELTError",
@@ -274,6 +275,16 @@ class BigQueryError(GDELTError):
 
     This includes query execution errors, authentication failures,
     and quota/billing issues.
+    """
+
+
+class BudgetExceededError(BigQueryError):
+    """
+    Raised when a BigQuery session byte-budget is exceeded.
+
+    This is raised by :class:`~py_gdelt.analytics.SessionCostTracker`
+    when cumulative bytes processed exceed the configured budget, either
+    after a query completes or during a pre-flight estimate check.
     """
 
 

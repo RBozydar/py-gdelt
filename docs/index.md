@@ -11,6 +11,7 @@ A comprehensive Python client library for the [GDELT](https://www.gdeltproject.o
 - **Resilience**: Automatic fallback to BigQuery when APIs fail or rate limit
 - **Modern Python**: 3.11+, Async-first, Pydantic models, type hints throughout
 - **Streaming**: Generator-based iteration for large datasets with memory efficiency
+- **Analytics**: SQL-level time-series, trend detection, and comparisons via BigQuery
 - **Developer Experience**: Clear errors, progress indicators, comprehensive lookups
 
 ## Quick Start
@@ -125,6 +126,7 @@ py-gdelt/
 ├── src/py_gdelt/
 │   ├── client.py           # Main GDELTClient
 │   ├── endpoints/          # All endpoint implementations
+│   ├── analytics/         # BigQuery analytics layer
 │   ├── filters/            # Query filter models
 │   ├── models/             # Data models (Event, GKG, etc.)
 │   ├── sources/            # Data sources (files, BigQuery)

@@ -58,6 +58,7 @@ plugins:
         API Reference:
           - api/client.md
           - api/endpoints.md
+          - api/analytics.md
           - api/filters.md
           - api/models.md
           - api/exceptions.md
@@ -111,6 +112,7 @@ nav:
   - API Reference:
     - Client: api/client.md
     - Endpoints: api/endpoints.md
+    - Analytics: api/analytics.md
     - Filters: api/filters.md
     - Models: api/models.md
     - Exceptions: api/exceptions.md

@@ -16,6 +16,7 @@ GDELTError (base)
 │       └── InvalidCodeError
 ├── ConfigurationError
 ├── BigQueryError
+│   └── BudgetExceededError
 └── SecurityError
 ```
 
@@ -78,6 +79,11 @@ GDELTError (base)
       heading_level: 3
 
 ::: py_gdelt.exceptions.BigQueryError
+    options:
+      show_root_heading: true
+      heading_level: 3
+
+::: py_gdelt.exceptions.BudgetExceededError
     options:
       show_root_heading: true
       heading_level: 3

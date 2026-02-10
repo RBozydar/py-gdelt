@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date as date_type  # noqa: TC003 - Pydantic needs runtime access
 from datetime import datetime  # noqa: TC003 - Pydantic needs runtime access
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, TypeAlias
 
 from pydantic import BaseModel, Field
@@ -25,7 +25,7 @@ __all__ = [
 ]
 
 
-class BroadcastSource(str, Enum):
+class BroadcastSource(StrEnum):
     """Source type for broadcast NGrams."""
 
     TV = "tv"

@@ -14,6 +14,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
+from py_gdelt.analytics._gkg_mixin import GKGAnalyticsMixin
 from py_gdelt.models.common import FetchResult
 from py_gdelt.models.gkg import GKGRecord
 
@@ -34,7 +35,7 @@ __all__ = ["GKGEndpoint"]
 logger = logging.getLogger(__name__)
 
 
-class GKGEndpoint:
+class GKGEndpoint(GKGAnalyticsMixin):
     """GKG (Global Knowledge Graph) endpoint for querying GDELT enriched content data.
 
     The GKGEndpoint provides access to GDELT's Global Knowledge Graph, which contains
@@ -108,7 +109,7 @@ class GKGEndpoint:
         from py_gdelt.sources.fetcher import DataFetcher
 
         self._settings = settings
-        self._fetcher: Any = DataFetcher(
+        self._fetcher: DataFetcher = DataFetcher(
             file_source=file_source,
             bigquery_source=bigquery_source,
             fallback_enabled=fallback_enabled,
@@ -240,7 +241,7 @@ class GKGEndpoint:
         # Column projection mode: return raw dicts, skip model conversion/filter
         if columns is not None:
             raw_rows: list[dict[str, Any]] = [
-                raw_gkg
+                raw_gkg  # type: ignore[misc]
                 async for raw_gkg in self._fetcher.fetch_gkg(
                     filter_obj,
                     use_bigquery=use_bigquery,
@@ -326,7 +327,7 @@ class GKGEndpoint:
         async for raw_gkg in self._fetcher.fetch_gkg(filter_obj, **fetch_kwargs):
             if columns is not None:
                 # Column projection: yield raw dict directly
-                yield raw_gkg
+                yield raw_gkg  # type: ignore[misc]
                 count += 1
                 if limit is not None and count >= limit:
                     return

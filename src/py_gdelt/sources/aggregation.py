@@ -22,12 +22,15 @@ from typing import Any, Final
 
 from pydantic import BaseModel, model_validator
 
+from py_gdelt.sources.metadata import QueryMetadata  # noqa: TC001 - Pydantic needs runtime access
+
 
 class AggFunc(StrEnum):
     """BigQuery aggregation functions.
 
     Each member maps directly to a SQL aggregation function. COUNT_DISTINCT
-    is rendered as ``COUNT(DISTINCT column)``.
+    is rendered as ``COUNT(DISTINCT column)``, and APPROX_COUNT_DISTINCT
+    maps to BigQuery's ``APPROX_COUNT_DISTINCT(column)``.
     """
 
     COUNT = "COUNT"
@@ -36,6 +39,8 @@ class AggFunc(StrEnum):
     MIN = "MIN"
     MAX = "MAX"
     COUNT_DISTINCT = "COUNT_DISTINCT"
+    APPROX_COUNT_DISTINCT = "APPROX_COUNT_DISTINCT"
+    STDDEV = "STDDEV"
 
 
 class Aggregation(BaseModel):
@@ -92,9 +97,13 @@ class AggregationResult(BaseModel):
         group_by: Column names used for grouping.
         total_rows: Number of result rows.
         bytes_processed: Bytes scanned by BigQuery (for cost tracking).
+        meta: Query metadata from BigQuery.
+        sql: Generated SQL for debugging.
     """
 
     rows: list[dict[str, Any]]
     group_by: list[str]
     total_rows: int
     bytes_processed: int | None = None
+    meta: QueryMetadata | None = None
+    sql: str | None = None

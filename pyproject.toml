@@ -220,14 +220,15 @@ ignore = [
 ]
 
 "examples/**/*.py" = [
-  "T201",     # print statements are the point
-  "S101",     # assert OK in examples
-  "BLE001",   # Blind except OK in examples
-  "PLR2004",  # Magic values OK in examples
-  "DTZ001",   # datetime without tz OK in examples
-  "DTZ011",   # date.today() OK in examples
-  "S108",     # Hardcoded temp file OK in examples
-  "PLC0415",  # Lazy imports OK in examples
+  "T201",      # print statements are the point
+  "S101",      # assert OK in examples
+  "ASYNC240",  # pathlib in async OK in examples (not production code)
+  "BLE001",    # Blind except OK in examples
+  "PLR2004",   # Magic values OK in examples
+  "DTZ001",    # datetime without tz OK in examples
+  "DTZ011",    # date.today() OK in examples
+  "S108",      # Hardcoded temp file OK in examples
+  "PLC0415",   # Lazy imports OK in examples
 ]
 
 # MCP server needs broad exception handling for API boundary

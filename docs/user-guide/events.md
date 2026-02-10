@@ -124,6 +124,94 @@ async with GDELTClient() as client:
     mentions = await client.mentions.query("123456789", event_filter)
 ```
 
+## Analytics (BigQuery)
+
+When BigQuery is configured, powerful SQL-level analytics are available directly on the events endpoint. These push computation to BigQuery rather than downloading raw rows.
+
+### Time Series
+
+```python
+from py_gdelt import GDELTClient, TimeGranularity, EventMetric
+from py_gdelt.filters import DateRange, EventFilter
+from datetime import date
+
+async with GDELTClient(settings=settings) as client:
+    event_filter = EventFilter(
+        date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 3, 31)),
+        actor1_country="USA",
+    )
+
+    # Daily event counts with 7-day moving average
+    result = await client.events.time_series(
+        event_filter,
+        granularity=TimeGranularity.DAY,
+        metrics=[EventMetric.COUNT, EventMetric.AVG_GOLDSTEIN],
+        moving_average_window=7,
+    )
+
+    for bucket in result.buckets:
+        print(f"{bucket['bucket']}: {bucket['count']} events, MA7={bucket.get('count_ma7')}")
+```
+
+### Trend Detection
+
+```python
+    # Detect escalation/de-escalation trends
+    trend = await client.events.trend(
+        event_filter,
+        metric=EventMetric.AVG_GOLDSTEIN,
+        granularity=TimeGranularity.WEEK,
+    )
+    print(f"Direction: {trend.direction}, R²={trend.r_squared:.3f}")
+```
+
+### Country Comparison
+
+```python
+    # Compare event patterns between countries
+    comparison = await client.events.compare(
+        event_filter,
+        compare_by="Actor1CountryCode",
+        values=["USA", "CHN", "RUS"],
+        metric=EventMetric.COUNT,
+        granularity=TimeGranularity.WEEK,
+    )
+    for row in comparison.rows:
+        print(f"{row['bucket']}: USA={row.get('USA_count')}, CHN={row.get('CHN_count')}")
+```
+
+### Extreme Events
+
+```python
+    # Find most extreme events by Goldstein scale
+    extremes = await client.events.extremes(
+        event_filter,
+        criterion="GoldsteinScale",
+        most_negative=5,
+        most_positive=5,
+    )
+    print("Most negative:")
+    for evt in extremes.most_negative:
+        print(f"  {evt['GoldsteinScale']}: {evt.get('EventCode')}")
+```
+
+### Dyadic Analysis
+
+```python
+    # Analyze bilateral relationship between two actors
+    dyad = await client.events.dyad_analysis(
+        event_filter,
+        actor_a="USA",
+        actor_b="RUS",
+        metrics=[EventMetric.COUNT, EventMetric.AVG_GOLDSTEIN],
+    )
+    print(f"USA→RUS: {len(dyad.a_to_b)} periods")
+    print(f"RUS→USA: {len(dyad.b_to_a)} periods")
+```
+
+All analytics methods have synchronous wrappers (e.g., `time_series_sync()`).
+See the [Analytics API Reference](../api/analytics.md) for full details.
+
 ## BigQuery Fallback
 
 When file sources fail, automatically fallback to BigQuery:

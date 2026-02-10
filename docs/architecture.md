@@ -106,6 +106,30 @@ async with GDELTClient(settings=settings) as client:
     events = await client.events.query(filter)
 ```
 
+## Analytics Layer
+
+The analytics layer pushes computation from Python to BigQuery SQL, enabling aggregation over millions of rows without downloading raw data.
+
+```
+┌─────────────────────────────────────────────────┐
+│                  EventsEndpoint                  │
+│                                                  │
+│  Layer 1: Analytics    time_series(), trend(),   │
+│           (SQL)        compare(), extremes()     │
+│  Layer 2: Aggregation  aggregate(filter,         │
+│           (SQL)        group_by, aggregations)   │
+│  Layer 3: Raw Data     stream(filter)            │
+│           (Rows)       query(filter)             │
+└─────────────────────────────────────────────────┘
+```
+
+Analytics methods are implemented as **mixins** (`EventsAnalyticsMixin`, `GKGAnalyticsMixin`) composed into the endpoint classes. Each method:
+
+1. Validates parameters against column allowlists
+2. Calls a SQL builder function to generate parameterized SQL
+3. Executes via `BigQuerySource._execute_query_batch()`
+4. Wraps results in typed Pydantic models
+
 ## Data Flow
 
 ### Query Execution
