@@ -1,0 +1,39 @@
+# gdelt-py
+
+> Python client library for GDELT (Global Database of Events, Language, and Tone)
+
+gdelt-py is a Python client library for GDELT (Global Database of Events, Language, and Tone).
+It provides unified access to all 6 REST APIs, 3 database tables (Events, Mentions, GKG),
+and NGrams dataset with modern async-first design, Pydantic models, and streaming support.
+
+
+## Getting Started
+
+- [Installation](https://rbozydar.github.io/py-gdelt/getting-started/installation/index.md)
+- [Quick Start](https://rbozydar.github.io/py-gdelt/getting-started/quickstart/index.md)
+- [Configuration](https://rbozydar.github.io/py-gdelt/getting-started/configuration/index.md)
+
+## User Guide
+
+- [Events & Mentions](https://rbozydar.github.io/py-gdelt/user-guide/events/index.md)
+- [GKG](https://rbozydar.github.io/py-gdelt/user-guide/gkg/index.md)
+- [NGrams](https://rbozydar.github.io/py-gdelt/user-guide/ngrams/index.md)
+- [REST APIs](https://rbozydar.github.io/py-gdelt/user-guide/rest-apis/index.md)
+- [Lookups](https://rbozydar.github.io/py-gdelt/user-guide/lookups/index.md)
+- [Streaming](https://rbozydar.github.io/py-gdelt/user-guide/streaming/index.md)
+- [Deduplication](https://rbozydar.github.io/py-gdelt/user-guide/deduplication/index.md)
+- [Error Handling](https://rbozydar.github.io/py-gdelt/user-guide/errors/index.md)
+
+## API Reference
+
+- [Client](https://rbozydar.github.io/py-gdelt/api/client/index.md)
+- [Endpoints](https://rbozydar.github.io/py-gdelt/api/endpoints/index.md)
+- [Filters](https://rbozydar.github.io/py-gdelt/api/filters/index.md)
+- [Models](https://rbozydar.github.io/py-gdelt/api/models/index.md)
+- [Exceptions](https://rbozydar.github.io/py-gdelt/api/exceptions/index.md)
+
+## Examples
+
+- [Basic Usage](https://rbozydar.github.io/py-gdelt/examples/basic/index.md)
+- [Advanced Patterns](https://rbozydar.github.io/py-gdelt/examples/advanced/index.md)
+
