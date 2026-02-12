@@ -67,9 +67,17 @@ TABLES: Final[dict[TableType, str]] = {
 # Column allowlists for each table type (prevents unauthorized column access)
 # Only commonly used columns are included to minimize data transfer costs
 # GKG columns that need SQL-level rewriting when used in aggregation expressions.
-# V2Tone is a comma-delimited STRING; the first element is the numeric tone score.
+# V2Tone is a comma-delimited STRING with 7 subfields: tone, positive, negative,
+# polarity, activity_ref_density, self_ref_density, word_count.
+# All are cast to FLOAT64 so they work uniformly with AVG/STDDEV/etc.
 _GKG_COLUMN_TRANSFORMS: Final[dict[str, str]] = {
     "V2Tone": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(0)] AS FLOAT64)",
+    "V2Tone_Positive": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(1)] AS FLOAT64)",
+    "V2Tone_Negative": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(2)] AS FLOAT64)",
+    "V2Tone_Polarity": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(3)] AS FLOAT64)",
+    "V2Tone_ActivityDensity": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(4)] AS FLOAT64)",
+    "V2Tone_SelfDensity": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(5)] AS FLOAT64)",
+    "V2Tone_WordCount": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(6)] AS FLOAT64)",
 }
 
 # Column allowlists for each table type (prevents unauthorized column access)
@@ -178,6 +186,12 @@ ALLOWED_COLUMNS: Final[dict[TableType, frozenset[str]]] = {
             "Organizations",
             "V2Organizations",
             "V2Tone",
+            "V2Tone_Positive",
+            "V2Tone_Negative",
+            "V2Tone_Polarity",
+            "V2Tone_ActivityDensity",
+            "V2Tone_SelfDensity",
+            "V2Tone_WordCount",
             "Dates",
             "GCAM",
             "SharingImage",
@@ -1544,6 +1558,17 @@ class BigQuerySource:
         """
         # Parse and validate group_by columns
         parsed = self._parse_gkg_group_by(group_by)
+
+        virtual_in_group = [
+            str(g) for g in group_by if isinstance(g, str) and g in _GKG_COLUMN_TRANSFORMS
+        ]
+        if virtual_in_group:
+            msg = (
+                f"Virtual columns cannot be used in GROUP BY: {virtual_in_group}. "
+                f"Use them only in aggregations (e.g., Aggregation(func=AggFunc.AVG, "
+                f"column='V2Tone_Positive'))."
+            )
+            raise BigQueryError(msg)
 
         if not group_by and not aggregations:
             msg = "At least one of group_by or aggregations must be non-empty"

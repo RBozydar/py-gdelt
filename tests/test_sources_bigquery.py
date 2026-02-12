@@ -37,6 +37,7 @@ from py_gdelt.sources.bigquery import (
     _BQ_EVENT_MAP,
     _BQ_GKG_MAP,
     _BQ_MENTION_MAP,
+    _GKG_COLUMN_TRANSFORMS,
     ALLOWED_COLUMNS,
     BigQuerySource,
     _bq_row_to_raw_event,
@@ -667,7 +668,10 @@ class TestBQNameMapping:
         assert set(_BQ_EVENT_MAP.keys()) == ALLOWED_COLUMNS["events"]
 
     def test_bq_gkg_map_keys_match_allowed_columns(self) -> None:
-        assert set(_BQ_GKG_MAP.keys()) == ALLOWED_COLUMNS["gkg"]
+        # Virtual columns (V2Tone subfields) are in ALLOWED_COLUMNS but not
+        # in _BQ_GKG_MAP since they are computed SQL expressions for aggregation only.
+        virtual_only = {k for k in _GKG_COLUMN_TRANSFORMS if k not in _BQ_GKG_MAP}
+        assert set(_BQ_GKG_MAP.keys()) | virtual_only == ALLOWED_COLUMNS["gkg"]
 
     def test_bq_mention_map_keys_match_allowed_columns(self) -> None:
         assert set(_BQ_MENTION_MAP.keys()) == ALLOWED_COLUMNS["eventmentions"]
@@ -1363,6 +1367,117 @@ class TestBigQueryAggregation:
         # Should contain the SAFE_CAST extraction, not bare AVG(V2Tone)
         assert "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(0)] AS FLOAT64)" in query
         assert "AVG(V2Tone)" not in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_v2tone_subfields_transform(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """V2Tone virtual columns should produce correct SAFE_CAST SQL expressions."""
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 4000
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [{"SourceCommonName": "bbc.co.uk", "avg_positive": 3.1, "avg_wc": 200.0}],
+            ),
+        )
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+
+        # Test V2Tone_Positive (index 1) and V2Tone_WordCount (index 6)
+        await source.aggregate_gkg(
+            filter_obj,
+            group_by=["SourceCommonName"],
+            aggregations=[
+                Aggregation(func=AggFunc.AVG, column="V2Tone_Positive", alias="avg_positive"),
+                Aggregation(func=AggFunc.AVG, column="V2Tone_WordCount", alias="avg_wc"),
+            ],
+        )
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+
+        # V2Tone_Positive should use SAFE_OFFSET(1)
+        assert "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(1)] AS FLOAT64)" in query
+        # V2Tone_WordCount should use SAFE_OFFSET(6)
+        assert "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(6)] AS FLOAT64)" in query
+        # Raw virtual column names should NOT appear in the SQL
+        assert "AVG(V2Tone_Positive)" not in query
+        assert "AVG(V2Tone_WordCount)" not in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_virtual_column_group_by_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Using a virtual column in group_by should raise BigQueryError."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(BigQueryError, match="Virtual columns cannot be used in GROUP BY"):
+            await source.aggregate_gkg(
+                filter_obj,
+                group_by=["V2Tone_Positive"],
+                aggregations=[Aggregation(func=AggFunc.COUNT, alias="cnt")],
+            )
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_mixed_real_and_virtual_columns(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Real columns in group_by + virtual columns in aggregations should work."""
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 5000
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [{"DATE": "20240101", "avg_neg": -1.5}],
+            ),
+        )
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        result = await source.aggregate_gkg(
+            filter_obj,
+            group_by=["DATE"],
+            aggregations=[
+                Aggregation(func=AggFunc.AVG, column="V2Tone_Negative", alias="avg_neg"),
+            ],
+        )
+
+        assert result.total_rows == 1
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+
+        # Should have GROUP BY DATE (real column)
+        assert "GROUP BY DATE" in query
+        # V2Tone_Negative should use SAFE_OFFSET(2)
+        assert "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(2)] AS FLOAT64)" in query
+        # Raw virtual column name should NOT appear as-is in the aggregation
+        assert "AVG(V2Tone_Negative)" not in query
 
     @pytest.mark.asyncio
     async def test_aggregate_gkg_empty_both_raises(
