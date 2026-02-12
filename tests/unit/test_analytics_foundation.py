@@ -798,6 +798,25 @@ class TestBuildComparisonSql:
         assert "start_date" in param_names
         assert "end_date" in param_names
 
+    def test_duplicate_alias_raises(self) -> None:
+        """Values that sanitize to the same alias must raise BigQueryError."""
+        with pytest.raises(BigQueryError, match="duplicate column alias"):
+            build_comparison_sql(
+                _event_filter(),
+                compare_by="Actor1CountryCode",
+                values=["US-A", "US.A"],
+            )
+
+    def test_distinct_aliases_accepted(self) -> None:
+        """Values with distinct sanitized aliases should succeed."""
+        sql, _ = build_comparison_sql(
+            _event_filter(),
+            compare_by="Actor1CountryCode",
+            values=["US", "CH"],
+        )
+        assert "US_count" in sql
+        assert "CH_count" in sql
+
 
 class TestBuildTrendSql:
     """Tests for build_trend_sql builder."""

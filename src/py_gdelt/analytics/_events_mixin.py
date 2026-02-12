@@ -146,7 +146,12 @@ class EventsAnalyticsMixin:
         Raises:
             ConfigurationError: If BigQuery credentials are not configured.
             BigQueryError: If the query fails.
+            ValueError: If moving_average_window is not None and less than 2.
         """
+        if moving_average_window is not None and moving_average_window < 2:
+            msg = "moving_average_window must be >= 2 for a meaningful moving average"
+            raise ValueError(msg)
+
         bq = _require_bigquery(self)
         metrics_tuple = tuple(metrics)
         sql, params = build_time_series_sql(
@@ -484,6 +489,7 @@ class EventsAnalyticsMixin:
         Raises:
             ConfigurationError: If BigQuery credentials are not configured.
             BigQueryError: If the query fails.
+            ValueError: If moving_average_window is not None and less than 2.
             RuntimeError: If called from within an already running event loop.
         """
         return asyncio.run(  # type: ignore[no-any-return]

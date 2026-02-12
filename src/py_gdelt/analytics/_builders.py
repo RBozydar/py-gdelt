@@ -26,6 +26,8 @@ from py_gdelt.sources.bigquery import (
 if TYPE_CHECKING:
     from py_gdelt.filters import EventFilter, GKGFilter
 
+QueryParam = bigquery.ScalarQueryParameter | bigquery.ArrayQueryParameter
+
 _SAFE_ALIAS_RE: Final[re.Pattern[str]] = re.compile(r"[^a-zA-Z0-9_]")
 
 _GRANULARITY_INTERVAL: Final[dict[TimeGranularity, str]] = {
@@ -262,7 +264,7 @@ def build_comparison_sql(
     values: list[str],
     metric: EventMetric = EventMetric.COUNT,
     granularity: TimeGranularity = TimeGranularity.DAY,
-) -> tuple[str, list[bigquery.ScalarQueryParameter]]:
+) -> tuple[str, list[QueryParam]]:
     """Build a comparison query that pivots a metric by category values.
 
     For each value in ``values``, generates a CASE-WHEN column so the caller
@@ -279,15 +281,17 @@ def build_comparison_sql(
         Tuple of (SQL string, list of query parameters).
 
     Raises:
-        BigQueryError: If the compare_by column is not in the events allowlist.
+        BigQueryError: If the compare_by column is not in the events allowlist,
+            or if values produce duplicate column aliases after sanitization.
     """
     _validate_columns([compare_by], "events")
-    where_clause, params = _build_where_clause_for_events(filter_obj)
+    where_clause, scalar_params = _build_where_clause_for_events(filter_obj)
+    params: list[QueryParam] = list(scalar_params)
 
     # Add the IN UNNEST filter
     where_clause += f" AND {compare_by} IN UNNEST(@compare_values)"
     params.append(
-        bigquery.ArrayQueryParameter("compare_values", "STRING", values),  # type: ignore[arg-type]
+        bigquery.ArrayQueryParameter("compare_values", "STRING", values),
     )
 
     bucket_expr = _DATE_TRUNC_EXPR.format(granularity=granularity.value)
@@ -295,10 +299,18 @@ def build_comparison_sql(
 
     # Build per-value CASE columns
     case_parts: list[str] = []
+    seen_aliases: set[str] = set()
     for i, val in enumerate(values):
         param_name = f"val_{i}"
         params.append(bigquery.ScalarQueryParameter(param_name, "STRING", val))
         alias = f"{_sanitize_alias(val)}_{metric.value}"
+        if alias in seen_aliases:
+            msg = (
+                f"Values {values!r} produce duplicate column alias {alias!r} "
+                f"after sanitization. Use values with more distinct alphanumeric characters."
+            )
+            raise BigQueryError(msg)
+        seen_aliases.add(alias)
 
         if cfg.bq_column == "*":
             expr = f"{cfg.agg_func}(CASE WHEN {compare_by} = @{param_name} THEN 1 END)"

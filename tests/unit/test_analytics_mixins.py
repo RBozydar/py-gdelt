@@ -183,6 +183,38 @@ class TestEventsTimeSeries:
 
         assert result.granularity == "WEEK"
 
+    @pytest.mark.asyncio
+    async def test_time_series_moving_average_window_zero_raises(self) -> None:
+        """Verify moving_average_window=0 raises ValueError."""
+        endpoint = _make_events_endpoint([])
+        with pytest.raises(ValueError, match="moving_average_window must be >= 2"):
+            await endpoint.time_series(_event_filter(), moving_average_window=0)
+
+    @pytest.mark.asyncio
+    async def test_time_series_moving_average_window_one_raises(self) -> None:
+        """Verify moving_average_window=1 raises ValueError."""
+        endpoint = _make_events_endpoint([])
+        with pytest.raises(ValueError, match="moving_average_window must be >= 2"):
+            await endpoint.time_series(_event_filter(), moving_average_window=1)
+
+    @pytest.mark.asyncio
+    async def test_time_series_moving_average_window_negative_raises(self) -> None:
+        """Verify negative moving_average_window raises ValueError."""
+        endpoint = _make_events_endpoint([])
+        with pytest.raises(ValueError, match="moving_average_window must be >= 2"):
+            await endpoint.time_series(_event_filter(), moving_average_window=-5)
+
+    @pytest.mark.asyncio
+    async def test_time_series_moving_average_window_two_accepted(self) -> None:
+        """Verify moving_average_window=2 is the minimum accepted value."""
+        rows = [
+            {"bucket": date(2024, 1, 1), "count": 100, "count_ma2": 100.0},
+        ]
+        endpoint = _make_events_endpoint(rows)
+        result = await endpoint.time_series(_event_filter(), moving_average_window=2)
+
+        assert result.moving_average_window == 2
+
 
 # ---------------------------------------------------------------------------
 # Events: extremes

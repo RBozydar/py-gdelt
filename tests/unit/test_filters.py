@@ -206,6 +206,14 @@ class TestGKGFilter:
         assert gf.max_tone is None
         assert gf.include_translated is True
 
+    def test_gkg_filter_themes_uppercased(self) -> None:
+        """Test that themes are normalized to uppercase."""
+        gf = GKGFilter(
+            date_range=DateRange(start=date(2024, 1, 1)),
+            themes=["env_climatechange"],
+        )
+        assert gf.themes == ["ENV_CLIMATECHANGE"]
+
 
 class TestDocFilter:
     """Tests for DocFilter model."""

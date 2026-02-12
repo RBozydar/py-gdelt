@@ -207,7 +207,7 @@ class GKGFilter(BaseModel):
             except InvalidCodeError:
                 msg = f"Invalid GKG theme: {theme!r}"
                 raise InvalidCodeError(msg, code=theme, code_type="GKG theme") from None
-        return v
+        return [t.upper() for t in v]
 
     @field_validator("country", mode="before")
     @classmethod

@@ -21,7 +21,7 @@ Security Features:
 import asyncio
 import logging
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Final, Literal, NamedTuple
@@ -681,19 +681,21 @@ def _build_where_clause_for_gkg(
 
     # Optional: Country filter
     if filter_obj.country is not None:
-        conditions.append("REGEXP_CONTAINS(V2Locations, @country_code)")
+        conditions.append("REGEXP_CONTAINS(V2Locations, @country_pattern)")
         parameters.append(
-            bigquery.ScalarQueryParameter("country_code", "STRING", filter_obj.country),
+            bigquery.ScalarQueryParameter(
+                "country_pattern", "STRING", f"#{re.escape(filter_obj.country)}#"
+            ),
         )
 
     # Optional: Tone filters (V2Tone format: tone,positive,negative,polarity,activity_ref_density,self_ref_density,word_count)
     # We extract the first field (tone) from the comma-delimited string
     if filter_obj.min_tone is not None:
-        conditions.append("CAST(SPLIT(V2Tone, ',')[OFFSET(0)] AS FLOAT64) >= @min_tone")
+        conditions.append("SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(0)] AS FLOAT64) >= @min_tone")
         parameters.append(bigquery.ScalarQueryParameter("min_tone", "FLOAT64", filter_obj.min_tone))
 
     if filter_obj.max_tone is not None:
-        conditions.append("CAST(SPLIT(V2Tone, ',')[OFFSET(0)] AS FLOAT64) <= @max_tone")
+        conditions.append("SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(0)] AS FLOAT64) <= @max_tone")
         parameters.append(bigquery.ScalarQueryParameter("max_tone", "FLOAT64", filter_obj.max_tone))
 
     where_clause = " AND ".join(conditions)
@@ -1366,7 +1368,7 @@ class BigQuerySource:
     async def _execute_query_batch(
         self,
         query: str,
-        parameters: list[bigquery.ScalarQueryParameter],
+        parameters: Sequence[bigquery.ScalarQueryParameter | bigquery.ArrayQueryParameter],
     ) -> tuple[list[dict[str, Any]], int | None]:
         """Execute a BigQuery query and return all results as a batch.
 
@@ -1459,6 +1461,10 @@ class BigQuerySource:
         # Validate group_by columns against allowlist
         _validate_columns(group_by, "events")
 
+        if not group_by and not aggregations:
+            msg = "At least one of group_by or aggregations must be non-empty"
+            raise BigQueryError(msg)
+
         # Validate aggregation columns against allowlist (except "*")
         agg_columns = [a.column for a in aggregations if a.column != "*"]
         if agg_columns:
@@ -1469,7 +1475,6 @@ class BigQuerySource:
         agg_aliases = self._build_agg_select(aggregations, select_parts)
 
         select_clause = ", ".join(select_parts)
-        group_clause = ", ".join(group_by)
 
         # Build WHERE clause
         where_clause, parameters = _build_where_clause_for_events(filter_obj)
@@ -1478,13 +1483,10 @@ class BigQuerySource:
         order_clause = self._build_order_clause(order_by, ascending, limit, agg_aliases)
 
         # Build complete query
-        query = (
-            f"SELECT {select_clause} "
-            f"FROM `{TABLES['events']}` "
-            f"WHERE {where_clause} "
-            f"GROUP BY {group_clause} "
-            f"{order_clause}"
-        )
+        query = f"SELECT {select_clause} FROM `{TABLES['events']}` WHERE {where_clause} "
+        if group_by:
+            query += f"GROUP BY {', '.join(group_by)} "
+        query += order_clause
 
         if limit is not None:
             query += f" LIMIT {limit:d}"
@@ -1535,6 +1537,10 @@ class BigQuerySource:
         # Parse and validate group_by columns
         parsed = self._parse_gkg_group_by(group_by)
 
+        if not group_by and not aggregations:
+            msg = "At least one of group_by or aggregations must be non-empty"
+            raise BigQueryError(msg)
+
         # Validate aggregation columns (except "*")
         agg_columns = [a.column for a in aggregations if a.column != "*"]
         if agg_columns:
@@ -1544,7 +1550,6 @@ class BigQuerySource:
         agg_aliases = self._build_agg_select(aggregations, parsed.select_parts)
 
         select_clause = ", ".join(parsed.select_parts)
-        group_clause = ", ".join(parsed.group_refs)
 
         # Build WHERE clause
         where_clause, parameters = _build_where_clause_for_gkg(filter_obj)
@@ -1559,9 +1564,10 @@ class BigQuerySource:
             f"SELECT {select_clause} "
             f"FROM `{TABLES['gkg']}`{parsed.unnest_join} "
             f"WHERE {where_clause} "
-            f"GROUP BY {group_clause} "
-            f"{order_clause}"
         )
+        if parsed.group_refs:
+            query += f"GROUP BY {', '.join(parsed.group_refs)} "
+        query += order_clause
 
         if limit is not None:
             query += f" LIMIT {limit:d}"

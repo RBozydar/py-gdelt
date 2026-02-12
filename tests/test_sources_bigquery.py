@@ -237,14 +237,21 @@ class TestWhereClauseBuilding:
 
         # Should contain all filter conditions
         assert "REGEXP_CONTAINS(V2Themes, @theme_pattern)" in where_clause
-        assert "REGEXP_CONTAINS(V2Locations, @country_code)" in where_clause
-        assert "CAST(SPLIT(V2Tone, ',')[OFFSET(0)] AS FLOAT64) >= @min_tone" in where_clause
+        assert "REGEXP_CONTAINS(V2Locations, @country_pattern)" in where_clause
+        assert (
+            "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(0)] AS FLOAT64) >= @min_tone" in where_clause
+        )
 
         # Verify theme pattern
         param_dict = {p.name: p for p in parameters}
         theme_value = param_dict["theme_pattern"].value
         assert isinstance(theme_value, str)
         assert "ENV_CLIMATECHANGE" in theme_value
+
+        # Verify country pattern uses delimited matching
+        country_value = param_dict["country_pattern"].value
+        assert isinstance(country_value, str)
+        assert country_value == "#US#"
 
     def test_theme_prefix_no_substring_match(self) -> None:
         """Verify theme_prefix doesn't match substrings in the middle of themes.
@@ -1229,6 +1236,114 @@ class TestBigQueryAggregation:
         query = call_args[0][0]
         # Should filter out empty string items from UNNEST
         assert "item != ''" in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_empty_group_by(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that aggregate_events with empty group_by omits GROUP BY clause."""
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 1000
+        mock_job.__iter__ = Mock(return_value=iter([{"total": 42}]))
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        result = await source.aggregate_events(
+            filter_obj,
+            group_by=[],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="total")],
+        )
+
+        assert result.total_rows == 1
+        assert result.rows[0]["total"] == 42
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        assert "GROUP BY" not in query
+        assert "COUNT(*) AS total" in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_empty_group_by(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that aggregate_gkg with empty group_by omits GROUP BY clause."""
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 1000
+        mock_job.__iter__ = Mock(return_value=iter([{"total": 99}]))
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        result = await source.aggregate_gkg(
+            filter_obj,
+            group_by=[],
+            aggregations=[Aggregation(func=AggFunc.COUNT, alias="total")],
+        )
+
+        assert result.total_rows == 1
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        assert "GROUP BY" not in query
+
+    @pytest.mark.asyncio
+    async def test_aggregate_events_empty_both_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that aggregate_events raises when both group_by and aggregations are empty."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(BigQueryError, match=r"(?i)at least one"):
+            await source.aggregate_events(
+                filter_obj,
+                group_by=[],
+                aggregations=[],
+            )
+
+    @pytest.mark.asyncio
+    async def test_aggregate_gkg_empty_both_raises(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """Test that aggregate_gkg raises when both group_by and aggregations are empty."""
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        with pytest.raises(BigQueryError, match=r"(?i)at least one"):
+            await source.aggregate_gkg(
+                filter_obj,
+                group_by=[],
+                aggregations=[],
+            )
 
 
 class TestColumnProfiles:
