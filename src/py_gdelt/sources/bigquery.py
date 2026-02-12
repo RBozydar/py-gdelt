@@ -66,6 +66,14 @@ TABLES: Final[dict[TableType, str]] = {
 
 # Column allowlists for each table type (prevents unauthorized column access)
 # Only commonly used columns are included to minimize data transfer costs
+# GKG columns that need SQL-level rewriting when used in aggregation expressions.
+# V2Tone is a comma-delimited STRING; the first element is the numeric tone score.
+_GKG_COLUMN_TRANSFORMS: Final[dict[str, str]] = {
+    "V2Tone": "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(0)] AS FLOAT64)",
+}
+
+# Column allowlists for each table type (prevents unauthorized column access)
+# Only commonly used columns are included to minimize data transfer costs
 ALLOWED_COLUMNS: Final[dict[TableType, frozenset[str]]] = {
     "events": frozenset(
         {
@@ -1546,8 +1554,20 @@ class BigQuerySource:
         if agg_columns:
             _validate_columns(agg_columns, "gkg")
 
+        # Rewrite GKG columns that require SQL-level extraction (e.g. V2Tone)
+        transformed_aggs = [
+            Aggregation(
+                func=agg.func,
+                column=_GKG_COLUMN_TRANSFORMS.get(agg.column, agg.column),
+                alias=agg.alias,
+            )
+            if agg.column in _GKG_COLUMN_TRANSFORMS
+            else agg
+            for agg in aggregations
+        ]
+
         # Build aggregation expressions
-        agg_aliases = self._build_agg_select(aggregations, parsed.select_parts)
+        agg_aliases = self._build_agg_select(transformed_aggs, parsed.select_parts)
 
         select_clause = ", ".join(parsed.select_parts)
 

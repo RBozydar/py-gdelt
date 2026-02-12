@@ -1325,6 +1325,46 @@ class TestBigQueryAggregation:
             )
 
     @pytest.mark.asyncio
+    async def test_aggregate_gkg_v2tone_auto_transforms(
+        self,
+        mock_settings_with_credentials: GDELTSettings,
+        mock_bigquery_client: Mock,
+    ) -> None:
+        """V2Tone column should be auto-transformed to extract numeric tone score."""
+        mock_job = Mock()
+        mock_job.result.return_value = None
+        mock_job.total_bytes_processed = 4000
+        mock_job.__iter__ = Mock(
+            return_value=iter(
+                [{"SourceCommonName": "bbc.co.uk", "avg_tone": -2.5}],
+            ),
+        )
+        mock_bigquery_client.query.return_value = mock_job
+
+        source = BigQuerySource(
+            settings=mock_settings_with_credentials,
+            client=mock_bigquery_client,
+        )
+        source._credentials_validated = True
+
+        filter_obj = GKGFilter(date_range=DateRange(start=date(2024, 1, 1)))
+        result = await source.aggregate_gkg(
+            filter_obj,
+            group_by=["SourceCommonName"],
+            aggregations=[
+                Aggregation(func=AggFunc.AVG, column="V2Tone", alias="avg_tone"),
+            ],
+        )
+
+        assert result.total_rows == 1
+
+        call_args = mock_bigquery_client.query.call_args
+        query = call_args[0][0]
+        # Should contain the SAFE_CAST extraction, not bare AVG(V2Tone)
+        assert "SAFE_CAST(SPLIT(V2Tone, ',')[SAFE_OFFSET(0)] AS FLOAT64)" in query
+        assert "AVG(V2Tone)" not in query
+
+    @pytest.mark.asyncio
     async def test_aggregate_gkg_empty_both_raises(
         self,
         mock_settings_with_credentials: GDELTSettings,
