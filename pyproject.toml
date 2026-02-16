@@ -47,6 +47,7 @@ bigquery = ["google-cloud-bigquery>=3.0"]
 pandas = ["pandas>=2.0"]
 mcp = ["mcp>=1.0"]
 fuzzy = ["rapidfuzz>=3.0"]
+parquet = ["pyarrow>=14.0"]
 dev = [
     "commitizen>=3.0",
     "geonamescache>=2.0",  # For regenerating countries.json (FIPS/ISO mappings)
@@ -183,6 +184,7 @@ ignore = [
 "src/py_gdelt/filters.py" = ["PLC0415"]  # Lazy validation imports
 "src/py_gdelt/utils/streaming.py" = ["PLC0415"]  # Optional dependency (pandas)
 "src/py_gdelt/lookups/_utils.py" = ["PLC0415"]  # Optional dependency (rapidfuzz)
+"src/py_gdelt/parquet/__init__.py" = ["PLC0415"]  # Optional dependency (pyarrow)
 
 # Test files get more flexibility
 "tests/**/*.py" = [
@@ -339,6 +341,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["mcp.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pyarrow.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
