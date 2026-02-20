@@ -109,8 +109,8 @@ class TestGetMasterFileList:
     ) -> None:
         """Test successful master file list retrieval."""
         mock_content = (
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-            "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip\n"
+            "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82345 bf33c25f1aa3dg0229895dce5ae754fd http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip\n"
         )
 
         async with respx.mock:
@@ -130,10 +130,8 @@ class TestGetMasterFileList:
         file_source: FileSource,
     ) -> None:
         """Test master file list with translation files."""
-        master_content = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-        trans_content = (
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.translation.export.CSV.zip\n"
-        )
+        master_content = "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+        trans_content = "49305 xyz789abc123def456ghi789jkl012mn http://data.gdeltproject.org/gdeltv2/20240101000000.translation.export.CSV.zip\n"
 
         async with respx.mock:
             respx.get(MASTER_FILE_LIST_URL).mock(
@@ -181,7 +179,7 @@ class TestGetMasterFileList:
         file_source: FileSource,
     ) -> None:
         """Test that master file list is cached."""
-        mock_content = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+        mock_content = "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
 
         async with respx.mock:
             mock_route = respx.get(MASTER_FILE_LIST_URL).mock(
@@ -208,17 +206,30 @@ class TestGetFilesForDateRange:
         self,
         file_source: FileSource,
     ) -> None:
-        """Test getting export files for date range."""
+        """Test getting export files for date range from master list."""
         start = datetime(2024, 1, 1, 0, 0, 0)
         end = datetime(2024, 1, 1, 0, 30, 0)
 
-        urls = await file_source.get_files_for_date_range(
-            start_date=start,
-            end_date=end,
-            file_type="export",
+        master_content = (
+            "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82000 def456ghi789jkl012mno345pqr678 http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
+            "83000 ghi789jkl012mno345pqr678stu901 http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip\n"
+            "84000 jkl012mno345pqr678stu901vwx234 http://data.gdeltproject.org/gdeltv2/20240101001500.mentions.CSV.zip\n"
+            "85000 mno345pqr678stu901vwx234yza567 http://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip\n"
+            "86000 pqr678stu901vwx234yza567bcd890 http://data.gdeltproject.org/gdeltv2/20240101003000.gkg.csv.zip\n"
         )
 
-        # Should have 3 files (0:00, 0:15, 0:30)
+        async with respx.mock:
+            respx.get(MASTER_FILE_LIST_URL).mock(
+                return_value=httpx.Response(200, text=master_content),
+            )
+            urls = await file_source.get_files_for_date_range(
+                start_date=start,
+                end_date=end,
+                file_type="export",
+            )
+
+        # Should have 3 export files (0:00, 0:15, 0:30)
         assert len(urls) == 3
         assert "20240101000000.export.CSV.zip" in urls[0]
         assert "20240101001500.export.CSV.zip" in urls[1]
@@ -229,15 +240,25 @@ class TestGetFilesForDateRange:
         self,
         file_source: FileSource,
     ) -> None:
-        """Test getting mentions files."""
+        """Test getting mentions files from master list."""
         start = datetime(2024, 1, 1, 0, 0, 0)
         end = datetime(2024, 1, 1, 0, 0, 0)
 
-        urls = await file_source.get_files_for_date_range(
-            start_date=start,
-            end_date=end,
-            file_type="mentions",
+        master_content = (
+            "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82000 def456ghi789jkl012mno345pqr678 http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
+            "83000 ghi789jkl012mno345pqr678stu901 http://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip\n"
         )
+
+        async with respx.mock:
+            respx.get(MASTER_FILE_LIST_URL).mock(
+                return_value=httpx.Response(200, text=master_content),
+            )
+            urls = await file_source.get_files_for_date_range(
+                start_date=start,
+                end_date=end,
+                file_type="mentions",
+            )
 
         assert len(urls) == 1
         assert "20240101000000.mentions.CSV.zip" in urls[0]
@@ -247,15 +268,25 @@ class TestGetFilesForDateRange:
         self,
         file_source: FileSource,
     ) -> None:
-        """Test getting GKG files."""
+        """Test getting GKG files from master list."""
         start = datetime(2024, 1, 1, 0, 0, 0)
         end = datetime(2024, 1, 1, 0, 0, 0)
 
-        urls = await file_source.get_files_for_date_range(
-            start_date=start,
-            end_date=end,
-            file_type="gkg",
+        master_content = (
+            "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82000 def456ghi789jkl012mno345pqr678 http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
+            "83000 ghi789jkl012mno345pqr678stu901 http://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip\n"
         )
+
+        async with respx.mock:
+            respx.get(MASTER_FILE_LIST_URL).mock(
+                return_value=httpx.Response(200, text=master_content),
+            )
+            urls = await file_source.get_files_for_date_range(
+                start_date=start,
+                end_date=end,
+                file_type="gkg",
+            )
 
         assert len(urls) == 1
         assert "20240101000000.gkg.csv.zip" in urls[0]
@@ -284,21 +315,50 @@ class TestGetFilesForDateRange:
         self,
         file_source: FileSource,
     ) -> None:
-        """Test getting files with translation."""
+        """Test getting files with translation from master lists."""
         start = datetime(2024, 1, 1, 0, 0, 0)
         end = datetime(2024, 1, 1, 0, 0, 0)
 
-        urls = await file_source.get_files_for_date_range(
-            start_date=start,
-            end_date=end,
-            file_type="export",
-            include_translation=True,
-        )
+        master_content = "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+        trans_content = "49305 xyz789abc123def456ghi789jkl012 http://data.gdeltproject.org/gdeltv2/20240101000000.translation.export.CSV.zip\n"
+
+        async with respx.mock:
+            respx.get(MASTER_FILE_LIST_URL).mock(
+                return_value=httpx.Response(200, text=master_content),
+            )
+            respx.get(TRANSLATION_FILE_LIST_URL).mock(
+                return_value=httpx.Response(200, text=trans_content),
+            )
+            urls = await file_source.get_files_for_date_range(
+                start_date=start,
+                end_date=end,
+                file_type="export",
+                include_translation=True,
+            )
 
         # Should have 2 files (regular + translation)
         assert len(urls) == 2
         assert "20240101000000.export.CSV.zip" in urls[0]
         assert "20240101000000.translation.export.CSV.zip" in urls[1]
+
+    @pytest.mark.asyncio
+    async def test_get_files_for_date_range_graph_uses_patterns(
+        self,
+        file_source: FileSource,
+    ) -> None:
+        """Test that graph file types use pattern generation, not master list."""
+        start = datetime(2024, 1, 1, 0, 0, 0)
+        end = datetime(2024, 1, 1, 0, 0, 0)
+
+        # No HTTP mocks needed - pattern generation does not make network calls
+        urls = await file_source.get_files_for_date_range(
+            start_date=start,
+            end_date=end,
+            file_type="gqg",
+        )
+
+        assert len(urls) == 1
+        assert "gdeltv3/gqg" in urls[0]
 
     @pytest.mark.asyncio
     async def test_get_files_for_date_range_invalid_dates(
@@ -331,6 +391,99 @@ class TestGetFilesForDateRange:
                 end_date=end,
                 file_type="invalid",  # type: ignore[arg-type]
             )
+
+
+class TestParseMasterFileLine:
+    """Test master file line parsing."""
+
+    def test_parse_normal_line(self) -> None:
+        """Test parsing a standard 3-column master file line."""
+        result = FileSource._parse_master_file_line(
+            "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        )
+        assert result == "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+
+    def test_parse_blank_line(self) -> None:
+        """Test that blank lines return None."""
+        assert FileSource._parse_master_file_line("") is None
+        assert FileSource._parse_master_file_line("   ") is None
+
+    def test_parse_url_only_line(self) -> None:
+        """Test fallback parsing of a line containing only a URL."""
+        result = FileSource._parse_master_file_line(
+            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        )
+        assert result == "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+
+    def test_parse_malformed_line(self) -> None:
+        """Test that malformed lines without a URL return None."""
+        assert FileSource._parse_master_file_line("just_two_columns values") is None
+
+
+class TestFilterUrlsByTypeAndRange:
+    """Test URL filtering by file type and date range."""
+
+    def test_filter_by_type(self, file_source: FileSource) -> None:
+        """Test filtering URLs by file type suffix."""
+        urls = [
+            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip",
+        ]
+        result = file_source._filter_urls_by_type_and_range(
+            urls,
+            "export",
+            datetime(2024, 1, 1),
+            datetime(2024, 1, 2),
+        )
+        assert len(result) == 1
+        assert "export" in result[0]
+
+    def test_filter_by_date_range(self, file_source: FileSource) -> None:
+        """Test filtering URLs by date range boundaries."""
+        urls = [
+            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240102000000.export.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240103000000.export.CSV.zip",
+        ]
+        result = file_source._filter_urls_by_type_and_range(
+            urls,
+            "export",
+            datetime(2024, 1, 1),
+            datetime(2024, 1, 2),
+        )
+        assert len(result) == 2
+        assert "20240101" in result[0]
+        assert "20240102" in result[1]
+
+    def test_filter_empty_list(self, file_source: FileSource) -> None:
+        """Test filtering an empty URL list."""
+        result = file_source._filter_urls_by_type_and_range(
+            [],
+            "export",
+            datetime(2024, 1, 1),
+            datetime(2024, 1, 2),
+        )
+        assert result == []
+
+    def test_filter_sorted_by_timestamp(self, file_source: FileSource) -> None:
+        """Test that filtered results are sorted by timestamp."""
+        # Provide URLs in reverse order
+        urls = [
+            "http://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
+        ]
+        result = file_source._filter_urls_by_type_and_range(
+            urls,
+            "export",
+            datetime(2024, 1, 1),
+            datetime(2024, 1, 2),
+        )
+        assert len(result) == 3
+        assert "000000" in result[0]
+        assert "001500" in result[1]
+        assert "003000" in result[2]
 
 
 class TestDownloadFile:
