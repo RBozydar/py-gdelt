@@ -155,16 +155,19 @@ async def config_file_usage() -> None:
     config_path = Path(config_path_str)
 
     # Set secure permissions (owner read/write only)
-    config_path.chmod(0o600)
+    await asyncio.to_thread(config_path.chmod, 0o600)
 
     # Write config content
-    config_path.write_text("""
+    await asyncio.to_thread(
+        config_path.write_text,
+        """
 [gdelt]
 timeout = 45
 max_retries = 3
 cache_ttl = 7200
 validate_codes = true
-""")
+""",
+    )
 
     try:
         async with GDELTClient(config_path=config_path) as client:
@@ -174,7 +177,7 @@ validate_codes = true
             print(f"  Cache TTL: {client.settings.cache_ttl}s")
     finally:
         # Cleanup
-        config_path.unlink(missing_ok=True)
+        await asyncio.to_thread(config_path.unlink, missing_ok=True)
 
 
 async def streaming_usage() -> None:
