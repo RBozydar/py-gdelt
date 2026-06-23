@@ -16,12 +16,15 @@ from __future__ import annotations
 import json
 import logging
 from abc import ABC, abstractmethod
+from datetime import UTC, datetime, timedelta
+from email.utils import parsedate_to_datetime
+from math import ceil
 from typing import Any
 
 import httpx
 from tenacity import (
     AsyncRetrying,
-    retry_if_exception_type,
+    retry_if_exception,
     stop_after_attempt,
     wait_exponential,
 )
@@ -40,6 +43,48 @@ from py_gdelt.exceptions import (
 __all__ = ["BaseEndpoint"]
 
 logger = logging.getLogger(__name__)
+
+
+def _utc_now() -> datetime:
+    """Return the current UTC time."""
+    return datetime.now(UTC)
+
+
+def _as_utc(value: datetime) -> datetime:
+    """Return a datetime normalized to UTC."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
+def _parse_retry_after(value: str | None, now: datetime | None = None) -> int | None:
+    """Parse a Retry-After header into non-negative seconds.
+
+    Args:
+        value: Retry-After header value.
+        now: Reference time for HTTP-date values.
+
+    Returns:
+        Seconds until retry, or None when the header is absent or invalid.
+    """
+    if value is None:
+        return None
+
+    normalized_value = value.strip()
+    if not normalized_value:
+        return None
+
+    if normalized_value.isdecimal():
+        return int(normalized_value)
+
+    reference_time = _utc_now() if now is None else _as_utc(now)
+    try:
+        retry_at = parsedate_to_datetime(normalized_value)
+    except (TypeError, ValueError):
+        return None
+
+    remaining_seconds = (_as_utc(retry_at) - reference_time).total_seconds()
+    return max(0, ceil(remaining_seconds))
 
 
 class BaseEndpoint(ABC):
@@ -78,6 +123,9 @@ class BaseEndpoint(ABC):
             raise NotImplementedError(msg)
 
         self.settings = settings or GDELTSettings()
+        self._rate_limit_until: datetime | None = None
+        self._transient_error_until: datetime | None = None
+        self._consecutive_transient_errors = 0
 
         if client is not None:
             self._client = client
@@ -95,12 +143,111 @@ class BaseEndpoint(ABC):
         return httpx.AsyncClient(
             timeout=httpx.Timeout(
                 connect=10.0,
-                read=30.0,
+                read=float(self.settings.timeout),
                 write=10.0,
                 pool=5.0,
             ),
             follow_redirects=True,
         )
+
+    def _record_rate_limit(self, retry_after: int | None, now: datetime) -> None:
+        """Record the endpoint-local rate-limit circuit when configured."""
+        if not self.settings.rate_limit_fail_fast:
+            return
+
+        circuit_seconds = (
+            retry_after if retry_after is not None else self.settings.rate_limit_circuit_seconds
+        )
+        if circuit_seconds is None or circuit_seconds <= 0:
+            self._rate_limit_until = None
+            return
+
+        self._rate_limit_until = now + timedelta(seconds=circuit_seconds)
+
+    def _cap_retry_after(self, retry_after: int | None) -> int | None:
+        """Cap Retry-After seconds according to settings."""
+        if retry_after is None:
+            return None
+
+        max_seconds = self.settings.rate_limit_retry_after_max_seconds
+        if max_seconds <= 0:
+            return retry_after
+        return min(retry_after, max_seconds)
+
+    def _rate_limit_remaining_seconds(self, now: datetime | None = None) -> int | None:
+        """Return remaining endpoint-local circuit seconds if the circuit is open."""
+        if not self.settings.rate_limit_fail_fast or self._rate_limit_until is None:
+            return None
+
+        reference_time = _utc_now() if now is None else _as_utc(now)
+        remaining_seconds = (self._rate_limit_until - reference_time).total_seconds()
+        if remaining_seconds <= 0:
+            self._rate_limit_until = None
+            return None
+
+        return ceil(remaining_seconds)
+
+    def _raise_for_open_rate_limit(self, url: str) -> None:
+        """Raise RateLimitError without I/O when this endpoint is locally limited."""
+        retry_after = self._rate_limit_remaining_seconds()
+        if retry_after is None:
+            return
+
+        msg = f"Rate limit circuit open for {url}"
+        raise RateLimitError(msg, retry_after=retry_after)
+
+    def _record_transient_error(self, now: datetime) -> None:
+        """Record a transient API failure and open the local circuit if needed."""
+        threshold = self.settings.transient_error_circuit_threshold
+        if threshold <= 0:
+            return
+
+        self._consecutive_transient_errors += 1
+        if self._consecutive_transient_errors < threshold:
+            return
+
+        circuit_seconds = self.settings.transient_error_circuit_seconds
+        if circuit_seconds <= 0:
+            self._transient_error_until = None
+            return
+
+        self._transient_error_until = now + timedelta(seconds=circuit_seconds)
+
+    def _reset_transient_errors(self) -> None:
+        """Reset transient error tracking after a successful response."""
+        self._consecutive_transient_errors = 0
+        self._transient_error_until = None
+
+    def _transient_error_remaining_seconds(self, now: datetime | None = None) -> int | None:
+        """Return remaining endpoint-local transient circuit seconds if open."""
+        if self._transient_error_until is None:
+            return None
+
+        reference_time = _utc_now() if now is None else _as_utc(now)
+        remaining_seconds = (self._transient_error_until - reference_time).total_seconds()
+        if remaining_seconds <= 0:
+            self._transient_error_until = None
+            self._consecutive_transient_errors = 0
+            return None
+
+        return ceil(remaining_seconds)
+
+    def _raise_for_open_transient_error(self, url: str) -> None:
+        """Raise APIUnavailableError without I/O when transient circuit is open."""
+        retry_after = self._transient_error_remaining_seconds()
+        if retry_after is None:
+            return
+
+        msg = f"Transient error circuit open for {url}; retry after {retry_after} seconds"
+        raise APIUnavailableError(msg)
+
+    def _should_retry_exception(self, exception: BaseException) -> bool:
+        """Return whether tenacity should retry the exception."""
+        if isinstance(exception, APIUnavailableError):
+            return self._transient_error_remaining_seconds() is None
+        if isinstance(exception, RateLimitError):
+            return self._rate_limit_remaining_seconds() is None
+        return False
 
     async def close(self) -> None:
         """Close the HTTP client if we own it.
@@ -154,8 +301,11 @@ class BaseEndpoint(ABC):
             APIUnavailableError: On 5xx response or connection error (retryable)
             APIError: On other HTTP errors (not retryable)
         """
+        self._raise_for_open_rate_limit(url)
+        self._raise_for_open_transient_error(url)
+
         async for attempt in AsyncRetrying(
-            retry=retry_if_exception_type((RateLimitError, APIUnavailableError)),
+            retry=retry_if_exception(self._should_retry_exception),
             wait=wait_exponential(multiplier=1, min=2, max=60),
             stop=stop_after_attempt(self.settings.max_retries),
             reraise=True,
@@ -171,15 +321,21 @@ class BaseEndpoint(ABC):
 
                     # Handle rate limiting
                     if response.status_code == 429:
-                        retry_after = response.headers.get("Retry-After")
+                        retry_after_header = response.headers.get("Retry-After")
+                        now = _utc_now()
+                        retry_after = self._cap_retry_after(
+                            _parse_retry_after(retry_after_header, now=now),
+                        )
+                        self._record_rate_limit(retry_after, now=now)
                         msg = f"Rate limited by {url}"
                         raise RateLimitError(
                             msg,
-                            retry_after=int(retry_after) if retry_after else None,
+                            retry_after=retry_after,
                         )
 
                     # Handle server errors
                     if 500 <= response.status_code < 600:
+                        self._record_transient_error(_utc_now())
                         msg = f"Server error {response.status_code} from {url}"
                         raise APIUnavailableError(msg)
 
@@ -189,15 +345,18 @@ class BaseEndpoint(ABC):
                         raise APIError(msg)
 
                 except httpx.ConnectError as e:
+                    self._record_transient_error(_utc_now())
                     msg = f"Connection failed to {url}: {e}"
                     raise APIUnavailableError(msg) from e
                 except httpx.TimeoutException as e:
+                    self._record_transient_error(_utc_now())
                     msg = f"Request timed out to {url}: {e}"
                     raise APIUnavailableError(msg) from e
                 except httpx.HTTPStatusError as e:
                     msg = f"HTTP error from {url}: {e}"
                     raise APIError(msg) from e
                 else:
+                    self._reset_transient_errors()
                     return response
 
         # This should never be reached due to reraise=True, but mypy needs it

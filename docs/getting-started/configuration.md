@@ -10,6 +10,11 @@ Set environment variables to configure default behavior:
 # Timeouts and retries
 export GDELT_TIMEOUT=60
 export GDELT_MAX_RETRIES=5
+export GDELT_RATE_LIMIT_FAIL_FAST=true
+export GDELT_RATE_LIMIT_CIRCUIT_SECONDS=60
+export GDELT_RATE_LIMIT_RETRY_AFTER_MAX_SECONDS=1800
+export GDELT_TRANSIENT_ERROR_CIRCUIT_THRESHOLD=3
+export GDELT_TRANSIENT_ERROR_CIRCUIT_SECONDS=30
 
 # Caching
 export GDELT_CACHE_DIR=/path/to/cache
@@ -33,6 +38,11 @@ Create a `gdelt.toml` file:
 [gdelt]
 timeout = 60
 max_retries = 5
+rate_limit_fail_fast = true
+rate_limit_circuit_seconds = 60
+rate_limit_retry_after_max_seconds = 1800
+transient_error_circuit_threshold = 3
+transient_error_circuit_seconds = 30
 cache_dir = "/path/to/cache"
 cache_ttl = 3600
 fallback_to_bigquery = true
@@ -67,6 +77,11 @@ settings = GDELTSettings(
     # Timeouts and retries
     timeout=60,
     max_retries=5,
+    rate_limit_fail_fast=True,
+    rate_limit_circuit_seconds=60,
+    rate_limit_retry_after_max_seconds=1800,
+    transient_error_circuit_threshold=3,
+    transient_error_circuit_seconds=30,
 
     # Caching
     cache_dir=Path.home() / ".cache" / "gdelt",
@@ -96,7 +111,11 @@ async with GDELTClient(settings=settings) as client:
 ### Retries
 
 - **max_retries** (int): Maximum retry attempts. Default: `3`
-- **retry_backoff** (float): Backoff multiplier for retries. Default: `2.0`
+- **rate_limit_fail_fast** (bool): Open an endpoint-local circuit after `429` responses so repeated calls fail without more network I/O. Default: `true`
+- **rate_limit_circuit_seconds** (int): Fallback circuit duration when `Retry-After` is absent or invalid. Default: `60`
+- **rate_limit_retry_after_max_seconds** (int): Maximum `Retry-After` value to honor before capping. Use `0` to disable the cap. Default: `1800`
+- **transient_error_circuit_threshold** (int): Consecutive timeout/server errors before opening an endpoint-local circuit. Use `0` to disable. Default: `3`
+- **transient_error_circuit_seconds** (int): Circuit duration after repeated transient errors. Default: `30`
 
 ### Caching
 
@@ -133,7 +152,7 @@ Configuration is loaded in this order (later overrides earlier):
 
 For BigQuery access:
 
-1. Install dependencies: `pip install py-gdelt[bigquery]`
+1. Install dependencies: `pip install gdelt-py[bigquery]`
 2. Create Google Cloud project
 3. Enable BigQuery API
 4. Create service account and download credentials

@@ -185,17 +185,20 @@ All REST APIs support these timespans:
 
 ## Rate Limiting
 
-GDELT APIs may rate limit. Handle gracefully:
+GDELT APIs may return `429 Too Many Requests`. py-gdelt parses `Retry-After`
+headers and opens an endpoint-local circuit so repeated calls through the same
+endpoint instance fail fast instead of continuing to hit GDELT.
 
 ```python
-from py_gdelt.exceptions import APIError
+import asyncio
+
+from py_gdelt.exceptions import RateLimitError
 
 try:
     result = await client.doc.query(doc_filter)
-except APIError as e:
-    if "rate limit" in str(e).lower():
-        # Wait and retry
-        await asyncio.sleep(60)
+except RateLimitError as e:
+    if e.retry_after is not None:
+        await asyncio.sleep(e.retry_after)
 ```
 
 ## Best Practices

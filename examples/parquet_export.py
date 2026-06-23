@@ -29,6 +29,7 @@ from py_gdelt.parsers.gkg import GKGParser
 from py_gdelt.parsers.mentions import MentionsParser
 from py_gdelt.sources.files import FileSource
 
+
 OUTPUT_DIR = Path("examples/output/parquet")
 
 # Map FileSource file_type → parquet DatasetType
