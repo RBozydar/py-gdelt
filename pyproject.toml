@@ -1,6 +1,6 @@
 [project]
 name = "gdelt-py"
-version = "0.1.9"
+version = "0.1.10"
 description = "Python client library for GDELT (Global Database of Events, Language, and Tone)"
 readme = "README.md"
 authors = [
@@ -448,7 +448,7 @@ color = true
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.9"
+version = "0.1.10"
 version_files = [
     "pyproject.toml:version",
     "src/py_gdelt/__init__.py:__version__",

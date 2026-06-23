@@ -192,11 +192,81 @@ jobs:
         # - CVE-2026-22702: virtualenv (transitive dep)
         # - CVE-2026-0994: protobuf (transitive dep via google-cloud-bigquery, no fix available yet)
 
+  minimal-install:
+    name: Minimal Install Import Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Build wheel
+        run: uv build --wheel
+
+      - name: Create clean environment
+        run: python -m venv .minimal-venv
+
+      - name: Install wheel without extras
+        run: |
+          .minimal-venv/bin/python -m pip install --upgrade pip
+          .minimal-venv/bin/python -m pip install dist/*.whl
+
+      - name: Verify base imports without BigQuery extra
+        run: |
+          .minimal-venv/bin/python - <<'PY'
+          import asyncio
+          import importlib.abc
+          import sys
+
+          for module_name in list(sys.modules):
+              if module_name == "google" or module_name.startswith("google."):
+                  del sys.modules[module_name]
+
+          class BlockGoogleImports(importlib.abc.MetaPathFinder):
+              def find_spec(self, fullname, path=None, target=None):
+                  if fullname == "google" or fullname.startswith("google."):
+                      raise ImportError(f"blocked optional Google import: {fullname}")
+                  return None
+
+          sys.meta_path.insert(0, BlockGoogleImports())
+
+          import py_gdelt
+          from py_gdelt import GDELTClient, GDELTSettings
+          from py_gdelt.endpoints import DocEndpoint
+          from py_gdelt.sources import DataFetcher, FileSource
+
+          async def main():
+              async with GDELTClient(settings=GDELTSettings()) as client:
+                  assert isinstance(client.doc, DocEndpoint)
+
+          asyncio.run(main())
+          assert py_gdelt.__version__
+          assert DataFetcher is not None
+          assert FileSource is not None
+
+          try:
+              from py_gdelt.sources import BigQuerySource
+          except ImportError as exc:
+              message = str(exc)
+              assert "gdelt-py[bigquery]" in message
+          else:
+              raise AssertionError(f"expected ImportError, got {BigQuerySource!r}")
+          PY
+
   # Summary job that depends on all checks
   ci-success:
     name: All CI Checks Passed
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, doc-coverage, test]
+    needs: [lint, typecheck, doc-coverage, test, minimal-install]
     if: always()
     steps:
       - name: Check all jobs status
@@ -204,7 +274,8 @@ jobs:
           if [[ "${{ needs.lint.result }}" != "success" || \
                 "${{ needs.typecheck.result }}" != "success" || \
                 "${{ needs.doc-coverage.result }}" != "success" || \
-                "${{ needs.test.result }}" != "success" ]]; then
+                "${{ needs.test.result }}" != "success" || \
+                "${{ needs.minimal-install.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
           fi
@@ -218,3 +289,4 @@ jobs:
           echo "- Type Checking (MyPy): ${{ needs.typecheck.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Documentation Coverage: ${{ needs.doc-coverage.result }} (${{ needs.doc-coverage.outputs.coverage }}%)" >> $GITHUB_STEP_SUMMARY
           echo "- Tests (Multiple Python versions): ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Minimal Install Import Smoke: ${{ needs.minimal-install.result }}" >> $GITHUB_STEP_SUMMARY

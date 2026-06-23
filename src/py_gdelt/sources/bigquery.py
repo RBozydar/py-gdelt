@@ -26,16 +26,41 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Final, Literal
 
-from google.cloud import bigquery
-from google.cloud.exceptions import GoogleCloudError
-from google.oauth2 import service_account
+
+try:
+    from google.cloud import bigquery
+    from google.cloud.exceptions import GoogleCloudError
+    from google.oauth2 import service_account
+except ImportError as exc:
+    msg = (
+        "BigQuerySource requires the optional BigQuery dependency. "
+        "Install it with: pip install 'gdelt-py[bigquery]'"
+    )
+    raise ImportError(msg) from exc
 
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import BigQueryError, ConfigurationError, SecurityError
 from py_gdelt.filters import DateRange, EventFilter, GKGFilter
+from py_gdelt.sources._bigquery_rows import (
+    _BQ_EVENT_MAP,
+    _BQ_GKG_MAP,
+    _BQ_MENTION_MAP,
+    _bq_row_to_raw_event,
+    _bq_row_to_raw_gkg,
+    _bq_row_to_raw_mention,
+)
 
 
-__all__ = ["BigQuerySource", "TableType"]
+__all__ = [
+    "_BQ_EVENT_MAP",
+    "_BQ_GKG_MAP",
+    "_BQ_MENTION_MAP",
+    "BigQuerySource",
+    "TableType",
+    "_bq_row_to_raw_event",
+    "_bq_row_to_raw_gkg",
+    "_bq_row_to_raw_mention",
+]
 
 logger = logging.getLogger(__name__)
 
