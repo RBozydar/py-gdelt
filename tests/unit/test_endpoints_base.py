@@ -10,6 +10,8 @@ Tests cover:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
 from typing import Any
 
 import httpx
@@ -84,6 +86,12 @@ class TestClientLifecycle:
         assert endpoint.settings.timeout == 60
         await endpoint.close()
 
+    async def test_created_client_uses_settings_read_timeout(self) -> None:
+        """Test owned client read timeout uses configured settings timeout."""
+        endpoint = TestEndpoint(settings=GDELTSettings(timeout=45))
+        assert endpoint._client.timeout.read == 45.0
+        await endpoint.close()
+
     async def test_uses_default_settings_when_none_provided(self) -> None:
         """Test endpoint uses default settings when none provided."""
         endpoint = TestEndpoint()
@@ -152,6 +160,52 @@ class TestErrorHandling:
 
             assert exc_info.value.retry_after == 30
             assert "Rate limited" in str(exc_info.value)
+
+    @respx.mock
+    async def test_rate_limit_parses_http_date_retry_after(self) -> None:
+        """Test 429 response parses HTTP-date Retry-After values."""
+        retry_at = datetime.now(UTC) + timedelta(seconds=120)
+        retry_after = format_datetime(retry_at, usegmt=True)
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(429, headers={"Retry-After": retry_after}),
+        )
+
+        async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
+            with pytest.raises(RateLimitError) as exc_info:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert exc_info.value.retry_after is not None
+            assert 1 <= exc_info.value.retry_after <= 120
+
+    @respx.mock
+    async def test_rate_limit_ignores_invalid_retry_after(self) -> None:
+        """Test invalid Retry-After values do not mask the rate-limit error."""
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(429, headers={"Retry-After": "soon"}),
+        )
+
+        async with TestEndpoint(settings=GDELTSettings(max_retries=1)) as endpoint:
+            with pytest.raises(RateLimitError) as exc_info:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert exc_info.value.retry_after is None
+
+    @respx.mock
+    async def test_rate_limit_caps_retry_after(self) -> None:
+        """Test Retry-After values are capped by settings."""
+        respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(429, headers={"Retry-After": "9999"}),
+        )
+        settings = GDELTSettings(
+            max_retries=1,
+            rate_limit_retry_after_max_seconds=30,
+        )
+
+        async with TestEndpoint(settings=settings) as endpoint:
+            with pytest.raises(RateLimitError) as exc_info:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert exc_info.value.retry_after == 30
 
     @respx.mock
     async def test_rate_limit_without_retry_after(self) -> None:
@@ -311,7 +365,9 @@ class TestRetryBehavior:
             ],
         )
 
-        async with TestEndpoint(settings=GDELTSettings(max_retries=3)) as endpoint:
+        settings = GDELTSettings(max_retries=3, rate_limit_fail_fast=False)
+
+        async with TestEndpoint(settings=settings) as endpoint:
             response = await endpoint._get("https://api.gdeltproject.org/test")
             assert response.status_code == 200
             assert response.json() == {"success": True}
@@ -359,6 +415,115 @@ class TestRetryBehavior:
 
             # Should be called max_retries times
             assert route.call_count == 2
+
+    @respx.mock
+    async def test_rate_limit_fail_fast_circuit_is_endpoint_local(self) -> None:
+        """Test fail-fast rate-limit circuit skips I/O only for the limited endpoint."""
+        route = respx.get("https://api.gdeltproject.org/test").mock(
+            side_effect=[
+                httpx.Response(429, headers={"Retry-After": "60"}),
+                httpx.Response(200, json={"ok": True}),
+            ],
+        )
+        settings = GDELTSettings(max_retries=1, rate_limit_fail_fast=True)
+
+        async with TestEndpoint(settings=settings) as limited_endpoint:
+            with pytest.raises(RateLimitError) as first_exc:
+                await limited_endpoint._get("https://api.gdeltproject.org/test")
+
+            assert first_exc.value.retry_after == 60
+            assert route.call_count == 1
+
+            with pytest.raises(RateLimitError) as second_exc:
+                await limited_endpoint._get("https://api.gdeltproject.org/test")
+
+            assert second_exc.value.retry_after is not None
+            assert 1 <= second_exc.value.retry_after <= 60
+            assert route.call_count == 1
+
+        async with TestEndpoint(settings=settings) as other_endpoint:
+            response = await other_endpoint._get("https://api.gdeltproject.org/test")
+
+        assert response.status_code == 200
+        assert response.json() == {"ok": True}
+        assert route.call_count == 2
+
+    @respx.mock
+    async def test_rate_limit_fail_fast_uses_fallback_circuit_seconds(self) -> None:
+        """Test fail-fast circuit uses settings fallback when Retry-After is absent."""
+        route = respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(429),
+        )
+        settings = GDELTSettings(
+            max_retries=1,
+            rate_limit_fail_fast=True,
+            rate_limit_circuit_seconds=7,
+        )
+
+        async with TestEndpoint(settings=settings) as endpoint:
+            with pytest.raises(RateLimitError) as first_exc:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert first_exc.value.retry_after is None
+            assert route.call_count == 1
+
+            with pytest.raises(RateLimitError) as second_exc:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert second_exc.value.retry_after is not None
+            assert 1 <= second_exc.value.retry_after <= 7
+            assert route.call_count == 1
+
+    @respx.mock
+    async def test_transient_error_circuit_opens_after_threshold(self) -> None:
+        """Test repeated transient errors open a local fail-fast circuit."""
+        route = respx.get("https://api.gdeltproject.org/test").mock(
+            return_value=httpx.Response(503),
+        )
+        settings = GDELTSettings(
+            max_retries=5,
+            transient_error_circuit_threshold=2,
+            transient_error_circuit_seconds=10,
+        )
+
+        async with TestEndpoint(settings=settings) as endpoint:
+            with pytest.raises(APIUnavailableError) as first_exc:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert "Server error 503" in str(first_exc.value)
+            assert route.call_count == 2
+
+            with pytest.raises(APIUnavailableError) as second_exc:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert "Transient error circuit open" in str(second_exc.value)
+            assert route.call_count == 2
+
+    @respx.mock
+    async def test_transient_error_success_resets_count(self) -> None:
+        """Test successful requests reset consecutive transient error tracking."""
+        route = respx.get("https://api.gdeltproject.org/test").mock(
+            side_effect=[
+                httpx.Response(503),
+                httpx.Response(200, json={"ok": True}),
+                httpx.Response(503),
+                httpx.Response(200, json={"ok": True}),
+            ],
+        )
+        settings = GDELTSettings(
+            max_retries=2,
+            transient_error_circuit_threshold=2,
+            transient_error_circuit_seconds=10,
+        )
+
+        async with TestEndpoint(settings=settings) as endpoint:
+            first_response = await endpoint._get("https://api.gdeltproject.org/test")
+            assert first_response.status_code == 200
+
+            second_response = await endpoint._get("https://api.gdeltproject.org/test")
+            assert second_response.status_code == 200
+
+        assert route.call_count == 4
 
 
 class TestAbstractMethod:

@@ -268,6 +268,15 @@ ignore = [
   "INP001",   # Implicit namespace package OK for scripts
 ]
 
+"scripts/measure_dataset_sizes.py" = [
+  "T201",      # print statements expected in CLI scripts
+  "INP001",    # Implicit namespace package OK for scripts
+  "BLE001",    # exploratory measurement should report and continue on dataset errors
+  "ASYNC230",  # writes one local report file at script completion
+  "PTH123",    # leave scratch script file handling alone
+  "S108",      # writes a fixed /tmp report for manual inspection
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["py_gdelt"]
 section-order = [
