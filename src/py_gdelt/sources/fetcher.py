@@ -26,7 +26,7 @@ from py_gdelt.exceptions import (
     RateLimitError,
 )
 from py_gdelt.filters import DateRange, EventFilter, GKGFilter, NGramsFilter
-from py_gdelt.sources.bigquery import (
+from py_gdelt.sources._bigquery_rows import (
     _bq_row_to_raw_event,
     _bq_row_to_raw_gkg,
     _bq_row_to_raw_mention,

@@ -151,8 +151,8 @@ class TestGDELTClientAsyncContextManager:
         )
         client = GDELTClient(settings=settings)
 
-        with patch("py_gdelt.client.BigQuerySource") as mock_bq:
-            mock_bq.return_value = MagicMock()
+        mock_bq = MagicMock()
+        with patch("py_gdelt.client._load_bigquery_source", return_value=mock_bq):
             async with client:
                 # BigQuerySource should be initialized
                 mock_bq.assert_called_once_with(settings=settings)
@@ -174,10 +174,8 @@ class TestGDELTClientAsyncContextManager:
         )
         client = GDELTClient(settings=settings)
 
-        with patch(
-            "py_gdelt.client.BigQuerySource",
-            side_effect=Exception("BQ init failed"),
-        ):
+        mock_bq = MagicMock(side_effect=Exception("BQ init failed"))
+        with patch("py_gdelt.client._load_bigquery_source", return_value=mock_bq):
             # Should not raise, just log warning
             async with client:
                 assert client._bigquery_source is None
@@ -390,7 +388,7 @@ class TestGDELTClientIntegration:
             validate_codes=True,
         )
 
-        with patch("py_gdelt.client.BigQuerySource"):
+        with patch("py_gdelt.client._load_bigquery_source", return_value=MagicMock()):
             async with GDELTClient(settings=settings) as client:
                 # All features should be accessible
                 assert client.events is not None
@@ -410,7 +408,8 @@ class TestGDELTClientBigQueryProperty:
         )
 
         mock_bq_instance = MagicMock()
-        with patch("py_gdelt.client.BigQuerySource", return_value=mock_bq_instance):
+        mock_bq = MagicMock(return_value=mock_bq_instance)
+        with patch("py_gdelt.client._load_bigquery_source", return_value=mock_bq):
             async with GDELTClient(settings=settings) as client:
                 assert client.bigquery is mock_bq_instance
 

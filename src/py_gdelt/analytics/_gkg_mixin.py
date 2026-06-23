@@ -10,7 +10,6 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from py_gdelt.analytics._builders import build_gkg_approx_top_sql
 from py_gdelt.sources.aggregation import AggFunc, Aggregation, AggregationResult, GKGUnnestField
 
 
@@ -119,6 +118,8 @@ class GKGAnalyticsMixin:
             ValueError: If n is out of range (1-1000).
         """
         bq = _require_bigquery(self)
+        from py_gdelt.analytics._builders import build_gkg_approx_top_sql  # noqa: PLC0415
+
         sql, params = build_gkg_approx_top_sql(filter_obj, field=field, n=n)
         rows, bytes_processed = await bq._execute_query_batch(sql, params)  # noqa: SLF001
         meta = bq.last_query_metadata

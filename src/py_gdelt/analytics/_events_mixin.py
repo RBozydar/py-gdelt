@@ -12,14 +12,6 @@ import datetime
 import math
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from py_gdelt.analytics._builders import (
-    build_comparison_sql,
-    build_dyad_sql,
-    build_extremes_sql,
-    build_time_series_sql,
-    build_top_n_per_group_sql,
-    build_trend_sql,
-)
 from py_gdelt.analytics.results import (
     ComparisonResult,
     DyadResult,
@@ -153,6 +145,8 @@ class EventsAnalyticsMixin:
             raise ValueError(msg)
 
         bq = _require_bigquery(self)
+        from py_gdelt.analytics._builders import build_time_series_sql  # noqa: PLC0415
+
         metrics_tuple = tuple(metrics)
         sql, params = build_time_series_sql(
             filter_obj,
@@ -196,6 +190,8 @@ class EventsAnalyticsMixin:
             BigQueryError: If the query fails.
         """
         bq = _require_bigquery(self)
+        from py_gdelt.analytics._builders import build_extremes_sql  # noqa: PLC0415
+
         sql, params = build_extremes_sql(
             filter_obj,
             criterion=criterion,
@@ -262,6 +258,8 @@ class EventsAnalyticsMixin:
             raise ValueError(msg)
 
         bq = _require_bigquery(self)
+        from py_gdelt.analytics._builders import build_comparison_sql  # noqa: PLC0415
+
         sql, params = build_comparison_sql(
             filter_obj,
             compare_by=compare_by,
@@ -305,6 +303,8 @@ class EventsAnalyticsMixin:
             ValueError: If there are fewer than 2 data points for regression.
         """
         bq = _require_bigquery(self)
+        from py_gdelt.analytics._builders import build_trend_sql  # noqa: PLC0415
+
         sql, params = build_trend_sql(
             filter_obj,
             metric=metric,
@@ -374,6 +374,8 @@ class EventsAnalyticsMixin:
             BigQueryError: If the query fails.
         """
         bq = _require_bigquery(self)
+        from py_gdelt.analytics._builders import build_dyad_sql  # noqa: PLC0415
+
         metrics_tuple = tuple(metrics)
         sql, params = build_dyad_sql(
             filter_obj,
@@ -437,6 +439,8 @@ class EventsAnalyticsMixin:
             BigQueryError: If the query fails.
         """
         bq = _require_bigquery(self)
+        from py_gdelt.analytics._builders import build_top_n_per_group_sql  # noqa: PLC0415
+
         sql, params = build_top_n_per_group_sql(
             filter_obj,
             partition_by=partition_by,

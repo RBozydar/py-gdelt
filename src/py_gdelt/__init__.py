@@ -41,7 +41,7 @@ from py_gdelt.sources.columns import EventColumns, GKGColumns, MentionColumns
 from py_gdelt.sources.metadata import QueryEstimate, QueryMetadata
 
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 __all__ = [
     "APIError",
