@@ -207,7 +207,7 @@ def _bq_row_to_raw_mention(row: dict[str, Any]) -> _RawMention:
         else:
             kwargs[raw_field] = str(value)
 
-    kwargs["event_time_full"] = ""
-    kwargs["mention_time_full"] = ""
+    kwargs["event_time_full"] = kwargs["event_time_date"]
+    kwargs["mention_time_full"] = kwargs["mention_time_date"]
 
     return _RawMention(**kwargs)

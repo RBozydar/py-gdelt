@@ -206,7 +206,7 @@ class GDELTClient:
                 # google-cloud-bigquery package not installed
                 logger.warning(
                     "BigQuery package not installed: %s. "
-                    "Install with: pip install py-gdelt[bigquery]",
+                    "Install with: pip install gdelt-py[bigquery]",
                     e,
                 )
                 self._bigquery_source = None

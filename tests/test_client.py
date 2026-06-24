@@ -11,6 +11,7 @@ This module tests:
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -179,6 +180,29 @@ class TestGDELTClientAsyncContextManager:
             # Should not raise, just log warning
             async with client:
                 assert client._bigquery_source is None
+
+    @pytest.mark.asyncio
+    async def test_bigquery_missing_extra_warning_uses_distribution_name(
+        self,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Test missing BigQuery extra warning uses the published package name."""
+        settings = GDELTSettings(
+            bigquery_project="test-project",
+            bigquery_credentials="/path/to/creds.json",
+        )
+        client = GDELTClient(settings=settings)
+        caplog.set_level(logging.WARNING, logger="py_gdelt.client")
+
+        with patch(
+            "py_gdelt.client._load_bigquery_source",
+            side_effect=ImportError("missing google-cloud-bigquery"),
+        ):
+            async with client:
+                assert client._bigquery_source is None
+
+        assert "pip install gdelt-py[bigquery]" in caplog.text
+        assert "pip install py-gdelt[bigquery]" not in caplog.text
 
 
 class TestGDELTClientSyncContextManager:

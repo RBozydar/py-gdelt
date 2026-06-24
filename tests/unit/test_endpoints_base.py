@@ -531,6 +531,42 @@ class TestRetryBehavior:
 
         assert route.call_count == 4
 
+    @pytest.mark.parametrize("client_status_code", [400, 404])
+    @respx.mock
+    async def test_non_transient_api_errors_reset_transient_count(
+        self,
+        client_status_code: int,
+    ) -> None:
+        """Test client API errors break a consecutive transient failure chain."""
+        route = respx.get("https://api.gdeltproject.org/test").mock(
+            side_effect=[
+                httpx.Response(503),
+                httpx.Response(client_status_code),
+                httpx.Response(503),
+                httpx.Response(200, json={"ok": True}),
+            ],
+        )
+        settings = GDELTSettings(
+            max_retries=1,
+            transient_error_circuit_threshold=2,
+            transient_error_circuit_seconds=10,
+        )
+
+        async with TestEndpoint(settings=settings) as endpoint:
+            with pytest.raises(APIUnavailableError):
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            with pytest.raises(APIError):
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            with pytest.raises(APIUnavailableError):
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            response = await endpoint._get("https://api.gdeltproject.org/test")
+
+        assert response.status_code == 200
+        assert route.call_count == 4
+
 
 class TestAbstractMethod:
     """Test abstract method enforcement."""

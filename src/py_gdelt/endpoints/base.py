@@ -338,6 +338,7 @@ class BaseEndpoint(ABC):
 
                     # Handle client errors
                     if 400 <= response.status_code < 500:
+                        self._reset_transient_errors()
                         msg = f"HTTP {response.status_code} from {url}: {response.text[:200]}"
                         raise APIError(msg)
 
@@ -350,6 +351,7 @@ class BaseEndpoint(ABC):
                     msg = f"Request timed out to {url}: {e}"
                     raise APIUnavailableError(msg) from e
                 except httpx.HTTPStatusError as e:
+                    self._reset_transient_errors()
                     msg = f"HTTP error from {url}: {e}"
                     raise APIError(msg) from e
                 else:
