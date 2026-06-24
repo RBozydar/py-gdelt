@@ -99,7 +99,7 @@ jobs:
       - name: Find existing issue
         if: steps.examples.outputs.examples_failed == 'true'
         id: find_issue
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const issues = await github.rest.issues.listForRepo({
@@ -114,7 +114,7 @@ jobs:
 
       - name: Update or create issue
         if: steps.examples.outputs.examples_failed == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           CLAUDE_RESULT: ${{ steps.claude_analysis.outputs.result }}
         with:
