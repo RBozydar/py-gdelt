@@ -29,6 +29,13 @@ from py_gdelt.sources.bigquery import (
 )
 
 
+def test_bigquery_public_exports_exclude_internal_row_helpers() -> None:
+    """BigQuery public star exports do not include underscore-prefixed internals."""
+    from py_gdelt.sources import bigquery as bigquery_module
+
+    assert set(bigquery_module.__all__) == {"BigQuerySource", "TableType"}
+
+
 @pytest.fixture
 def mock_settings_with_credentials(tmp_path: Path) -> GDELTSettings:
     """Create test settings with explicit credentials."""

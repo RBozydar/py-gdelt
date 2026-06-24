@@ -8,6 +8,7 @@ optional dependency.
 
 from __future__ import annotations
 
+from dataclasses import MISSING, fields
 from typing import Any, Final
 
 from py_gdelt.models._internal import _RawEvent, _RawGKG, _RawMention
@@ -127,71 +128,22 @@ _BQ_MENTION_MAP: Final[dict[str, str]] = {
     "Extras": "extras",
 }
 
+
+def _required_raw_field_names(
+    raw_model: type[_RawEvent] | type[_RawGKG] | type[_RawMention],
+) -> frozenset[str]:
+    """Return dataclass fields that must be populated with strings."""
+    return frozenset(
+        field.name
+        for field in fields(raw_model)
+        if field.default is MISSING and field.default_factory is MISSING
+    )
+
+
 # Required fields (str, not str | None) on each _Raw* dataclass.
-_RAW_EVENT_REQUIRED: Final[frozenset[str]] = frozenset(
-    {
-        "global_event_id",
-        "sql_date",
-        "month_year",
-        "year",
-        "fraction_date",
-        "is_root_event",
-        "event_code",
-        "event_base_code",
-        "event_root_code",
-        "quad_class",
-        "goldstein_scale",
-        "num_mentions",
-        "num_sources",
-        "num_articles",
-        "avg_tone",
-        "date_added",
-    },
-)
-
-_RAW_GKG_REQUIRED: Final[frozenset[str]] = frozenset(
-    {
-        "gkg_record_id",
-        "date",
-        "source_collection_id",
-        "source_common_name",
-        "document_identifier",
-        "counts_v1",
-        "counts_v2",
-        "themes_v1",
-        "themes_v2_enhanced",
-        "locations_v1",
-        "locations_v2_enhanced",
-        "persons_v1",
-        "persons_v2_enhanced",
-        "organizations_v1",
-        "organizations_v2_enhanced",
-        "tone",
-        "dates_v2",
-        "gcam",
-    },
-)
-
-_RAW_MENTION_REQUIRED: Final[frozenset[str]] = frozenset(
-    {
-        "global_event_id",
-        "event_time_date",
-        "event_time_full",
-        "mention_time_date",
-        "mention_time_full",
-        "mention_type",
-        "mention_source_name",
-        "mention_identifier",
-        "sentence_id",
-        "actor1_char_offset",
-        "actor2_char_offset",
-        "action_char_offset",
-        "in_raw_text",
-        "confidence",
-        "mention_doc_length",
-        "mention_doc_tone",
-    },
-)
+_RAW_EVENT_REQUIRED: Final[frozenset[str]] = _required_raw_field_names(_RawEvent)
+_RAW_GKG_REQUIRED: Final[frozenset[str]] = _required_raw_field_names(_RawGKG)
+_RAW_MENTION_REQUIRED: Final[frozenset[str]] = _required_raw_field_names(_RawMention)
 
 
 def _bq_row_to_raw_event(row: dict[str, Any]) -> _RawEvent:

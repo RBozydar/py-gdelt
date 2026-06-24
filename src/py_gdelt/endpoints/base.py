@@ -89,6 +89,10 @@ class BaseEndpoint(ABC):
     - Define BASE_URL class attribute
     - Implement _build_url() method
 
+    Endpoint-local circuit state is intended for normal single-event-loop
+    async use. Create separate endpoint instances when sharing work across
+    threads.
+
     Args:
         settings: Configuration settings. If None, uses defaults.
         client: Optional shared HTTP client. If None, creates owned client.
@@ -132,10 +136,11 @@ class BaseEndpoint(ABC):
         Returns:
             Configured httpx.AsyncClient with timeouts and redirect following.
         """
+        read_timeout = float(self.settings.timeout)
         return httpx.AsyncClient(
             timeout=httpx.Timeout(
                 connect=10.0,
-                read=float(self.settings.timeout),
+                read=None if read_timeout < 0 else read_timeout,
                 write=10.0,
                 pool=5.0,
             ),

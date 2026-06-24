@@ -92,6 +92,12 @@ class TestClientLifecycle:
         assert endpoint._client.timeout.read == 45.0
         await endpoint.close()
 
+    async def test_created_client_disables_negative_settings_read_timeout(self) -> None:
+        """Test negative settings timeout disables the owned client read timeout."""
+        endpoint = TestEndpoint(settings=GDELTSettings(timeout=-1))
+        assert endpoint._client.timeout.read is None
+        await endpoint.close()
+
     async def test_uses_default_settings_when_none_provided(self) -> None:
         """Test endpoint uses default settings when none provided."""
         endpoint = TestEndpoint()
