@@ -42,4 +42,8 @@ response. Further calls through the same endpoint instance raise
 `RateLimitError` locally until the parsed `Retry-After` value or configured
 fallback circuit expires.
 
+Rate-limit and transient-error circuit state is endpoint-local. If concurrent
+workers need independent circuit state or strict isolation, give each worker its
+own `GDELTClient`/endpoint instance rather than sharing one endpoint object.
+
 For details, see [API reference](../api/exceptions.md).

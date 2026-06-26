@@ -189,6 +189,17 @@ GDELT APIs may return `429 Too Many Requests`. py-gdelt parses `Retry-After`
 headers and opens an endpoint-local circuit so repeated calls through the same
 endpoint instance fail fast instead of continuing to hit GDELT.
 
+The circuit is local to each endpoint object. It uses the capped `Retry-After`
+value when GDELT provides one, otherwise it uses `rate_limit_circuit_seconds`.
+Later local `RateLimitError.retry_after` values report the remaining circuit
+time, so they count down as the circuit expires. Successful requests reset
+transient-error tracking, but an open rate-limit circuit expires by time instead
+of being cleared early.
+
+Circuit state is not protected by locks. For strict isolation across concurrent
+workers, threads, or separate retry policies, create separate `GDELTClient`
+instances instead of sharing the same endpoint object.
+
 ```python
 import asyncio
 
