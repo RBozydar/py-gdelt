@@ -89,9 +89,10 @@ class BaseEndpoint(ABC):
     - Define BASE_URL class attribute
     - Implement _build_url() method
 
-    Endpoint-local circuit state is intended for normal single-event-loop
-    async use. Create separate endpoint instances when sharing work across
-    threads.
+    Endpoint-local rate-limit and transient circuit state is not protected by
+    locks. Shared instances can observe normal async task interleaving; use
+    separate endpoint/client instances when concurrent tasks or threads need
+    strict isolation.
 
     Args:
         settings: Configuration settings. If None, uses defaults.
@@ -323,6 +324,7 @@ class BaseEndpoint(ABC):
                         retry_after = self._cap_retry_after(
                             _parse_retry_after(retry_after_header, now=now),
                         )
+                        self._reset_transient_errors()
                         self._record_rate_limit(retry_after, now=now)
                         msg = f"Rate limited by {url}"
                         raise RateLimitError(

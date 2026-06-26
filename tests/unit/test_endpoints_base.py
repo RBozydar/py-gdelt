@@ -531,6 +531,43 @@ class TestRetryBehavior:
 
         assert route.call_count == 4
 
+    @respx.mock
+    async def test_rate_limit_resets_transient_error_count(self) -> None:
+        """Test rate-limit responses break a consecutive transient failure chain."""
+        route = respx.get("https://api.gdeltproject.org/test").mock(
+            side_effect=[
+                httpx.Response(503),
+                httpx.Response(429, headers={"Retry-After": "1"}),
+                httpx.Response(503),
+                httpx.Response(200, json={"ok": True}),
+            ],
+        )
+        settings = GDELTSettings(
+            max_retries=1,
+            rate_limit_fail_fast=False,
+            transient_error_circuit_threshold=2,
+            transient_error_circuit_seconds=10,
+        )
+
+        async with TestEndpoint(settings=settings) as endpoint:
+            with pytest.raises(APIUnavailableError) as first_exc:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert "Server error 503" in str(first_exc.value)
+
+            with pytest.raises(RateLimitError):
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            with pytest.raises(APIUnavailableError) as second_exc:
+                await endpoint._get("https://api.gdeltproject.org/test")
+
+            assert "Server error 503" in str(second_exc.value)
+
+            response = await endpoint._get("https://api.gdeltproject.org/test")
+
+        assert response.status_code == 200
+        assert route.call_count == 4
+
     @pytest.mark.parametrize("client_status_code", [400, 404])
     @respx.mock
     async def test_non_transient_api_errors_reset_transient_count(
