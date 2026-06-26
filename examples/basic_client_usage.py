@@ -13,6 +13,8 @@ import asyncio
 from datetime import date
 from pathlib import Path
 
+from anyio import Path as AsyncPath
+
 from py_gdelt import GDELTClient
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, DataError, RateLimitError
@@ -153,12 +155,13 @@ async def config_file_usage() -> None:
 
     os.close(fd)  # Close the file descriptor
     config_path = Path(config_path_str)
+    async_config_path = AsyncPath(config_path)
 
     # Set secure permissions (owner read/write only)
-    config_path.chmod(0o600)
+    await async_config_path.chmod(0o600)
 
     # Write config content
-    config_path.write_text("""
+    await async_config_path.write_text("""
 [gdelt]
 timeout = 45
 max_retries = 3
@@ -174,7 +177,7 @@ validate_codes = true
             print(f"  Cache TTL: {client.settings.cache_ttl}s")
     finally:
         # Cleanup
-        config_path.unlink(missing_ok=True)
+        await async_config_path.unlink(missing_ok=True)
 
 
 async def streaming_usage() -> None:
