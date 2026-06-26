@@ -161,13 +161,15 @@ async def config_file_usage() -> None:
     await async_config_path.chmod(0o600)
 
     # Write config content
-    await async_config_path.write_text("""
+    await async_config_path.write_text(
+        """
 [gdelt]
 timeout = 45
 max_retries = 3
 cache_ttl = 7200
 validate_codes = true
-""")
+""",
+    )
 
     try:
         async with GDELTClient(config_path=config_path) as client:

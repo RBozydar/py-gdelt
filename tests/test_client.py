@@ -11,6 +11,7 @@ This module tests:
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -151,8 +152,8 @@ class TestGDELTClientAsyncContextManager:
         )
         client = GDELTClient(settings=settings)
 
-        with patch("py_gdelt.client.BigQuerySource") as mock_bq:
-            mock_bq.return_value = MagicMock()
+        mock_bq = MagicMock()
+        with patch("py_gdelt.client._load_bigquery_source", return_value=mock_bq):
             async with client:
                 # BigQuerySource should be initialized
                 mock_bq.assert_called_once_with(settings=settings)
@@ -174,13 +175,34 @@ class TestGDELTClientAsyncContextManager:
         )
         client = GDELTClient(settings=settings)
 
-        with patch(
-            "py_gdelt.client.BigQuerySource",
-            side_effect=Exception("BQ init failed"),
-        ):
+        mock_bq = MagicMock(side_effect=Exception("BQ init failed"))
+        with patch("py_gdelt.client._load_bigquery_source", return_value=mock_bq):
             # Should not raise, just log warning
             async with client:
                 assert client._bigquery_source is None
+
+    @pytest.mark.asyncio
+    async def test_bigquery_missing_extra_warning_uses_distribution_name(
+        self,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Test missing BigQuery extra warning uses the published package name."""
+        settings = GDELTSettings(
+            bigquery_project="test-project",
+            bigquery_credentials="/path/to/creds.json",
+        )
+        client = GDELTClient(settings=settings)
+        caplog.set_level(logging.WARNING, logger="py_gdelt.client")
+
+        with patch(
+            "py_gdelt.client._load_bigquery_source",
+            side_effect=ImportError("missing google-cloud-bigquery"),
+        ):
+            async with client:
+                assert client._bigquery_source is None
+
+        assert "pip install gdelt-py[bigquery]" in caplog.text
+        assert "pip install py-gdelt[bigquery]" not in caplog.text
 
 
 class TestGDELTClientSyncContextManager:
@@ -390,7 +412,7 @@ class TestGDELTClientIntegration:
             validate_codes=True,
         )
 
-        with patch("py_gdelt.client.BigQuerySource"):
+        with patch("py_gdelt.client._load_bigquery_source", return_value=MagicMock()):
             async with GDELTClient(settings=settings) as client:
                 # All features should be accessible
                 assert client.events is not None

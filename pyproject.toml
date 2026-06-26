@@ -1,6 +1,6 @@
 [project]
 name = "gdelt-py"
-version = "0.1.7"
+version = "0.1.10"
 description = "Python client library for GDELT (Global Database of Events, Language, and Tone)"
 readme = "README.md"
 authors = [
@@ -268,6 +268,15 @@ ignore = [
   "INP001",   # Implicit namespace package OK for scripts
 ]
 
+"scripts/measure_dataset_sizes.py" = [
+  "T201",      # print statements expected in CLI scripts
+  "INP001",    # Implicit namespace package OK for scripts
+  "BLE001",    # exploratory measurement should report and continue on dataset errors
+  "ASYNC230",  # writes one local report file at script completion
+  "PTH123",    # leave scratch script file handling alone
+  "S108",      # writes a fixed /tmp report for manual inspection
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["py_gdelt"]
 section-order = [
@@ -439,9 +448,10 @@ color = true
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0"
+version = "0.1.10"
 version_files = [
-    "pyproject.toml:version"
+    "pyproject.toml:version",
+    "src/py_gdelt/__init__.py:__version__",
 ]
 tag_format = "v$version"
 update_changelog_on_bump = true

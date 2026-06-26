@@ -176,6 +176,30 @@ class GDELTSettings(BaseSettings):
         default=10,
         description="Maximum concurrent file downloads",
     )
+    rate_limit_fail_fast: bool = Field(
+        default=True,
+        description="Whether endpoint instances fail fast while locally rate limited",
+    )
+    rate_limit_circuit_seconds: int = Field(
+        default=60,
+        ge=0,
+        description="Fallback rate-limit circuit duration when Retry-After is absent",
+    )
+    rate_limit_retry_after_max_seconds: int = Field(
+        default=1800,
+        ge=0,
+        description="Maximum Retry-After seconds to honor before capping; 0 disables cap",
+    )
+    transient_error_circuit_threshold: int = Field(
+        default=3,
+        ge=0,
+        description="Consecutive transient errors before opening a local circuit; 0 disables",
+    )
+    transient_error_circuit_seconds: int = Field(
+        default=30,
+        ge=0,
+        description="Local circuit duration after repeated transient API errors",
+    )
 
     # Behavior settings
     fallback_to_bigquery: bool = Field(

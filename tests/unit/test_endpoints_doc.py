@@ -14,7 +14,7 @@ import pytest
 import respx
 
 from py_gdelt.endpoints.doc import DocEndpoint
-from py_gdelt.exceptions import APIError
+from py_gdelt.exceptions import APIError, RateLimitError
 from py_gdelt.filters import DocFilter
 
 
@@ -387,6 +387,20 @@ class TestResponseHandling:
         async with DocEndpoint() as doc:
             with pytest.raises(APIError):
                 await doc.search("test")
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_rate_limit_preserves_retry_after(self) -> None:
+        """Test DOC API rate limits expose retry metadata."""
+        respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
+            return_value=httpx.Response(429, headers={"Retry-After": "120"}),
+        )
+
+        async with DocEndpoint() as doc:
+            with pytest.raises(RateLimitError) as exc_info:
+                await doc.search("test")
+
+            assert exc_info.value.retry_after == 120
 
     @respx.mock
     @pytest.mark.asyncio

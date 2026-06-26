@@ -105,11 +105,11 @@ except RateLimitError as e:
         await asyncio.sleep(e.retry_after)
 except APIError as e:
     # Handle other API errors (network, unavailable, etc.)
-    logger.error(f"API error: {e}")
+    logger.error("API error: %s", e)
 except DataError as e:
     # Handle data parsing errors
-    logger.error(f"Data error: {e}")
+    logger.error("Data error: %s", e)
 except Exception as e:
     # Handle unexpected errors
-    logger.error(f"Unexpected error: {e}")
+    logger.error("Unexpected error: %s", e)
 ```

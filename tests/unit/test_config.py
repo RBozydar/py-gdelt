@@ -36,6 +36,11 @@ class TestGDELTSettingsDefaults:
         assert settings.timeout == 30
         assert settings.max_concurrent_requests == 10
         assert settings.max_concurrent_downloads == 10
+        assert settings.rate_limit_fail_fast is True
+        assert settings.rate_limit_circuit_seconds == 60
+        assert settings.rate_limit_retry_after_max_seconds == 1800
+        assert settings.transient_error_circuit_threshold == 3
+        assert settings.transient_error_circuit_seconds == 30
 
         # Behavior defaults
         assert settings.fallback_to_bigquery is True
@@ -76,6 +81,11 @@ class TestGDELTSettingsEnvironmentVariables:
         monkeypatch.setenv("GDELT_TIMEOUT", "60")
         monkeypatch.setenv("GDELT_MAX_CONCURRENT_REQUESTS", "20")
         monkeypatch.setenv("GDELT_MAX_CONCURRENT_DOWNLOADS", "5")
+        monkeypatch.setenv("GDELT_RATE_LIMIT_FAIL_FAST", "false")
+        monkeypatch.setenv("GDELT_RATE_LIMIT_CIRCUIT_SECONDS", "45")
+        monkeypatch.setenv("GDELT_RATE_LIMIT_RETRY_AFTER_MAX_SECONDS", "300")
+        monkeypatch.setenv("GDELT_TRANSIENT_ERROR_CIRCUIT_THRESHOLD", "4")
+        monkeypatch.setenv("GDELT_TRANSIENT_ERROR_CIRCUIT_SECONDS", "20")
 
         settings = GDELTSettings()
 
@@ -83,6 +93,11 @@ class TestGDELTSettingsEnvironmentVariables:
         assert settings.timeout == 60
         assert settings.max_concurrent_requests == 20
         assert settings.max_concurrent_downloads == 5
+        assert settings.rate_limit_fail_fast is False
+        assert settings.rate_limit_circuit_seconds == 45
+        assert settings.rate_limit_retry_after_max_seconds == 300
+        assert settings.transient_error_circuit_threshold == 4
+        assert settings.transient_error_circuit_seconds == 20
 
     def test_load_behavior_settings_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test loading behavior settings from environment variables."""
@@ -120,6 +135,11 @@ max_retries = 10
 timeout = 120
 max_concurrent_requests = 5
 max_concurrent_downloads = 3
+rate_limit_fail_fast = true
+rate_limit_circuit_seconds = 15
+rate_limit_retry_after_max_seconds = 120
+transient_error_circuit_threshold = 5
+transient_error_circuit_seconds = 10
 fallback_to_bigquery = false
 validate_codes = false
 """
@@ -135,6 +155,11 @@ validate_codes = false
         assert settings.timeout == 120
         assert settings.max_concurrent_requests == 5
         assert settings.max_concurrent_downloads == 3
+        assert settings.rate_limit_fail_fast is True
+        assert settings.rate_limit_circuit_seconds == 15
+        assert settings.rate_limit_retry_after_max_seconds == 120
+        assert settings.transient_error_circuit_threshold == 5
+        assert settings.transient_error_circuit_seconds == 10
         assert settings.fallback_to_bigquery is False
         assert settings.validate_codes is False
 
@@ -204,6 +229,48 @@ class TestGDELTSettingsValidation:
 
         settings = GDELTSettings()
         assert settings.timeout == -1
+
+    def test_negative_rate_limit_circuit_seconds_rejected(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that negative rate-limit circuit duration raises ValidationError."""
+        monkeypatch.setenv("GDELT_RATE_LIMIT_CIRCUIT_SECONDS", "-1")
+
+        with pytest.raises(ValidationError) as exc_info:
+            GDELTSettings()
+
+        errors = exc_info.value.errors()
+        assert any(error["loc"][0] == "rate_limit_circuit_seconds" for error in errors)
+
+    def test_negative_rate_limit_retry_after_max_seconds_rejected(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that negative Retry-After cap raises ValidationError."""
+        monkeypatch.setenv("GDELT_RATE_LIMIT_RETRY_AFTER_MAX_SECONDS", "-1")
+
+        with pytest.raises(ValidationError) as exc_info:
+            GDELTSettings()
+
+        errors = exc_info.value.errors()
+        assert any(error["loc"][0] == "rate_limit_retry_after_max_seconds" for error in errors)
+
+    def test_negative_transient_error_circuit_settings_rejected(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that negative transient circuit settings raise ValidationError."""
+        monkeypatch.setenv("GDELT_TRANSIENT_ERROR_CIRCUIT_THRESHOLD", "-1")
+        monkeypatch.setenv("GDELT_TRANSIENT_ERROR_CIRCUIT_SECONDS", "-1")
+
+        with pytest.raises(ValidationError) as exc_info:
+            GDELTSettings()
+
+        errors = exc_info.value.errors()
+        error_fields = {error["loc"][0] for error in errors}
+        assert "transient_error_circuit_threshold" in error_fields
+        assert "transient_error_circuit_seconds" in error_fields
 
     def test_path_conversion(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that string paths are converted to Path objects."""

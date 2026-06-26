@@ -78,16 +78,25 @@ from py_gdelt.endpoints import (
     VGKGEndpoint,
 )
 from py_gdelt.lookups import Lookups
-from py_gdelt.sources import BigQuerySource, FileSource
+from py_gdelt.sources.files import FileSource
 
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from py_gdelt.sources.bigquery import BigQuerySource
+
 
 __all__ = ["GDELTClient"]
 
 logger = logging.getLogger(__name__)
+
+
+def _load_bigquery_source() -> type[BigQuerySource]:
+    """Load the optional BigQuery source class."""
+    from py_gdelt.sources.bigquery import BigQuerySource  # noqa: PLC0415
+
+    return BigQuerySource
 
 
 class GDELTClient:
@@ -187,7 +196,8 @@ class GDELTClient:
         # Initialize BigQuery source if credentials are configured
         if self.settings.bigquery_project and self.settings.bigquery_credentials:
             try:
-                self._bigquery_source = BigQuerySource(settings=self.settings)
+                bigquery_source_cls = _load_bigquery_source()
+                self._bigquery_source = bigquery_source_cls(settings=self.settings)
                 logger.debug(
                     "Initialized BigQuerySource with project %s",
                     self.settings.bigquery_project,
@@ -196,7 +206,7 @@ class GDELTClient:
                 # google-cloud-bigquery package not installed
                 logger.warning(
                     "BigQuery package not installed: %s. "
-                    "Install with: pip install py-gdelt[bigquery]",
+                    "Install with: pip install gdelt-py[bigquery]",
                     e,
                 )
                 self._bigquery_source = None
