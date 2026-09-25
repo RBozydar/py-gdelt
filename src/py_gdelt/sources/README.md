@@ -29,19 +29,19 @@ import asyncio
 from datetime import datetime
 from py_gdelt.sources import FileSource
 
+
 async def download_gdelt_data():
     async with FileSource() as source:
         # Get URLs for a date range
         urls = await source.get_files_for_date_range(
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 1, 2),
-            file_type="export"
+            start_date=datetime(2024, 1, 1), end_date=datetime(2024, 1, 2), file_type="export"
         )
 
         # Download and extract files
         async for url, data in source.stream_files(urls):
             print(f"Downloaded {url}: {len(data)} bytes")
             # Process data (TAB-delimited despite .CSV extension)
+
 
 asyncio.run(download_gdelt_data())
 ```

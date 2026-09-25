@@ -154,7 +154,7 @@ async with FileSource() as source:
 
     batch_size = 100
     for i in range(0, len(urls), batch_size):
-        batch_urls = urls[i:i + batch_size]
+        batch_urls = urls[i : i + batch_size]
 
         async for url, data in source.stream_files(batch_urls):
             # Process batch
@@ -287,7 +287,7 @@ logger.setLevel(logging.DEBUG)
 ```python
 async with FileSource() as source:
     cache_size = source.cache.size()
-    print(f"Cache size: {cache_size / (1024*1024):.2f} MB")
+    print(f"Cache size: {cache_size / (1024 * 1024):.2f} MB")
 
     # Clear old cache entries
     cleared = source.cache.clear(before=datetime(2024, 1, 1))

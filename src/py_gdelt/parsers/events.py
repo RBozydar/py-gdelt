@@ -282,7 +282,7 @@ class EventsParser:
             try:
                 event = self._parse_row(row, column_map, is_translated, version)
                 yield event
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # Error boundary: log and skip malformed lines, continue processing
                 logger.warning(
                     "Skipping malformed line %d: %s",
