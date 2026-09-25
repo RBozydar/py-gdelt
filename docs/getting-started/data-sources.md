@@ -100,22 +100,22 @@ Choosing the right source based on time range:
 
 ### Master File Lists
 
-- English: `http://data.gdeltproject.org/gdeltv2/masterfilelist.txt`
-- Translated: `http://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt`
-- Last update: `http://data.gdeltproject.org/gdeltv2/lastupdate.txt`
+- English: `https://data.gdeltproject.org/gdeltv2/masterfilelist.txt`
+- Translated: `https://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt`
+- Last update: `https://data.gdeltproject.org/gdeltv2/lastupdate.txt`
 
 ### URL Patterns (v2)
 
 ```
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.export.CSV.zip
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.mentions.CSV.zip
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.gkg.csv.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.export.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.mentions.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.gkg.csv.zip
 ```
 
 ### NGrams 3.0
 
 ```
-http://data.gdeltproject.org/gdeltv3/webngrams/YYYYMMDDHHMMSS.webngrams.json.gz
+https://data.gdeltproject.org/gdeltv3/webngrams/YYYYMMDDHHMMSS.webngrams.json.gz
 ```
 
 ### Update Frequency

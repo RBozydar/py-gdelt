@@ -145,9 +145,11 @@ class Event(BaseModel):
 ```python
 from dataclasses import dataclass
 
+
 @dataclass(slots=True)  # Python 3.10+ - faster attribute access, less memory
 class _RawEvent:
     """Internal representation during parsing - no validation overhead."""
+
     global_event_id: str
     sql_date: str  # Still string, validated when converting to Pydantic
     actor1_code: str | None
@@ -164,6 +166,7 @@ class _RawEvent:
 @dataclass
 class FetchResult(Generic[T]):
     """Result container with partial failure tracking."""
+
     data: list[T]
     failed: list[FailedRequest] = field(default_factory=list)
 
@@ -174,6 +177,7 @@ class FetchResult(Generic[T]):
     @property
     def partial(self) -> bool:
         return len(self.failed) > 0 and len(self.data) > 0
+
 
 # Usage
 result = client.events.query(filter)
@@ -268,14 +272,15 @@ As a client library, we don't implement server-side rate limiting. Instead, we *
 MAX_CONCURRENT_DOWNLOADS = 10  # Don't overwhelm file server
 MAX_CONCURRENT_API_REQUESTS = 5  # Respect API rate limits
 
+
 # Exponential backoff on 429 responses
 @retry(
     retry=retry_if_exception_type(RateLimitError),
     wait=wait_exponential(multiplier=1, min=4, max=60),
     stop=stop_after_attempt(5),
 )
-async def _make_request(self, url: str) -> Response:
-    ...
+async def _make_request(self, url: str) -> Response: ...
+
 
 # Honor Retry-After header when provided
 if response.status_code == 429:
@@ -296,13 +301,16 @@ GDELT captures news reports, not unique events. ~20% redundancy exists. Provide 
 ```python
 from enum import StrEnum
 
+
 class DedupeStrategy(StrEnum):
     """Deduplication strategies - use StrEnum for type safety."""
+
     URL_ONLY = "url_only"
     URL_DATE = "url_date"
     URL_DATE_LOCATION = "url_date_location"  # Default
     URL_DATE_LOCATION_ACTORS = "url_date_location_actors"
     AGGRESSIVE = "aggressive"
+
 
 # Via query parameter (recommended)
 events = client.events.query(filter, deduplicate=True)  # Uses default
@@ -310,6 +318,7 @@ events = client.events.query(filter, dedupe_strategy=DedupeStrategy.AGGRESSIVE)
 
 # Via utility function
 from gdelt.utils import deduplicate
+
 deduped = deduplicate(events, strategy=DedupeStrategy.URL_DATE_LOCATION)
 ```
 
@@ -325,28 +334,28 @@ deduped = deduplicate(events, strategy=DedupeStrategy.URL_DATE_LOCATION)
 
 ```python
 # CAMEO helpers
-client.lookups.cameo["14"]                    # → "PROTEST"
-client.lookups.cameo.get_description("142")   # → "Demonstrate or rally"
-client.lookups.cameo.get_goldstein("14")      # → -6.5
-client.lookups.cameo.is_conflict("14")        # → True
-client.lookups.cameo.is_cooperation("05")     # → True
-client.lookups.cameo.get_quad_class("14")     # → 4
+client.lookups.cameo["14"]  # → "PROTEST"
+client.lookups.cameo.get_description("142")  # → "Demonstrate or rally"
+client.lookups.cameo.get_goldstein("14")  # → -6.5
+client.lookups.cameo.is_conflict("14")  # → True
+client.lookups.cameo.is_cooperation("05")  # → True
+client.lookups.cameo.get_quad_class("14")  # → 4
 
 # Theme helpers
-client.lookups.themes["ENV_CLIMATECHANGE"]             # → Theme info
-client.lookups.themes.search("climate")                 # → List of matching themes
-client.lookups.themes.get_category("ENV_CLIMATECHANGE") # → "Environment"
-client.lookups.themes.list_by_category("Health")        # → List of health themes
+client.lookups.themes["ENV_CLIMATECHANGE"]  # → Theme info
+client.lookups.themes.search("climate")  # → List of matching themes
+client.lookups.themes.get_category("ENV_CLIMATECHANGE")  # → "Environment"
+client.lookups.themes.list_by_category("Health")  # → List of health themes
 
 # Country helpers (FIPS ↔ ISO)
-client.lookups.countries.fips_to_iso("US")    # → "USA"
-client.lookups.countries.iso_to_fips("USA")   # → "US"
-client.lookups.countries.get_name("US")       # → "United States"
-client.lookups.countries.fips_to_iso("IZ")    # → "IRQ" (Iraq uses IZ in FIPS)
+client.lookups.countries.fips_to_iso("US")  # → "USA"
+client.lookups.countries.iso_to_fips("USA")  # → "US"
+client.lookups.countries.get_name("US")  # → "United States"
+client.lookups.countries.fips_to_iso("IZ")  # → "IRQ" (Iraq uses IZ in FIPS)
 
 # Validation (used internally, raises InvalidCodeError)
-client.lookups.validate_cameo("999")          # Raises InvalidCodeError
-client.lookups.validate_theme("INVALID")      # Raises InvalidCodeError
+client.lookups.validate_cameo("999")  # Raises InvalidCodeError
+client.lookups.validate_theme("INVALID")  # Raises InvalidCodeError
 ```
 
 #### Cache Management
@@ -356,9 +365,9 @@ client.lookups.validate_theme("INVALID")      # Raises InvalidCodeError
 # Recent data uses TTL-based caching (default: 1 hour)
 
 # Manual cache control
-client.cache.clear()                     # Clear all
+client.cache.clear()  # Clear all
 client.cache.clear(before="2024-01-01")  # Clear old entries
-client.cache.size()                      # Current cache size in bytes
+client.cache.size()  # Current cache size in bytes
 ```
 
 **Cache behavior:**
@@ -679,6 +688,7 @@ Single agent - `client.py` wires everything together, requires all prior phases.
 # Add anyio to dependencies (thin asyncio wrapper, same as httpx uses)
 import anyio
 
+
 class GDELTClient:
     """Async-first client with sync convenience methods."""
 
@@ -688,9 +698,7 @@ class GDELTClient:
 
     def query_sync(self, filters: EventFilter) -> list[Event]:
         """Sync wrapper using anyio - works in nested event loops."""
-        return anyio.from_thread.run_sync(
-            lambda: anyio.run(self._collect_async, filters)
-        )
+        return anyio.from_thread.run_sync(lambda: anyio.run(self._collect_async, filters))
 ```
 
 Alternative: Separate `GDELTClientSync` class with background thread + persistent event loop for connection reuse.
@@ -751,6 +759,7 @@ class DataFetcher:
 from typing import Protocol, TypeVar
 
 T = TypeVar("T")
+
 
 class Parser(Protocol[T]):
     """Interface for file format parsers."""

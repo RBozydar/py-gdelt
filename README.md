@@ -51,6 +51,7 @@ async with GDELTClient() as client:
 
     # Query Visual GKG (image analysis)
     from py_gdelt.filters import VGKGFilter
+
     vgkg_filter = VGKGFilter(
         date_range=DateRange(start=yesterday),
         domain="cnn.com",
@@ -59,6 +60,7 @@ async with GDELTClient() as client:
 
     # Query TV NGrams (word frequencies from TV)
     from py_gdelt.filters import BroadcastNGramsFilter
+
     tv_filter = BroadcastNGramsFilter(
         date_range=DateRange(start=yesterday),
         station="CNN",
@@ -68,6 +70,7 @@ async with GDELTClient() as client:
 
     # Query Graph Datasets (quotes, entities, frontpage links)
     from py_gdelt.filters import GQGFilter, GEGFilter
+
     gqg_filter = GQGFilter(date_range=DateRange(start=yesterday))
     quotes = await client.graphs.query_gqg(gqg_filter)
 

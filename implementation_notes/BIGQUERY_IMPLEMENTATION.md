@@ -42,12 +42,14 @@ Every column name is validated against an explicit allowlist before being used i
 
 ```python
 ALLOWED_COLUMNS: Final[dict[TableType, frozenset[str]]] = {
-    "events": frozenset({
-        "GLOBALEVENTID",
-        "Actor1CountryCode",
-        "EventCode",
-        # ... only allowed columns
-    }),
+    "events": frozenset(
+        {
+            "GLOBALEVENTID",
+            "Actor1CountryCode",
+            "EventCode",
+            # ... only allowed columns
+        }
+    ),
 }
 ```
 
@@ -137,9 +139,7 @@ def _build_where_clause_for_events(
 
     # Mandatory partition filter
     conditions.append("_PARTITIONTIME >= @start_date")
-    parameters.append(
-        bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime)
-    )
+    parameters.append(bigquery.ScalarQueryParameter("start_date", "TIMESTAMP", start_datetime))
 
     # Optional filters
     if filter_obj.actor1_country:

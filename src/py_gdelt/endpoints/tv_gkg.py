@@ -33,9 +33,9 @@ logger = logging.getLogger(__name__)
 
 
 TV_GKG_LAST_UPDATE_URL: Final[str] = (
-    "http://data.gdeltproject.org/gdeltv2_iatelevision/lastupdate.txt"
+    "https://data.gdeltproject.org/gdeltv2_iatelevision/lastupdate.txt"
 )
-TV_GKG_BASE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2_iatelevision/"
+TV_GKG_BASE_URL: Final[str] = "https://data.gdeltproject.org/gdeltv2_iatelevision/"
 
 EMBARGO_HOURS: Final[int] = 48
 

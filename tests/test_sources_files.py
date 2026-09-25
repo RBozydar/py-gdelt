@@ -109,8 +109,8 @@ class TestGetMasterFileList:
     ) -> None:
         """Test successful master file list retrieval."""
         mock_content = (
-            "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-            "82345 bf33c25f1aa3dg0229895dce5ae754fd http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip\n"
+            "81628 af22b14e0992cf9118794cbe49e643ec https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82345 bf33c25f1aa3dg0229895dce5ae754fd https://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip\n"
         )
 
         async with respx.mock:
@@ -121,8 +121,8 @@ class TestGetMasterFileList:
             urls = await file_source.get_master_file_list()
 
             assert len(urls) == 2
-            assert urls[0] == "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
-            assert urls[1] == "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip"
+            assert urls[0] == "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+            assert urls[1] == "https://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip"
 
     @pytest.mark.asyncio
     async def test_get_master_file_list_with_translation(
@@ -130,8 +130,8 @@ class TestGetMasterFileList:
         file_source: FileSource,
     ) -> None:
         """Test master file list with translation files."""
-        master_content = "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-        trans_content = "49305 xyz789abc123def456ghi789jkl012mn http://data.gdeltproject.org/gdeltv2/20240101000000.translation.export.CSV.zip\n"
+        master_content = "81628 af22b14e0992cf9118794cbe49e643ec https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+        trans_content = "49305 xyz789abc123def456ghi789jkl012mn https://data.gdeltproject.org/gdeltv2/20240101000000.translation.export.CSV.zip\n"
 
         async with respx.mock:
             respx.get(MASTER_FILE_LIST_URL).mock(
@@ -179,7 +179,7 @@ class TestGetMasterFileList:
         file_source: FileSource,
     ) -> None:
         """Test that master file list is cached."""
-        mock_content = "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+        mock_content = "81628 af22b14e0992cf9118794cbe49e643ec https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
 
         async with respx.mock:
             mock_route = respx.get(MASTER_FILE_LIST_URL).mock(
@@ -211,12 +211,12 @@ class TestGetFilesForDateRange:
         end = datetime(2024, 1, 1, 0, 30, 0)
 
         master_content = (
-            "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-            "82000 def456ghi789jkl012mno345pqr678 http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
-            "83000 ghi789jkl012mno345pqr678stu901 http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip\n"
-            "84000 jkl012mno345pqr678stu901vwx234 http://data.gdeltproject.org/gdeltv2/20240101001500.mentions.CSV.zip\n"
-            "85000 mno345pqr678stu901vwx234yza567 http://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip\n"
-            "86000 pqr678stu901vwx234yza567bcd890 http://data.gdeltproject.org/gdeltv2/20240101003000.gkg.csv.zip\n"
+            "81628 abc123def456ghi789jkl012mno345 https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82000 def456ghi789jkl012mno345pqr678 https://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
+            "83000 ghi789jkl012mno345pqr678stu901 https://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip\n"
+            "84000 jkl012mno345pqr678stu901vwx234 https://data.gdeltproject.org/gdeltv2/20240101001500.mentions.CSV.zip\n"
+            "85000 mno345pqr678stu901vwx234yza567 https://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip\n"
+            "86000 pqr678stu901vwx234yza567bcd890 https://data.gdeltproject.org/gdeltv2/20240101003000.gkg.csv.zip\n"
         )
 
         async with respx.mock:
@@ -245,9 +245,9 @@ class TestGetFilesForDateRange:
         end = datetime(2024, 1, 1, 0, 0, 0)
 
         master_content = (
-            "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-            "82000 def456ghi789jkl012mno345pqr678 http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
-            "83000 ghi789jkl012mno345pqr678stu901 http://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip\n"
+            "81628 abc123def456ghi789jkl012mno345 https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82000 def456ghi789jkl012mno345pqr678 https://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
+            "83000 ghi789jkl012mno345pqr678stu901 https://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip\n"
         )
 
         async with respx.mock:
@@ -273,9 +273,9 @@ class TestGetFilesForDateRange:
         end = datetime(2024, 1, 1, 0, 0, 0)
 
         master_content = (
-            "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-            "82000 def456ghi789jkl012mno345pqr678 http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
-            "83000 ghi789jkl012mno345pqr678stu901 http://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip\n"
+            "81628 abc123def456ghi789jkl012mno345 https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+            "82000 def456ghi789jkl012mno345pqr678 https://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip\n"
+            "83000 ghi789jkl012mno345pqr678stu901 https://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip\n"
         )
 
         async with respx.mock:
@@ -319,8 +319,8 @@ class TestGetFilesForDateRange:
         start = datetime(2024, 1, 1, 0, 0, 0)
         end = datetime(2024, 1, 1, 0, 0, 0)
 
-        master_content = "81628 abc123def456ghi789jkl012mno345 http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
-        trans_content = "49305 xyz789abc123def456ghi789jkl012 http://data.gdeltproject.org/gdeltv2/20240101000000.translation.export.CSV.zip\n"
+        master_content = "81628 abc123def456ghi789jkl012mno345 https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip\n"
+        trans_content = "49305 xyz789abc123def456ghi789jkl012 https://data.gdeltproject.org/gdeltv2/20240101000000.translation.export.CSV.zip\n"
 
         async with respx.mock:
             respx.get(MASTER_FILE_LIST_URL).mock(
@@ -399,9 +399,9 @@ class TestParseMasterFileLine:
     def test_parse_normal_line(self) -> None:
         """Test parsing a standard 3-column master file line."""
         result = FileSource._parse_master_file_line(
-            "81628 af22b14e0992cf9118794cbe49e643ec http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+            "81628 af22b14e0992cf9118794cbe49e643ec https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
         )
-        assert result == "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        assert result == "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
 
     def test_parse_blank_line(self) -> None:
         """Test that blank lines return None."""
@@ -411,9 +411,9 @@ class TestParseMasterFileLine:
     def test_parse_url_only_line(self) -> None:
         """Test fallback parsing of a line containing only a URL."""
         result = FileSource._parse_master_file_line(
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
         )
-        assert result == "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        assert result == "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
 
     def test_parse_malformed_line(self) -> None:
         """Test that malformed lines without a URL return None."""
@@ -426,9 +426,9 @@ class TestFilterUrlsByTypeAndRange:
     def test_filter_by_type(self, file_source: FileSource) -> None:
         """Test filtering URLs by file type suffix."""
         urls = [
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.mentions.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.gkg.csv.zip",
         ]
         result = file_source._filter_urls_by_type_and_range(
             urls,
@@ -442,9 +442,9 @@ class TestFilterUrlsByTypeAndRange:
     def test_filter_by_date_range(self, file_source: FileSource) -> None:
         """Test filtering URLs by date range boundaries."""
         urls = [
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240102000000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240103000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240102000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240103000000.export.CSV.zip",
         ]
         result = file_source._filter_urls_by_type_and_range(
             urls,
@@ -470,9 +470,9 @@ class TestFilterUrlsByTypeAndRange:
         """Test that filtered results are sorted by timestamp."""
         # Provide URLs in reverse order
         urls = [
-            "http://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
         ]
         result = file_source._filter_urls_by_type_and_range(
             urls,
@@ -495,7 +495,7 @@ class TestDownloadFile:
         file_source: FileSource,
     ) -> None:
         """Test successful file download."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
         mock_data = b"test data"
 
         async with respx.mock:
@@ -513,7 +513,7 @@ class TestDownloadFile:
         file_source: FileSource,
     ) -> None:
         """Test download with 404 error."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
 
         async with respx.mock:
             respx.get(url).mock(
@@ -529,7 +529,7 @@ class TestDownloadFile:
         file_source: FileSource,
     ) -> None:
         """Test download with server error."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
 
         async with respx.mock:
             respx.get(url).mock(
@@ -545,7 +545,7 @@ class TestDownloadFile:
         file_source: FileSource,
     ) -> None:
         """Test that downloaded files are cached."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
         mock_data = b"test data"
 
         async with respx.mock:
@@ -574,7 +574,7 @@ class TestDownloadAndExtract:
         file_source: FileSource,
     ) -> None:
         """Test downloading and extracting ZIP file."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
         original_data = b"test data content"
 
         # Create ZIP in memory
@@ -598,7 +598,7 @@ class TestDownloadAndExtract:
         file_source: FileSource,
     ) -> None:
         """Test downloading and extracting GZIP file."""
-        url = "http://data.gdeltproject.org/gdeltv3/webngrams/20240101000000.webngrams.json.gz"
+        url = "https://data.gdeltproject.org/gdeltv3/webngrams/20240101000000.webngrams.json.gz"
         original_data = b'{"test": "data"}'
 
         # Create GZIP in memory
@@ -622,7 +622,7 @@ class TestDownloadAndExtract:
         file_source: FileSource,
     ) -> None:
         """Test downloading uncompressed file."""
-        url = "http://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
+        url = "https://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
         original_data = b"test data"
 
         async with respx.mock:
@@ -640,7 +640,7 @@ class TestDownloadAndExtract:
         file_source: FileSource,
     ) -> None:
         """Test extraction of invalid ZIP file."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
         bad_zip_data = b"not a valid zip file"
 
         async with respx.mock:
@@ -657,7 +657,7 @@ class TestDownloadAndExtract:
         file_source: FileSource,
     ) -> None:
         """Test that decompression is aborted when size exceeds limit."""
-        url = "http://data.gdeltproject.org/gdeltv3/webngrams/20240101000000.webngrams.json.gz"
+        url = "https://data.gdeltproject.org/gdeltv3/webngrams/20240101000000.webngrams.json.gz"
 
         # Create a gzip bomb: small compressed data that expands to >500MB
         # We'll simulate this by creating a gzip file that will trigger the size check
@@ -690,8 +690,8 @@ class TestStreamFiles:
     ) -> None:
         """Test streaming multiple files successfully."""
         urls = [
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
         ]
 
         original_data = b"test data"
@@ -722,9 +722,9 @@ class TestStreamFiles:
     ) -> None:
         """Test streaming with some failed downloads."""
         urls = [
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
         ]
 
         original_data = b"test data"
@@ -768,7 +768,7 @@ class TestStreamFiles:
     ) -> None:
         """Test streaming with custom concurrency limit."""
         urls = [
-            f"http://data.gdeltproject.org/gdeltv2/2024010100{i:02d}00.export.CSV.zip"
+            f"https://data.gdeltproject.org/gdeltv2/2024010100{i:02d}00.export.CSV.zip"
             for i in range(10)
         ]
 
@@ -803,9 +803,9 @@ class TestStreamFiles:
         import asyncio
 
         urls = [
-            "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
-            "http://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101001500.export.CSV.zip",
+            "https://data.gdeltproject.org/gdeltv2/20240101003000.export.CSV.zip",
         ]
 
         original_data = b"test data"
@@ -859,7 +859,7 @@ class TestHelperMethods:
 
     def test_extract_date_from_url(self) -> None:
         """Test extracting date from GDELT URL."""
-        url = "http://data.gdeltproject.org/gdeltv2/20240115123000.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/20240115123000.export.CSV.zip"
         date = FileSource._extract_date_from_url(url)
 
         assert date is not None
@@ -872,14 +872,14 @@ class TestHelperMethods:
 
     def test_extract_date_from_url_no_match(self) -> None:
         """Test extracting date from URL without timestamp."""
-        url = "http://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
+        url = "https://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
         date = FileSource._extract_date_from_url(url)
 
         assert date is None
 
     def test_extract_date_from_url_invalid_timestamp(self) -> None:
         """Test extracting invalid timestamp from URL."""
-        url = "http://data.gdeltproject.org/gdeltv2/99999999999999.export.CSV.zip"
+        url = "https://data.gdeltproject.org/gdeltv2/99999999999999.export.CSV.zip"
         date = FileSource._extract_date_from_url(url)
 
         assert date is None

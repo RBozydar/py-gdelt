@@ -193,22 +193,14 @@ def _matches_filter(self, record: GKGRecord, filter_obj: GKGFilter) -> bool:
     if filter_obj.persons:
         filter_persons_lower = [fp.lower() for fp in filter_obj.persons]
         record_persons_lower = [p.name.lower() for p in record.persons]
-        if not any(
-            fp in rp
-            for rp in record_persons_lower
-            for fp in filter_persons_lower
-        ):
+        if not any(fp in rp for rp in record_persons_lower for fp in filter_persons_lower):
             return False
 
     # Organizations filter (case-insensitive substring match, OR logic)
     if filter_obj.organizations:
         filter_orgs_lower = [fo.lower() for fo in filter_obj.organizations]
         record_orgs_lower = [o.name.lower() for o in record.organizations]
-        if not any(
-            fo in ro
-            for ro in record_orgs_lower
-            for fo in filter_orgs_lower
-        ):
+        if not any(fo in ro for ro in record_orgs_lower for fo in filter_orgs_lower):
             return False
 
     # Country filter (exact match on FIPS in any location)

@@ -272,7 +272,7 @@ async def get_geojson_output() -> None:
         )
 
         print(f"\nGeoJSON type: {geojson.get('type')}")
-        features = geojson.get('features', [])
+        features = geojson.get("features", [])
         print(f"Number of features: {len(features)}")
 
         if features:
@@ -495,10 +495,10 @@ async def test_doc_search_returns_articles() -> None:
         # If we got results, verify structure
         if articles:
             article = articles[0]
-            assert hasattr(article, 'title')
-            assert hasattr(article, 'url')
-            assert hasattr(article, 'domain')
-            assert article.url.startswith('http')
+            assert hasattr(article, "title")
+            assert hasattr(article, "url")
+            assert hasattr(article, "domain")
+            assert article.url.startswith("http")
 
 
 @pytest.mark.integration
@@ -530,7 +530,7 @@ async def test_doc_timeline() -> None:
         )
 
         # Verify structure
-        assert hasattr(timeline, 'points')
+        assert hasattr(timeline, "points")
         assert isinstance(timeline.points, list)
 ```
 
@@ -555,13 +555,13 @@ async def test_geo_search_returns_points() -> None:
             max_points=20,
         )
 
-        assert hasattr(result, 'points')
+        assert hasattr(result, "points")
         assert isinstance(result.points, list)
 
         if result.points:
             point = result.points[0]
-            assert hasattr(point, 'lat')
-            assert hasattr(point, 'lon')
+            assert hasattr(point, "lat")
+            assert hasattr(point, "lon")
             assert -90 <= point.lat <= 90
             assert -180 <= point.lon <= 180
 
@@ -579,8 +579,8 @@ async def test_geo_geojson_format() -> None:
         # Verify GeoJSON structure
         assert isinstance(geojson, dict)
         # May be FeatureCollection or empty
-        if 'features' in geojson:
-            assert isinstance(geojson['features'], list)
+        if "features" in geojson:
+            assert isinstance(geojson["features"], list)
 ```
 
 **File**: `tests/integration/test_context_api.py`
@@ -603,10 +603,10 @@ async def test_context_analyze_returns_result() -> None:
             timespan="7d",
         )
 
-        assert hasattr(result, 'query')
+        assert hasattr(result, "query")
         assert result.query == "technology"
-        assert hasattr(result, 'themes')
-        assert hasattr(result, 'entities')
+        assert hasattr(result, "themes")
+        assert hasattr(result, "entities")
         assert isinstance(result.themes, list)
         assert isinstance(result.entities, list)
 
@@ -626,8 +626,8 @@ async def test_context_get_themes() -> None:
 
         if themes:
             theme = themes[0]
-            assert hasattr(theme, 'theme')
-            assert hasattr(theme, 'count')
+            assert hasattr(theme, "theme")
+            assert hasattr(theme, "count")
             assert theme.count >= 0
 ```
 
@@ -656,8 +656,8 @@ async def test_tv_search_returns_clips() -> None:
 
         if clips:
             clip = clips[0]
-            assert hasattr(clip, 'station')
-            assert hasattr(clip, 'show_name')
+            assert hasattr(clip, "station")
+            assert hasattr(clip, "show_name")
             assert clip.station  # Non-empty
 
 
@@ -671,7 +671,7 @@ async def test_tv_timeline() -> None:
             timespan="7d",
         )
 
-        assert hasattr(timeline, 'points')
+        assert hasattr(timeline, "points")
         assert isinstance(timeline.points, list)
 
 
@@ -685,13 +685,13 @@ async def test_tv_station_chart() -> None:
             timespan="7d",
         )
 
-        assert hasattr(chart, 'stations')
+        assert hasattr(chart, "stations")
         assert isinstance(chart.stations, list)
 
         if chart.stations:
             station = chart.stations[0]
-            assert hasattr(station, 'station')
-            assert hasattr(station, 'count')
+            assert hasattr(station, "station")
+            assert hasattr(station, "count")
 ```
 
 **File**: `tests/integration/test_events_files.py`
@@ -723,7 +723,7 @@ async def test_events_query_returns_events() -> None:
 
         # File-based queries may fail if files don't exist yet
         # Just verify we get a list back
-        assert isinstance(result, list) or hasattr(result, '__iter__')
+        assert isinstance(result, list) or hasattr(result, "__iter__")
 
 
 @pytest.mark.integration
@@ -741,7 +741,7 @@ async def test_events_streaming() -> None:
         count = 0
         async for event in client.events.stream(event_filter):
             count += 1
-            assert hasattr(event, 'global_event_id')
+            assert hasattr(event, "global_event_id")
             if count >= 10:  # Just verify streaming works
                 break
 
@@ -813,6 +813,7 @@ markers = [
 **Required setup for Jupyter async support**:
 ```python
 import nest_asyncio
+
 nest_asyncio.apply()
 ```
 

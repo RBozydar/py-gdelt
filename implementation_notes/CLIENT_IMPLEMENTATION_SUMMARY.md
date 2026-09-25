@@ -245,10 +245,7 @@ from py_gdelt.filters import EventFilter, DateRange
 from datetime import date
 
 async with GDELTClient() as client:
-    filter_obj = EventFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
-        actor1_country="USA"
-    )
+    filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)), actor1_country="USA")
     events = await client.events.query(filter_obj)
 ```
 

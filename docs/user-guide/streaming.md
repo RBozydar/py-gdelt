@@ -41,8 +41,8 @@ us_protest_count = 0
 async for event in client.events.stream(event_filter):
     # Filter in-stream
     if event.event_code == "14":  # Protest
-        if hasattr(event, 'actor1') and event.actor1:
-            if hasattr(event.actor1, 'country_code') and event.actor1.country_code == 'US':
+        if hasattr(event, "actor1") and event.actor1:
+            if hasattr(event.actor1, "country_code") and event.actor1.country_code == "US":
                 us_protest_count += 1
 ```
 

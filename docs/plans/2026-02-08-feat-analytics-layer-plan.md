@@ -238,6 +238,7 @@ class SessionCostTracker:
     Args:
         budget_bytes: Maximum cumulative bytes to process. None for no limit.
     """
+
     def __init__(self, budget_bytes: int | None = None) -> None:
         self._budget_bytes = budget_bytes
         self._cumulative_bytes: int = 0
@@ -471,6 +472,7 @@ if TYPE_CHECKING:
 @runtime_checkable
 class _HasFetcher(Protocol):
     """Protocol for classes that provide a DataFetcher."""
+
     _fetcher: DataFetcher
 ```
 
@@ -488,8 +490,7 @@ class EventsAnalyticsMixin:
         metrics: Collection[EventMetric] = (EventMetric.COUNT,),
         moving_average_window: int | None = None,
         limit: int | None = None,
-    ) -> TimeSeriesResult:
-        ...
+    ) -> TimeSeriesResult: ...
 ```
 
 This passes strict mypy because `EventsEndpoint` satisfies `_HasFetcher` (it has `_fetcher: DataFetcher`).

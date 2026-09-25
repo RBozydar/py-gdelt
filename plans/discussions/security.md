@@ -168,7 +168,7 @@ client = GDELTClient()
 client = GDELTClient(strict_security=False)
 
 # Or via environment variable
-os.environ['GDELT_STRICT_SECURITY'] = 'false'
+os.environ["GDELT_STRICT_SECURITY"] = "false"
 ```
 
 ### Pros

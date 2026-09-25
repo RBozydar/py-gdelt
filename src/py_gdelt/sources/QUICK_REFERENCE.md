@@ -32,7 +32,7 @@ async with FileSource() as source:
 async with FileSource() as source:
     # Download and extract
     data = await source.download_and_extract(
-        "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
     )
 
     # Or just download (no extraction)
@@ -121,26 +121,26 @@ async with FileSource() as source:
 
 ### GDELT v2
 ```
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.export.CSV.zip
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.mentions.CSV.zip
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.gkg.csv.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.export.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.mentions.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.gkg.csv.zip
 ```
 
 ### GDELT v3
 ```
-http://data.gdeltproject.org/gdeltv3/webngrams/YYYYMMDDHHMMSS.webngrams.json.gz
+https://data.gdeltproject.org/gdeltv3/webngrams/YYYYMMDDHHMMSS.webngrams.json.gz
 ```
 
 ### Translation Files
 ```
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.translation.export.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.translation.export.CSV.zip
 ```
 
 ## Important Notes
 
 1. **TAB Delimiters**: Files have `.CSV` extension but use TAB delimiters, not commas
 2. **15-minute Slots**: Files published every 15 minutes, but some slots may be empty (404s are normal)
-3. **HTTP Only**: `data.gdeltproject.org` only supports HTTP (SSL cert mismatch)
+3. **HTTPS**: Requests use HTTPS. Legacy HTTP links from GDELT manifests and callers are upgraded before download.
 4. **Caching**: Historical files (>30 days) cached indefinitely, recent files use TTL
 5. **Security**: Only allows `data.gdeltproject.org` domain, enforces size limits
 
@@ -154,7 +154,7 @@ async with FileSource() as source:
 
     batch_size = 100
     for i in range(0, len(urls), batch_size):
-        batch_urls = urls[i:i + batch_size]
+        batch_urls = urls[i : i + batch_size]
 
         async for url, data in source.stream_files(batch_urls):
             # Process batch
@@ -287,7 +287,7 @@ logger.setLevel(logging.DEBUG)
 ```python
 async with FileSource() as source:
     cache_size = source.cache.size()
-    print(f"Cache size: {cache_size / (1024*1024):.2f} MB")
+    print(f"Cache size: {cache_size / (1024 * 1024):.2f} MB")
 
     # Clear old cache entries
     cleared = source.cache.clear(before=datetime(2024, 1, 1))

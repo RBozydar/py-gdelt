@@ -232,7 +232,7 @@ class Countries:
             code=code,
             code_type="country",
             suggestions=suggestions,
-            help_url="http://data.gdeltproject.org/api/v2/guides/LOOKUP-COUNTRIES.TXT",
+            help_url="https://data.gdeltproject.org/api/v2/guides/LOOKUP-COUNTRIES.TXT",
         )
 
     def suggest(

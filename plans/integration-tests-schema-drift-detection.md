@@ -30,6 +30,7 @@ GDELT adds fields without notice. Our parsers should warn when this happens so w
 
 ```python
 """Schema drift detection for GDELT APIs and file sources."""
+
 from __future__ import annotations
 
 import warnings
@@ -150,7 +151,11 @@ async def test_country_codes_coverage(gdelt_client: GDELTClient) -> None:
     unknown_codes: set[str] = set()
 
     async for event in gdelt_client.events.stream(limit=500):
-        for code in [event.actor1.country_code, event.actor2.country_code] if event.actor1 or event.actor2 else []:
+        for code in (
+            [event.actor1.country_code, event.actor2.country_code]
+            if event.actor1 or event.actor2
+            else []
+        ):
             if code and code not in countries:
                 unknown_codes.add(code)
 

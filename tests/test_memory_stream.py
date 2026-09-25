@@ -76,7 +76,7 @@ async def _run_test(temp_cache: str) -> None:
 
     # Generate URLs for 100 files
     urls = [
-        f"http://data.gdeltproject.org/gdeltv2/202401010{i:04d}00.export.CSV.zip"
+        f"https://data.gdeltproject.org/gdeltv2/202401010{i:04d}00.export.CSV.zip"
         for i in range(NUM_FILES)
     ]
 

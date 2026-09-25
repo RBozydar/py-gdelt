@@ -81,6 +81,7 @@ class _RawMention:
     event_time_full: str
     ...
 
+
 # Public: Mention (Pydantic model)
 class Mention(BaseModel):
     global_event_id: int
@@ -176,6 +177,7 @@ def sample_raw_mention() -> _RawMention:
     """Create sample _RawMention for testing."""
     ...
 
+
 @pytest.fixture
 def sample_bigquery_row() -> dict:
     """Create sample BigQuery row dict for testing."""
@@ -198,9 +200,7 @@ async with FileSource() as file_source:
         bigquery_source=bq_source,
     )
 
-    filter_obj = EventFilter(
-        date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7))
-    )
+    filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 7)))
 
     result = await endpoint.query(
         global_event_id="123456789",

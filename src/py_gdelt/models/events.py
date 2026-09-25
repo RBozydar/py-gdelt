@@ -171,6 +171,7 @@ class Event(BaseModel):
 
         # Helper to create Actor
         def _make_actor(
+            *,
             code: str | None,
             name: str | None,
             country_code: str | None,
@@ -223,29 +224,29 @@ class Event(BaseModel):
 
         # Create actors
         actor1 = _make_actor(
-            raw.actor1_code,
-            raw.actor1_name,
-            raw.actor1_country_code,
-            raw.actor1_known_group_code,
-            raw.actor1_ethnic_code,
-            raw.actor1_religion1_code,
-            raw.actor1_religion2_code,
-            raw.actor1_type1_code,
-            raw.actor1_type2_code,
-            raw.actor1_type3_code,
+            code=raw.actor1_code,
+            name=raw.actor1_name,
+            country_code=raw.actor1_country_code,
+            known_group_code=raw.actor1_known_group_code,
+            ethnic_code=raw.actor1_ethnic_code,
+            religion1_code=raw.actor1_religion1_code,
+            religion2_code=raw.actor1_religion2_code,
+            type1_code=raw.actor1_type1_code,
+            type2_code=raw.actor1_type2_code,
+            type3_code=raw.actor1_type3_code,
         )
 
         actor2 = _make_actor(
-            raw.actor2_code,
-            raw.actor2_name,
-            raw.actor2_country_code,
-            raw.actor2_known_group_code,
-            raw.actor2_ethnic_code,
-            raw.actor2_religion1_code,
-            raw.actor2_religion2_code,
-            raw.actor2_type1_code,
-            raw.actor2_type2_code,
-            raw.actor2_type3_code,
+            code=raw.actor2_code,
+            name=raw.actor2_name,
+            country_code=raw.actor2_country_code,
+            known_group_code=raw.actor2_known_group_code,
+            ethnic_code=raw.actor2_ethnic_code,
+            religion1_code=raw.actor2_religion1_code,
+            religion2_code=raw.actor2_religion2_code,
+            type1_code=raw.actor2_type1_code,
+            type2_code=raw.actor2_type2_code,
+            type3_code=raw.actor2_type3_code,
         )
 
         # Create locations

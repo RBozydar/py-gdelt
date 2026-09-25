@@ -29,19 +29,19 @@ import asyncio
 from datetime import datetime
 from py_gdelt.sources import FileSource
 
+
 async def download_gdelt_data():
     async with FileSource() as source:
         # Get URLs for a date range
         urls = await source.get_files_for_date_range(
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 1, 2),
-            file_type="export"
+            start_date=datetime(2024, 1, 1), end_date=datetime(2024, 1, 2), file_type="export"
         )
 
         # Download and extract files
         async for url, data in source.stream_files(urls):
             print(f"Downloaded {url}: {len(data)} bytes")
             # Process data (TAB-delimited despite .CSV extension)
+
 
 asyncio.run(download_gdelt_data())
 ```
@@ -93,12 +93,12 @@ async with FileSource() as source:
 async with FileSource() as source:
     # Download raw file
     data = await source.download_file(
-        "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
     )
 
     # Download and extract
     data = await source.download_and_extract(
-        "http://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
+        "https://data.gdeltproject.org/gdeltv2/20240101000000.export.CSV.zip"
     )
 ```
 
@@ -117,19 +117,19 @@ GDELT uses the following URL patterns:
 
 ```
 # Events (v2)
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.export.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.export.CSV.zip
 
 # Mentions (v2)
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.mentions.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.mentions.CSV.zip
 
 # GKG (v2)
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.gkg.csv.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.gkg.csv.zip
 
 # NGrams (v3)
-http://data.gdeltproject.org/gdeltv3/webngrams/YYYYMMDDHHMMSS.webngrams.json.gz
+https://data.gdeltproject.org/gdeltv3/webngrams/YYYYMMDDHHMMSS.webngrams.json.gz
 
 # Translation files
-http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.translation.export.CSV.zip
+https://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.translation.export.CSV.zip
 ```
 
 ### Important Notes
@@ -137,7 +137,7 @@ http://data.gdeltproject.org/gdeltv2/YYYYMMDDHHMMSS.translation.export.CSV.zip
 1. **File Naming**: Files have `.CSV` extension but use **TAB delimiters**, not commas
 2. **15-minute Granularity**: Files are published every 15 minutes, but some slots may be empty
 3. **404 Errors are Normal**: Not all 15-minute time slots have data, 404s are expected
-4. **HTTP Only**: `data.gdeltproject.org` only supports HTTP (SSL cert mismatch with `*.storage.googleapis.com`)
+4. **HTTPS**: Requests use HTTPS. Legacy HTTP links from GDELT manifests and callers are upgraded before download.
 5. **Historical Data**: Files older than 30 days are cached indefinitely (immutable)
 
 ### Error Handling

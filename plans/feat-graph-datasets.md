@@ -145,9 +145,11 @@ class GQGRecord(SchemaEvolutionMixin, BaseModel):
 ```python
 # src/py_gdelt/models/_internal.py
 
+
 @dataclass(slots=True)
 class _RawGFGRecord:
     """Global Frontpage Graph raw record (TSV parsing)."""
+
     date: str
     from_frontpage_url: str
     link_url: str
@@ -364,6 +366,7 @@ class GALRecord(SchemaEvolutionMixin, BaseModel):
 
 ```python
 # src/py_gdelt/filters.py
+
 
 class GQGFilter(BaseModel):
     """Filter for Global Quotation Graph queries."""
@@ -592,7 +595,9 @@ def parse_gfg(data: bytes) -> Iterator[GFGRecord]:
             continue
 
         if len(row) < 6:
-            logger.warning("Incomplete row at line %d: expected 6 columns, got %d", line_num, len(row))
+            logger.warning(
+                "Incomplete row at line %d: expected 6 columns, got %d", line_num, len(row)
+            )
             continue
 
         try:
@@ -1036,9 +1041,7 @@ class TestGraphSchemaEvolution:
         """Verify GQG schema hasn't changed."""
         async with GDELTClient() as client:
             with pytest.warns(None) as warnings:
-                result = await client.graphs.query_gqg(
-                    GQGFilter(date_range=recent_date_range)
-                )
+                result = await client.graphs.query_gqg(GQGFilter(date_range=recent_date_range))
 
             # Check for schema change warnings
             schema_warnings = [w for w in warnings if "schema change" in str(w.message).lower()]
@@ -1054,9 +1057,7 @@ class TestGraphSchemaEvolution:
         """Verify GEG schema hasn't changed."""
         async with GDELTClient() as client:
             with pytest.warns(None) as warnings:
-                result = await client.graphs.query_geg(
-                    GEGFilter(date_range=recent_date_range)
-                )
+                result = await client.graphs.query_geg(GEGFilter(date_range=recent_date_range))
 
             schema_warnings = [w for w in warnings if "schema change" in str(w.message).lower()]
             if schema_warnings:
@@ -1071,9 +1072,7 @@ class TestGraphSchemaEvolution:
         """Verify GFG schema hasn't changed."""
         async with GDELTClient() as client:
             with pytest.warns(None) as warnings:
-                result = await client.graphs.query_gfg(
-                    GFGFilter(date_range=recent_date_range)
-                )
+                result = await client.graphs.query_gfg(GFGFilter(date_range=recent_date_range))
 
             schema_warnings = [w for w in warnings if "schema change" in str(w.message).lower()]
             if schema_warnings:
@@ -1085,9 +1084,7 @@ class TestGraphSchemaEvolution:
         """Verify GGG schema hasn't changed."""
         async with GDELTClient() as client:
             with pytest.warns(None) as warnings:
-                result = await client.graphs.query_ggg(
-                    GGGFilter(date_range=recent_date_range)
-                )
+                result = await client.graphs.query_ggg(GGGFilter(date_range=recent_date_range))
 
             schema_warnings = [w for w in warnings if "schema change" in str(w.message).lower()]
             if schema_warnings:
@@ -1099,9 +1096,7 @@ class TestGraphSchemaEvolution:
         """Verify GEMG schema hasn't changed."""
         async with GDELTClient() as client:
             with pytest.warns(None) as warnings:
-                result = await client.graphs.query_gemg(
-                    GEMGFilter(date_range=recent_date_range)
-                )
+                result = await client.graphs.query_gemg(GEMGFilter(date_range=recent_date_range))
 
             schema_warnings = [w for w in warnings if "schema change" in str(w.message).lower()]
             if schema_warnings:
@@ -1113,9 +1108,7 @@ class TestGraphSchemaEvolution:
         """Verify GAL schema hasn't changed."""
         async with GDELTClient() as client:
             with pytest.warns(None) as warnings:
-                result = await client.graphs.query_gal(
-                    GALFilter(date_range=recent_date_range)
-                )
+                result = await client.graphs.query_gal(GALFilter(date_range=recent_date_range))
 
             schema_warnings = [w for w in warnings if "schema change" in str(w.message).lower()]
             if schema_warnings:

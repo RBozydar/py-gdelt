@@ -24,11 +24,9 @@ fetcher = DataFetcher(
 ### 3. Parser Protocol
 ```python
 class Parser(Protocol[T]):
-    def parse(self, data: bytes, is_translated: bool = False) -> AsyncIterator[T] | Iterator[T]:
-        ...
+    def parse(self, data: bytes, is_translated: bool = False) -> AsyncIterator[T] | Iterator[T]: ...
 
-    def detect_version(self, header: bytes) -> int:
-        ...
+    def detect_version(self, header: bytes) -> int: ...
 ```
 
 ### 4. Error Handling Policies
@@ -215,9 +213,10 @@ settings = GDELTSettings(
     bigquery_credentials="/path/to/credentials.json",
 )
 
-async with FileSource(settings=settings) as file_source, \
-           BigQuerySource(settings=settings) as bq_source:
-
+async with (
+    FileSource(settings=settings) as file_source,
+    BigQuerySource(settings=settings) as bq_source,
+):
     fetcher = DataFetcher(
         file_source=file_source,
         bigquery_source=bq_source,

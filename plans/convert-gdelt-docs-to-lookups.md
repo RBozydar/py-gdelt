@@ -129,7 +129,7 @@ name = cameo["01"]  # Returns: "MAKE PUBLIC STATEMENT"
 # AFTER
 cameo = CAMEOCodes()
 entry = cameo["01"]  # Returns: CAMEOCodeEntry model
-name = entry.name    # "MAKE PUBLIC STATEMENT"
+name = entry.name  # "MAKE PUBLIC STATEMENT"
 # Also available: entry.description, entry.quad_class, entry.parent, entry.root
 ```
 
@@ -143,8 +143,8 @@ score = cameo.get_goldstein("141")  # Returns: -6.5
 # AFTER
 cameo = CAMEOCodes()
 entry = cameo.get_goldstein("141")  # Returns: GoldsteinEntry model
-score = entry.value                  # -6.5
-desc = entry.description             # "Demonstrate or rally, not specified below"
+score = entry.value  # -6.5
+desc = entry.description  # "Demonstrate or rally, not specified below"
 ```
 
 #### 3. `get_description()` removed - use `get()` instead
@@ -248,8 +248,15 @@ themes.search("climate")  # Searches both theme names and descriptions
 {"US": {"iso": "USA", "name": "United States"}}
 
 # AFTER
-{"US": {"iso3": "USA", "iso2": "US", "name": "United States",
-        "full_name": "United States of America", "region": "North America"}}
+{
+    "US": {
+        "iso3": "USA",
+        "iso2": "US",
+        "name": "United States",
+        "full_name": "United States of America",
+        "region": "North America",
+    }
+}
 ```
 
 #### `cameo_codes.json`
@@ -258,8 +265,7 @@ themes.search("climate")  # Searches both theme names and descriptions
 {"01": "MAKE PUBLIC STATEMENT"}
 
 # AFTER
-{"01": {"name": "MAKE PUBLIC STATEMENT", "description": "...",
-        "quad_class": 1, "root": true}}
+{"01": {"name": "MAKE PUBLIC STATEMENT", "description": "...", "quad_class": 1, "root": true}}
 ```
 
 #### `cameo_goldstein.json`
@@ -280,6 +286,7 @@ Add Pydantic models for type safety and validation:
 ```python
 from pydantic import BaseModel
 
+
 class CAMEOCodeEntry(BaseModel):
     name: str
     description: str
@@ -289,9 +296,11 @@ class CAMEOCodeEntry(BaseModel):
     quad_class: int
     root: bool = False
 
+
 class GoldsteinEntry(BaseModel):
     value: float
     description: str
+
 
 class CountryEntry(BaseModel):
     iso3: str
@@ -299,6 +308,7 @@ class CountryEntry(BaseModel):
     name: str
     full_name: str | None = None
     region: str
+
 
 class GKGThemeEntry(BaseModel):
     category: str
@@ -317,37 +327,41 @@ Store parsed Pydantic models, add accessors:
 def __init__(self) -> None:
     # Parse JSON into Pydantic models on load
     self._codes: dict[str, CAMEOCodeEntry] = {
-        code: CAMEOCodeEntry(**data)
-        for code, data in self._load_json("cameo_codes.json").items()
+        code: CAMEOCodeEntry(**data) for code, data in self._load_json("cameo_codes.json").items()
     }
     self._goldstein: dict[str, GoldsteinEntry] = {
         code: GoldsteinEntry(**data)
         for code, data in self._load_json("cameo_goldstein.json").items()
     }
 
+
 def __contains__(self, code: str) -> bool:
     """Check if code exists."""
     return code in self._codes
+
 
 def __getitem__(self, code: str) -> CAMEOCodeEntry:
     """Get full entry for CAMEO code."""
     return self._codes[code]
 
+
 def get(self, code: str) -> CAMEOCodeEntry | None:
     """Get entry for CAMEO code, or None if not found."""
     return self._codes.get(code)
+
 
 def get_goldstein(self, code: str) -> GoldsteinEntry | None:
     """Get Goldstein entry for CAMEO code."""
     return self._goldstein.get(code)
 
+
 def search(self, query: str) -> list[str]:
     """Search codes by name/description (substring match)."""
     query_lower = query.lower()
     return [
-        code for code, entry in self._codes.items()
-        if query_lower in entry.name.lower()
-        or query_lower in entry.description.lower()
+        code
+        for code, entry in self._codes.items()
+        if query_lower in entry.name.lower() or query_lower in entry.description.lower()
     ]
 ```
 
@@ -356,26 +370,30 @@ def search(self, query: str) -> list[str]:
 ```python
 def __init__(self) -> None:
     self._countries: dict[str, CountryEntry] = {
-        code: CountryEntry(**data)
-        for code, data in self._load_json("countries.json").items()
+        code: CountryEntry(**data) for code, data in self._load_json("countries.json").items()
     }
+
 
 def __contains__(self, code: str) -> bool:
     """Check if country code exists."""
     return code.upper() in self._countries
 
+
 def __getitem__(self, code: str) -> CountryEntry:
     """Get full entry for country code."""
     return self._countries[code.upper()]
+
 
 def get(self, code: str) -> CountryEntry | None:
     """Get entry for country code, or None if not found."""
     return self._countries.get(code.upper())
 
+
 def fips_to_iso3(self, fips: str) -> str | None:
     """Convert FIPS code to ISO 3166-1 alpha-3."""
     entry = self._countries.get(fips.upper())
     return entry.iso3 if entry else None
+
 
 def fips_to_iso2(self, fips: str) -> str | None:
     """Convert FIPS code to ISO 3166-1 alpha-2."""
@@ -388,28 +406,30 @@ def fips_to_iso2(self, fips: str) -> str | None:
 ```python
 def __init__(self) -> None:
     self._themes: dict[str, GKGThemeEntry] = {
-        code: GKGThemeEntry(**data)
-        for code, data in self._load_json("gkg_themes.json").items()
+        code: GKGThemeEntry(**data) for code, data in self._load_json("gkg_themes.json").items()
     }
+
 
 def __contains__(self, theme: str) -> bool:
     """Check if theme exists."""
     return theme in self._themes
 
+
 def __getitem__(self, theme: str) -> GKGThemeEntry:
     """Get full entry for theme."""
     return self._themes[theme]
+
 
 def get(self, theme: str) -> GKGThemeEntry | None:
     """Get entry for theme, or None if not found."""
     return self._themes.get(theme)
 
+
 def search(self, query: str) -> list[str]:
     """Search themes by description (substring match)."""
     query_lower = query.lower()
     return [
-        theme for theme, entry in self._themes.items()
-        if query_lower in entry.description.lower()
+        theme for theme, entry in self._themes.items() if query_lower in entry.description.lower()
     ]
 ```
 

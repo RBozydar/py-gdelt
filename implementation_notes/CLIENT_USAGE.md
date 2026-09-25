@@ -18,10 +18,7 @@ from datetime import date
 
 async with GDELTClient() as client:
     # Query events
-    filter_obj = EventFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
-        actor1_country="USA"
-    )
+    filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1)), actor1_country="USA")
     events = await client.events.query(filter_obj)
 
     # Search articles
@@ -60,7 +57,7 @@ settings = GDELTSettings(
     max_retries=5,
     max_concurrent_downloads=10,
     fallback_to_bigquery=True,
-    validate_codes=True
+    validate_codes=True,
 )
 
 async with GDELTClient(settings=settings) as client:
@@ -110,7 +107,7 @@ async with GDELTClient() as client:
     filter_obj = EventFilter(
         date_range=DateRange(start=date(2024, 1, 1)),
         actor1_country="USA",
-        event_code="14"  # Protest events
+        event_code="14",  # Protest events
     )
 
     # Batch query
@@ -126,10 +123,7 @@ async with GDELTClient() as client:
 ```python
 async with GDELTClient() as client:
     # Query all mentions of a specific event
-    mentions = await client.mentions.query(
-        global_event_id="123456789",
-        filter_obj=filter_obj
-    )
+    mentions = await client.mentions.query(global_event_id="123456789", filter_obj=filter_obj)
 ```
 
 #### GKG Endpoint
@@ -139,9 +133,7 @@ async with GDELTClient() as client:
     from py_gdelt.filters import GKGFilter
 
     filter_obj = GKGFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
-        themes=["ENV_CLIMATECHANGE"],
-        country="USA"
+        date_range=DateRange(start=date(2024, 1, 1)), themes=["ENV_CLIMATECHANGE"], country="USA"
     )
 
     records = await client.gkg.query(filter_obj)
@@ -154,9 +146,7 @@ async with GDELTClient() as client:
     from py_gdelt.filters import NGramsFilter
 
     filter_obj = NGramsFilter(
-        date_range=DateRange(start=date(2024, 1, 1)),
-        language="en",
-        ngram="climate"
+        date_range=DateRange(start=date(2024, 1, 1)), language="en", ngram="climate"
     )
 
     records = await client.ngrams.query(filter_obj)
@@ -175,10 +165,7 @@ async with GDELTClient() as client:
 
     # Advanced search with filter
     filter_obj = DocFilter(
-        query="elections",
-        timespan="7d",
-        source_country="US",
-        sort_by="relevance"
+        query="elections", timespan="7d", source_country="US", sort_by="relevance"
     )
     articles = await client.doc.query(filter_obj)
 
@@ -286,9 +273,7 @@ For memory-efficient processing of large datasets:
 
 ```python
 async with GDELTClient() as client:
-    filter_obj = EventFilter(
-        date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 31))
-    )
+    filter_obj = EventFilter(date_range=DateRange(start=date(2024, 1, 1), end=date(2024, 1, 31)))
 
     # Stream instead of loading all into memory
     count = 0
@@ -306,18 +291,13 @@ Events and mentions can be deduplicated:
 ```python
 async with GDELTClient() as client:
     # Deduplicate by GlobalEventID (default)
-    events = await client.events.query(
-        filter_obj,
-        deduplicate=True
-    )
+    events = await client.events.query(filter_obj, deduplicate=True)
 
     # Custom deduplication strategy
     from py_gdelt.utils.dedup import DedupeStrategy
 
     events = await client.events.query(
-        filter_obj,
-        deduplicate=True,
-        dedupe_strategy=DedupeStrategy.KEEP_FIRST
+        filter_obj, deduplicate=True, dedupe_strategy=DedupeStrategy.KEEP_FIRST
     )
 ```
 
@@ -329,7 +309,7 @@ When BigQuery credentials are configured, the client automatically falls back to
 settings = GDELTSettings(
     bigquery_project="my-project",
     bigquery_credentials="/path/to/credentials.json",
-    fallback_to_bigquery=True  # Default
+    fallback_to_bigquery=True,  # Default
 )
 
 async with GDELTClient(settings=settings) as client:
@@ -387,7 +367,7 @@ from py_gdelt.exceptions import (
     RateLimitError,
     APIUnavailableError,
     BigQueryError,
-    ConfigurationError
+    ConfigurationError,
 )
 
 async with GDELTClient() as client:
@@ -409,13 +389,10 @@ from py_gdelt.filters import EventFilter, DateRange, DocFilter
 from datetime import date, timedelta
 from pathlib import Path
 
+
 async def analyze_recent_events():
     # Configure client
-    settings = GDELTSettings(
-        config_path=Path("gdelt.toml"),
-        timeout=60,
-        max_retries=5
-    )
+    settings = GDELTSettings(config_path=Path("gdelt.toml"), timeout=60, max_retries=5)
 
     async with GDELTClient(settings=settings) as client:
         # Query recent protest events
@@ -423,7 +400,7 @@ async def analyze_recent_events():
         event_filter = EventFilter(
             date_range=DateRange(start=yesterday),
             event_code="14",  # Protests
-            actor1_country="USA"
+            actor1_country="USA",
         )
 
         # Get events
@@ -431,11 +408,7 @@ async def analyze_recent_events():
         print(f"Found {len(events)} protest events")
 
         # Find related articles
-        doc_filter = DocFilter(
-            query="protest",
-            timespan="24h",
-            source_country="US"
-        )
+        doc_filter = DocFilter(query="protest", timespan="24h", source_country="US")
         articles = await client.doc.query(doc_filter)
         print(f"Found {len(articles)} related articles")
 
@@ -448,8 +421,10 @@ async def analyze_recent_events():
             event_type = client.lookups.cameo[event.event_code]
             print(f"  {event.global_event_id}: {event_type}")
 
+
 # Run the analysis
 import asyncio
+
 asyncio.run(analyze_recent_events())
 ```
 

@@ -37,11 +37,7 @@ async def stream_files(
     Memory bounded to max_concurrent × max_file_size (~500MB default).
     Natural backpressure: downloads throttle to caller's consumption rate.
     """
-    limit = (
-        max_concurrent
-        if max_concurrent is not None
-        else self.settings.max_concurrent_downloads
-    )
+    limit = max_concurrent if max_concurrent is not None else self.settings.max_concurrent_downloads
     url_iter = iter(urls)
     pending: set[asyncio.Task[tuple[str, bytes] | None]] = set()
 
@@ -56,9 +52,7 @@ async def stream_files(
             spawn()
 
         while pending:
-            done, pending = await asyncio.wait(
-                pending, return_when=asyncio.FIRST_COMPLETED
-            )
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
 
             for task in done:
                 spawn()  # Replenish immediately (keeps pipeline full)

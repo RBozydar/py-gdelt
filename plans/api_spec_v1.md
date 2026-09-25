@@ -212,6 +212,7 @@ def query(self, filter: EventsFilter) -> EventStream:
         for record in self._parse_file(file_url):
             yield record
 
+
 # Terminal methods for materialization
 class EventStream:
     def __iter__(self): ...
@@ -254,16 +255,16 @@ with GDELTClient() as client:
 ### 4.2 Namespaced Endpoints
 
 ```python
-client.doc          # DOC 2.0 API (articles)
-client.geo          # GEO 2.0 API (geographic)
-client.context      # Context 2.0 API (sentence-level)
-client.tv           # TV 2.0 API (captions)
-client.tv_ai        # TV AI 2.0 API (visual)
-client.events       # Events table (multi-source)
-client.mentions     # Mentions table (multi-source)
-client.gkg          # GKG table (multi-source)
-client.ngrams       # Web NGrams 3.0 (multi-source)
-client.lookups      # Reference data (CAMEO, themes, countries)
+client.doc  # DOC 2.0 API (articles)
+client.geo  # GEO 2.0 API (geographic)
+client.context  # Context 2.0 API (sentence-level)
+client.tv  # TV 2.0 API (captions)
+client.tv_ai  # TV AI 2.0 API (visual)
+client.events  # Events table (multi-source)
+client.mentions  # Mentions table (multi-source)
+client.gkg  # GKG table (multi-source)
+client.ngrams  # Web NGrams 3.0 (multi-source)
+client.lookups  # Reference data (CAMEO, themes, countries)
 ```
 
 ### 4.3 Filter Objects
@@ -274,19 +275,19 @@ client.lookups      # Reference data (CAMEO, themes, countries)
 from gdelt.filters import EventsFilter
 
 filter = EventsFilter(
-    start_date="2024-01-01",           # date, datetime, or str
+    start_date="2024-01-01",  # date, datetime, or str
     end_date="2024-01-31",
-    countries=["US", "UK"],            # FIPS codes
-    cameo_codes=["14"],                # Protest events
+    countries=["US", "UK"],  # FIPS codes
+    cameo_codes=["14"],  # Protest events
     actor1_country="RUS",
     actor2_country="UKR",
     min_goldstein=-10.0,
     max_goldstein=10.0,
     min_avg_tone=-5.0,
-    quad_class=[3, 4],                 # Verbal/Material Conflict
+    quad_class=[3, 4],  # Verbal/Material Conflict
     source_domains=["reuters.com"],
-    include_translated=True,           # Include machine-translated
-    deduplicate=True,                  # Apply deduplication
+    include_translated=True,  # Include machine-translated
+    deduplicate=True,  # Apply deduplication
     dedupe_strategy="url_date_location",
 )
 
@@ -326,7 +327,7 @@ filter = DocFilter(
     theme="ENV_CLIMATECHANGE",
     tone_min=-5.0,
     tone_max=5.0,
-    timespan="3m",                     # or "7d", "24h", etc.
+    timespan="3m",  # or "7d", "24h", etc.
     mode="artlist",
     max_records=250,
     sort="datedesc",
@@ -347,12 +348,12 @@ from gdelt.filters import NGramsFilter
 filter = NGramsFilter(
     start_date="2024-01-01",
     end_date="2024-01-31",
-    ngram="climate",                   # Single word/character
-    bigram=("climate", "change"),      # Two-word phrase
+    ngram="climate",  # Single word/character
+    bigram=("climate", "change"),  # Two-word phrase
     trigram=("United", "Nations", "Human"),
     language="en",
-    min_position=0,                    # Article decile (0-90)
-    max_position=30,                   # First 30% of articles
+    min_position=0,  # Article decile (0-90)
+    max_position=30,  # First 30% of articles
 )
 ```
 
@@ -360,13 +361,13 @@ filter = NGramsFilter(
 
 ```python
 # Events
-events = client.events.query(filter)                    # Sync, returns EventStream
-events = await client.events.query_async(filter)       # Async
+events = client.events.query(filter)  # Sync, returns EventStream
+events = await client.events.query_async(filter)  # Async
 
 # Explicit source selection
 events = client.events.query(filter, source="bigquery")
 events = client.events.query(filter, source="files")
-events = client.events.query(filter, source="auto")    # Default
+events = client.events.query(filter, source="auto")  # Default
 
 # Streaming iteration
 for event in client.events.query(filter):
@@ -391,22 +392,22 @@ ngrams = client.ngrams.search(filter)
 
 ```python
 # CAMEO codes
-client.lookups.cameo["14"]           # → "PROTEST"
+client.lookups.cameo["14"]  # → "PROTEST"
 client.lookups.cameo.get_description("142")  # → "Demonstrate or rally"
-client.lookups.cameo.get_goldstein("14")     # → -6.5
+client.lookups.cameo.get_goldstein("14")  # → -6.5
 
 # Themes
-client.lookups.themes["ENV_CLIMATECHANGE"]   # → Theme info
-client.lookups.themes.search("climate")       # → List of matching themes
+client.lookups.themes["ENV_CLIMATECHANGE"]  # → Theme info
+client.lookups.themes.search("climate")  # → List of matching themes
 
 # Countries (FIPS ↔ ISO conversion)
-client.lookups.countries.fips_to_iso("US")   # → "USA"
+client.lookups.countries.fips_to_iso("US")  # → "USA"
 client.lookups.countries.iso_to_fips("USA")  # → "US"
-client.lookups.countries.get_name("US")      # → "United States"
+client.lookups.countries.get_name("US")  # → "United States"
 
 # Validation (used internally, raises InvalidCodeError)
-client.lookups.validate_cameo("999")         # Raises InvalidCodeError
-client.lookups.validate_theme("INVALID")     # Raises InvalidCodeError
+client.lookups.validate_cameo("999")  # Raises InvalidCodeError
+client.lookups.validate_theme("INVALID")  # Raises InvalidCodeError
 ```
 
 ---
@@ -423,20 +424,21 @@ All models use Pydantic v2 for validation and serialization.
 from pydantic import BaseModel
 from typing import Optional
 
+
 class Location(BaseModel):
-    geo_type: int                      # 1=Country, 2=USState, 3=USCity, 4=WorldCity, 5=WorldState
-    fullname: str                      # "City, State, Country"
-    country_code: str                  # FIPS 2-char
-    adm1_code: Optional[str]           # Country + ADM1 (e.g., "USTX")
-    adm2_code: Optional[str]           # GAUL ADM2 or US county
+    geo_type: int  # 1=Country, 2=USState, 3=USCity, 4=WorldCity, 5=WorldState
+    fullname: str  # "City, State, Country"
+    country_code: str  # FIPS 2-char
+    adm1_code: Optional[str]  # Country + ADM1 (e.g., "USTX")
+    adm2_code: Optional[str]  # GAUL ADM2 or US county
     lat: Optional[float]
     lon: Optional[float]
-    feature_id: Optional[str]          # GNS/GNIS ID (can be negative)
-    
+    feature_id: Optional[str]  # GNS/GNIS ID (can be negative)
+
     def as_tuple(self) -> tuple[float, float]:
         """Return (lat, lon) tuple."""
         return (self.lat, self.lon)
-    
+
     def as_wkt(self) -> str:
         """Return WKT POINT string for geopandas compatibility."""
         return f"POINT({self.lon} {self.lat})"
@@ -446,12 +448,12 @@ class Location(BaseModel):
 
 ```python
 class ToneScores(BaseModel):
-    tone: float                        # -100 to +100 (positive minus negative)
-    positive_score: float              # 0-100 (% positive words)
-    negative_score: float              # 0-100 (% negative words)
-    polarity: float                    # 0-100 (% emotionally charged)
-    activity_density: float            # 0-100
-    self_group_density: float          # 0-100
+    tone: float  # -100 to +100 (positive minus negative)
+    positive_score: float  # 0-100 (% positive words)
+    negative_score: float  # 0-100 (% negative words)
+    polarity: float  # 0-100 (% emotionally charged)
+    activity_density: float  # 0-100
+    self_group_density: float  # 0-100
     word_count: int
 ```
 
@@ -460,7 +462,7 @@ class ToneScores(BaseModel):
 ```python
 class EntityMention(BaseModel):
     name: str
-    offset: Optional[int] = None       # Character offset, None for v1
+    offset: Optional[int] = None  # Character offset, None for v1
 ```
 
 ### 5.2 Event Models
@@ -471,38 +473,39 @@ class EntityMention(BaseModel):
 class Event(BaseModel):
     # Identifiers
     global_event_id: int
-    date: date                         # Event date
-    date_added: datetime               # When first recorded (UTC)
+    date: date  # Event date
+    date_added: datetime  # When first recorded (UTC)
     source_url: Optional[str]
-    
+
     # Actors
     actor1: Optional[Actor]
     actor2: Optional[Actor]
-    
+
     # Action
-    event_code: str                    # CAMEO code (string, not int!)
+    event_code: str  # CAMEO code (string, not int!)
     event_base_code: str
     event_root_code: str
-    quad_class: int                    # 1-4
-    goldstein_scale: float             # -10 to +10
-    
+    quad_class: int  # 1-4
+    goldstein_scale: float  # -10 to +10
+
     # Metrics
     num_mentions: int
     num_sources: int
     num_articles: int
     avg_tone: float
     is_root_event: bool
-    
+
     # Geography
     actor1_geo: Optional[Location]
     actor2_geo: Optional[Location]
     action_geo: Optional[Location]
-    
+
     # Metadata
-    version: int                       # 1 or 2
+    version: int  # 1 or 2
     is_translated: bool
     original_record_id: Optional[str]  # For translated records
-    
+
+
 class Actor(BaseModel):
     code: Optional[str]
     name: Optional[str]
@@ -523,15 +526,15 @@ class Mention(BaseModel):
     global_event_id: int
     event_time: datetime
     mention_time: datetime
-    mention_type: int                  # 1=WEB, 2=Citation, 3=CORE, etc.
+    mention_type: int  # 1=WEB, 2=Citation, 3=CORE, etc.
     source_name: str
-    identifier: str                    # URL, DOI, or citation
+    identifier: str  # URL, DOI, or citation
     sentence_id: int
     actor1_char_offset: Optional[int]
     actor2_char_offset: Optional[int]
     action_char_offset: Optional[int]
     in_raw_text: bool
-    confidence: int                    # 10-100
+    confidence: int  # 10-100
     doc_length: int
     doc_tone: float
     translation_info: Optional[str]
@@ -542,39 +545,41 @@ class Mention(BaseModel):
 ```python
 class GKGRecord(BaseModel):
     # Identifiers
-    record_id: str                     # "YYYYMMDDHHMMSS-seq" or "-T" suffix
+    record_id: str  # "YYYYMMDDHHMMSS-seq" or "-T" suffix
     date: datetime
     source_url: str
     source_name: str
-    source_collection: int             # 1=WEB, 2=Citation, etc.
-    
+    source_collection: int  # 1=WEB, 2=Citation, etc.
+
     # Extracted entities (normalized: offset=None for v1)
     themes: list[EntityMention]
     persons: list[EntityMention]
     organizations: list[EntityMention]
     locations: list[Location]
-    
+
     # Tone
     tone: ToneScores
-    
+
     # GCAM emotional dimensions
-    gcam: dict[str, float]             # e.g., {"c2.14": 3.2, "c5.1": 0.85}
-    
+    gcam: dict[str, float]  # e.g., {"c2.14": 3.2, "c5.1": 0.85}
+
     # V2.1+ fields (empty lists for v1)
     quotations: list[Quotation]
     amounts: list[Amount]
-    
+
     # Metadata
-    version: int                       # 1 or 2
+    version: int  # 1 or 2
     is_translated: bool
     original_record_id: Optional[str]
     translation_info: Optional[str]
+
 
 class Quotation(BaseModel):
     offset: int
     length: int
     verb: str
     quote: str
+
 
 class Amount(BaseModel):
     amount: float
@@ -596,10 +601,12 @@ class Article(BaseModel):
     source_country: str
     tone: Optional[float]
 
+
 class Timeline(BaseModel):
     data: list[TimelinePoint]
     mode: str
-    
+
+
 class TimelinePoint(BaseModel):
     date: datetime
     value: float
@@ -610,12 +617,12 @@ class TimelinePoint(BaseModel):
 ```python
 class NGramRecord(BaseModel):
     date: datetime
-    ngram: str                         # Word or character
-    language: str                      # ISO 639-1/2
-    segment_type: int                  # 1=space-delimited, 2=scriptio continua
-    position: int                      # Article decile (0-90)
-    pre_context: str                   # ~7 words before
-    post_context: str                  # ~7 words after
+    ngram: str  # Word or character
+    language: str  # ISO 639-1/2
+    segment_type: int  # 1=space-delimited, 2=scriptio continua
+    position: int  # Article decile (0-90)
+    pre_context: str  # ~7 words before
+    post_context: str  # ~7 words after
     url: str
 ```
 
@@ -624,39 +631,39 @@ class NGramRecord(BaseModel):
 ```python
 from typing import TypeVar, Generic, Iterator
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class ResultStream(Generic[T]):
     """Lazy stream of results with terminal methods."""
-    
-    def __iter__(self) -> Iterator[T]:
-        ...
-    
-    def to_list(self) -> list[T]:
-        ...
-    
+
+    def __iter__(self) -> Iterator[T]: ...
+
+    def to_list(self) -> list[T]: ...
+
     def to_dataframe(self) -> "pd.DataFrame":
         """Requires pandas. Raises ImportError if not installed."""
         ...
-    
-    def to_json(self, path: str) -> None:
-        ...
-    
-    def to_csv(self, path: str) -> None:
-        ...
+
+    def to_json(self, path: str) -> None: ...
+
+    def to_csv(self, path: str) -> None: ...
+
 
 class FetchResult(Generic[T]):
     """Result container with partial failure tracking."""
+
     data: list[T]
     failed: list[FailedRequest]
-    
+
     @property
     def complete(self) -> bool:
         return len(self.failed) == 0
-    
+
     @property
     def partial(self) -> bool:
         return len(self.failed) > 0 and len(self.data) > 0
+
 
 class FailedRequest(BaseModel):
     url: str
@@ -716,6 +723,7 @@ Using `pydantic-settings` for automatic priority handling:
 ```python
 from pydantic_settings import BaseSettings
 
+
 class GDELTSettings(BaseSettings):
     bigquery_project: str | None = None
     bigquery_credentials: str | None = None
@@ -725,7 +733,7 @@ class GDELTSettings(BaseSettings):
     timeout: int = 30
     fallback_to_bigquery: bool = True
     max_concurrent_requests: int = 10
-    
+
     class Config:
         env_prefix = "GDELT_"
         toml_file = "~/.gdelt/config.toml"
@@ -740,47 +748,68 @@ class GDELTSettings(BaseSettings):
 ```python
 class GDELTError(Exception):
     """Base exception for all GDELT errors."""
+
     pass
+
 
 class APIError(GDELTError):
     """Errors from GDELT REST APIs."""
+
     pass
+
 
 class RateLimitError(APIError):
     """HTTP 429 - rate limited."""
+
     retry_after: int | None = None
+
 
 class APIUnavailableError(APIError):
     """API endpoint unavailable (5xx, connection error)."""
+
     pass
+
 
 class InvalidQueryError(APIError):
     """Invalid query parameters."""
+
     pass
+
 
 class DataError(GDELTError):
     """Errors in data processing."""
+
     pass
+
 
 class ParseError(DataError):
     """Failed to parse GDELT data."""
+
     raw_data: str | None = None
+
 
 class ValidationError(DataError):
     """Data validation failed."""
+
     pass
+
 
 class InvalidCodeError(ValidationError):
     """Invalid CAMEO code, theme, or country code."""
+
     code: str
     code_type: str  # "cameo", "theme", "country"
 
+
 class ConfigurationError(GDELTError):
     """Invalid configuration."""
+
     pass
+
 
 class BigQueryError(GDELTError):
     """BigQuery-related errors."""
+
     pass
 ```
 
@@ -796,13 +825,13 @@ from tenacity import (
     retry_if_exception_type,
 )
 
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=30),
     retry=retry_if_exception_type((RateLimitError, APIUnavailableError)),
 )
-async def _fetch_with_retry(self, url: str) -> bytes:
-    ...
+async def _fetch_with_retry(self, url: str) -> bytes: ...
 ```
 
 ### 7.3 Partial Failure Handling
@@ -896,8 +925,8 @@ Bundled reference data (~1MB total):
 from gdelt.lookups import CAMEOCodes, GKGThemes, Countries
 
 # Bundled with library
-client.lookups.cameo      # CAMEO event codes
-client.lookups.themes     # GKG theme taxonomy
+client.lookups.cameo  # CAMEO event codes
+client.lookups.themes  # GKG theme taxonomy
 client.lookups.countries  # FIPS/ISO country codes
 client.lookups.goldstein  # Goldstein scale values
 ```
@@ -906,16 +935,16 @@ client.lookups.goldstein  # Goldstein scale values
 
 ```python
 # CAMEO helpers
-client.lookups.cameo.is_conflict("14")      # → True
-client.lookups.cameo.is_cooperation("05")   # → True
-client.lookups.cameo.get_quad_class("14")   # → 4
+client.lookups.cameo.is_conflict("14")  # → True
+client.lookups.cameo.is_cooperation("05")  # → True
+client.lookups.cameo.get_quad_class("14")  # → 4
 
 # Theme helpers
 client.lookups.themes.get_category("ENV_CLIMATECHANGE")  # → "Environment"
-client.lookups.themes.list_by_category("Health")         # → List of health themes
+client.lookups.themes.list_by_category("Health")  # → List of health themes
 
 # Country helpers
-client.lookups.countries.fips_to_iso("IZ")   # → "IRQ" (Iraq)
+client.lookups.countries.fips_to_iso("IZ")  # → "IRQ" (Iraq)
 client.lookups.countries.iso_to_fips("IRQ")  # → "IZ"
 ```
 
@@ -926,9 +955,9 @@ client.lookups.countries.iso_to_fips("IRQ")  # → "IZ"
 # Recent data uses TTL-based caching
 
 # Manual cache control
-client.cache.clear()                    # Clear all
-client.cache.clear(before="2024-01-01") # Clear old entries
-client.cache.size()                     # Current cache size
+client.cache.clear()  # Clear all
+client.cache.clear(before="2024-01-01")  # Clear old entries
+client.cache.size()  # Current cache size
 ```
 
 ---
@@ -941,7 +970,7 @@ client.cache.size()                     # Current cache size
 
 ```python
 # CORRECT
-df = pd.read_csv(file, sep='\t', header=None, encoding='utf-8')
+df = pd.read_csv(file, sep="\t", header=None, encoding="utf-8")
 
 # WRONG - corrupts data
 df = pd.read_csv(file)  # Assumes comma delimiter
