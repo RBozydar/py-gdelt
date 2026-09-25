@@ -41,7 +41,7 @@ class TestInitialization:
         """Test BASE_URL is set correctly."""
         endpoint = RadioNGramsEndpoint()
 
-        assert endpoint.BASE_URL == "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/"
+        assert endpoint.BASE_URL == "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/"
 
     @pytest.mark.asyncio
     async def test_context_manager(self) -> None:
@@ -90,7 +90,7 @@ class TestBuildUrls:
         # Mock inventory file response
         inventory_content = (
             "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz"
         )
 
         mock_response = MagicMock()
@@ -116,7 +116,7 @@ class TestBuildUrls:
         assert len(urls) == 1
         assert (
             urls[0]
-            == "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
+            == "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
         )
 
     @pytest.mark.asyncio
@@ -124,8 +124,8 @@ class TestBuildUrls:
         """Test URL building without station filter returns all stations."""
         inventory_content = (
             "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz\n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/NPR.20240115.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz\n"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/NPR.20240115.1gram.txt.gz"
         )
 
         mock_response = MagicMock()
@@ -158,10 +158,10 @@ class TestBuildUrls:
         """Test URL building for multiple days."""
         # Mock inventory responses for two days
         inventory_day1 = (
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
         )
         inventory_day2 = (
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240116.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240116.1gram.txt.gz"
         )
 
         mock_response_1 = MagicMock()
@@ -197,8 +197,8 @@ class TestBuildUrls:
         """Test URL building filters by ngram size."""
         inventory_content = (
             "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.2gram.txt.gz\n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.3gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.2gram.txt.gz\n"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.3gram.txt.gz"
         )
 
         mock_response = MagicMock()
@@ -281,7 +281,7 @@ class TestBuildUrls:
             "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
             "\n"
             "   \n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz\n"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz\n"
         )
 
         mock_response = MagicMock()
@@ -315,7 +315,7 @@ class TestBuildUrls:
             "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
             "http://evil.com/malicious.txt.gz\n"
             "https://attacker.net/data.txt.gz\n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.1gram.txt.gz"
         )
 
         mock_response = MagicMock()
@@ -599,19 +599,19 @@ class TestUrlValidation:
 
         # Valid URLs should not raise
         endpoint._validate_url(
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
         )
         endpoint._validate_url(
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.2gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/WNYC.20240115.2gram.txt.gz"
         )
 
-    def test_validate_url_invalid_scheme_https(self) -> None:
-        """Test validation rejects HTTPS scheme (GDELT uses HTTP)."""
+    def test_validate_url_invalid_scheme_http(self) -> None:
+        """Test validation rejects HTTP after inventory normalization."""
         endpoint = RadioNGramsEndpoint()
 
-        with pytest.raises(ValueError, match="Invalid URL scheme 'https'"):
+        with pytest.raises(ValueError, match="Invalid URL scheme 'http'"):
             endpoint._validate_url(
-                "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
+                "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
             )
 
     def test_validate_url_invalid_scheme_ftp(self) -> None:
@@ -628,7 +628,7 @@ class TestUrlValidation:
         endpoint = RadioNGramsEndpoint()
 
         with pytest.raises(ValueError, match=r"Invalid URL host 'evil\.com'"):
-            endpoint._validate_url("http://evil.com/malicious.txt.gz")
+            endpoint._validate_url("https://evil.com/malicious.txt.gz")
 
     def test_validate_url_wrong_host_similar(self) -> None:
         """Test validation rejects hosts that are similar but not GDELT."""
@@ -636,7 +636,7 @@ class TestUrlValidation:
 
         with pytest.raises(ValueError, match=r"Invalid URL host 'fake-gdeltproject\.org'"):
             endpoint._validate_url(
-                "http://fake-gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.txt.gz"
+                "https://fake-gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.txt.gz"
             )
 
     def test_validate_url_empty_path(self) -> None:
@@ -644,7 +644,7 @@ class TestUrlValidation:
         endpoint = RadioNGramsEndpoint()
 
         with pytest.raises(ValueError, match="Invalid URL with empty path"):
-            endpoint._validate_url("http://data.gdeltproject.org")
+            endpoint._validate_url("https://data.gdeltproject.org")
 
     def test_validate_url_malformed(self) -> None:
         """Test validation handles malformed URLs."""
@@ -697,10 +697,10 @@ class TestEdgeCases:
     async def test_build_urls_year_boundary(self) -> None:
         """Test URL building across year boundary."""
         inventory_2023 = (
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20231231.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20231231.1gram.txt.gz"
         )
         inventory_2024 = (
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240101.1gram.txt.gz"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240101.1gram.txt.gz"
         )
 
         mock_response_1 = MagicMock()
@@ -757,6 +757,9 @@ class TestGetLatest:
         test_data = b"20240115\tKQED\t09\tword1\t10\tMorning Edition\n20240115\tKQED\t10\tword2\t20\tAfternoon News"
 
         def mock_stream_files(urls: list[str], **kwargs: object) -> AsyncIteratorMock:
+            assert urls == [
+                "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz"
+            ]
             return AsyncIteratorMock([("url", test_data)])
 
         mock_file_source.stream_files = mock_stream_files
@@ -776,7 +779,7 @@ class TestGetLatest:
         """Test get_latest() without station filter returns all stations."""
         inventory_content = (
             "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.1gram.txt.gz\n"
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/NPR.20240115.1gram.txt.gz\n"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/NPR.20240115.1gram.txt.gz\n"
         )
 
         mock_inventory_response = MagicMock()
@@ -821,7 +824,7 @@ class TestGetLatest:
     async def test_get_latest_with_ngram_size(self) -> None:
         """Test get_latest() with custom ngram size."""
         inventory_content = (
-            "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.2gram.txt.gz\n"
+            "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/KQED.20240115.2gram.txt.gz\n"
         )
 
         mock_inventory_response = MagicMock()

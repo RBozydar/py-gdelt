@@ -9,7 +9,7 @@ from py_gdelt.lookups.models import LanguageEntry
 
 __all__ = ["Languages"]
 
-_HELP_URL = "http://data.gdeltproject.org/api/v2/guides/LOOKUP-LANGUAGES.TXT"
+_HELP_URL = "https://data.gdeltproject.org/api/v2/guides/LOOKUP-LANGUAGES.TXT"
 
 
 class Languages:

@@ -63,7 +63,7 @@ class TVNGramsEndpoint:
         ...         print(record.ngram, record.count)
     """
 
-    BASE_URL = "http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/"
+    BASE_URL = "https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/"
 
     def __init__(
         self,
@@ -318,7 +318,7 @@ class TVNGramsEndpoint:
             date_str = current.strftime("%Y%m%d")
 
             # Format: {BASE_URL}{STATION}.{YYYYMMDD}.{ngram_type}.txt.gz
-            # Example: http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240101.1gram.txt.gz
+            # Example: https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240101.1gram.txt.gz
             url = f"{self.BASE_URL}{filter_obj.station.upper()}.{date_str}.{ngram_type}.txt.gz"
             urls.append(url)
 

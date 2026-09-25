@@ -11,7 +11,7 @@ from py_gdelt.lookups.models import GCAMEntry
 
 __all__ = ["GCAMLookup"]
 
-_HELP_URL = "http://data.gdeltproject.org/documentation/GCAM-MASTER-CODEBOOK.TXT"
+_HELP_URL = "https://data.gdeltproject.org/documentation/GCAM-MASTER-CODEBOOK.TXT"
 
 
 class GCAMLookup:

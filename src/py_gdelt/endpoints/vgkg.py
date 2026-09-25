@@ -49,8 +49,8 @@ logger = logging.getLogger(__name__)
 
 
 # VGKG data URLs
-VGKG_LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv3/vgkg/lastupdate.txt"
-VGKG_BASE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv3/vgkg/"
+VGKG_LAST_UPDATE_URL: Final[str] = "https://data.gdeltproject.org/gdeltv3/vgkg/lastupdate.txt"
+VGKG_BASE_URL: Final[str] = "https://data.gdeltproject.org/gdeltv3/vgkg/"
 
 
 class VGKGEndpoint:
@@ -67,7 +67,7 @@ class VGKGEndpoint:
     - Landmark detection (famous places)
 
     VGKG is file-based only (no BigQuery support). Files are generated every 15
-    minutes and are available at http://data.gdeltproject.org/gdeltv3/vgkg/.
+    minutes and are available at https://data.gdeltproject.org/gdeltv3/vgkg/.
 
     Args:
         settings: Configuration settings. If None, uses defaults.

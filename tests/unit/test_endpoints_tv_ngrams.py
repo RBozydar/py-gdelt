@@ -41,7 +41,7 @@ class TestInitialization:
         """Test BASE_URL is set correctly."""
         endpoint = TVNGramsEndpoint()
 
-        assert endpoint.BASE_URL == "http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/"
+        assert endpoint.BASE_URL == "https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/"
 
     @pytest.mark.asyncio
     async def test_context_manager(self) -> None:
@@ -90,7 +90,7 @@ class TestBuildUrls:
         assert len(urls) == 1
         assert (
             urls[0]
-            == "http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240115.1gram.txt.gz"
+            == "https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240115.1gram.txt.gz"
         )
 
     def test_build_urls_multiple_days(self) -> None:
@@ -108,15 +108,15 @@ class TestBuildUrls:
         assert len(urls) == 3
         assert (
             urls[0]
-            == "http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240115.1gram.txt.gz"
+            == "https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240115.1gram.txt.gz"
         )
         assert (
             urls[1]
-            == "http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240116.1gram.txt.gz"
+            == "https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240116.1gram.txt.gz"
         )
         assert (
             urls[2]
-            == "http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240117.1gram.txt.gz"
+            == "https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240117.1gram.txt.gz"
         )
 
     def test_build_urls_different_ngram_sizes(self) -> None:
@@ -135,7 +135,7 @@ class TestBuildUrls:
             assert len(urls) == 1
             assert (
                 urls[0]
-                == f"http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240115.{expected_type}.txt.gz"
+                == f"https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/CNN.20240115.{expected_type}.txt.gz"
             )
 
     def test_build_urls_station_uppercase(self) -> None:
