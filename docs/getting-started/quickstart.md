@@ -12,6 +12,7 @@ from datetime import date, timedelta
 from py_gdelt import GDELTClient
 from py_gdelt.filters import DateRange, EventFilter
 
+
 async def main():
     async with GDELTClient() as client:
         # Query yesterday's events
@@ -28,6 +29,7 @@ async def main():
         if result:
             event = result[0]
             print(f"First event: {event.global_event_id}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

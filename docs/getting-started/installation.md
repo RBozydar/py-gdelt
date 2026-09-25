@@ -83,9 +83,11 @@ Verify your installation:
 
 ```python
 import py_gdelt
+
 print(py_gdelt.__version__)
 
 from py_gdelt import GDELTClient
+
 print("Installation successful!")
 ```
 

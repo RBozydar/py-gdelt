@@ -125,10 +125,7 @@ All public functions and methods must have complete type hints:
 
 ```python
 def fetch_events(
-    start_date: datetime,
-    end_date: datetime,
-    *,
-    limit: int | None = None
+    start_date: datetime, end_date: datetime, *, limit: int | None = None
 ) -> list[Event]:
     """Fetch GDELT events within date range."""
     ...

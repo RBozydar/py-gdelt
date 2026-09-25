@@ -31,7 +31,7 @@ class ImageTags(BaseTagLookup):
         Returns:
             URL to documentation for image tags.
         """
-        return "http://data.gdeltproject.org/api/v2/guides/LOOKUP-IMAGETAGS.TXT"
+        return "https://data.gdeltproject.org/api/v2/guides/LOOKUP-IMAGETAGS.TXT"
 
     @property
     def _code_type(self) -> str:

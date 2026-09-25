@@ -44,6 +44,7 @@ Modern Jupyter (IPython 8+) supports native async/await. The notebooks use `nest
 
 ```python
 import nest_asyncio
+
 nest_asyncio.apply()
 ```
 
@@ -121,6 +122,7 @@ Use `nest_asyncio`:
 
 ```python
 import nest_asyncio
+
 nest_asyncio.apply()
 ```
 

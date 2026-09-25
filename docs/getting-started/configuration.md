@@ -82,15 +82,12 @@ settings = GDELTSettings(
     rate_limit_retry_after_max_seconds=1800,
     transient_error_circuit_threshold=3,
     transient_error_circuit_seconds=30,
-
     # Caching
     cache_dir=Path.home() / ".cache" / "gdelt",
     cache_ttl=3600,
-
     # BigQuery
     bigquery_project="my-project",
     bigquery_credentials=Path("/path/to/credentials.json"),
-
     # Behavior
     fallback_to_bigquery=True,
     validate_codes=True,

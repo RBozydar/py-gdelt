@@ -19,6 +19,7 @@ from py_gdelt.models.common import FetchResult
 from py_gdelt.models.ngrams import BroadcastNGramRecord, BroadcastSource
 from py_gdelt.parsers.broadcast_ngrams import BroadcastNGramsParser
 from py_gdelt.sources.files import FileSource
+from py_gdelt.utils.urls import normalize_data_url
 
 
 if TYPE_CHECKING:
@@ -59,7 +60,7 @@ class RadioNGramsEndpoint:
         ...         print(record.ngram, record.count, record.show)
     """
 
-    BASE_URL = "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/"
+    BASE_URL = "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/"
 
     def __init__(
         self,
@@ -185,7 +186,7 @@ class RadioNGramsEndpoint:
                 # Parse inventory for matching files
                 urls: list[str] = []
                 for line in response.text.strip().split("\n"):
-                    file_url = line.strip()
+                    file_url = normalize_data_url(line.strip())
                     if not file_url:
                         continue
 
@@ -307,8 +308,8 @@ class RadioNGramsEndpoint:
             ValueError: If the URL is malformed or does not point to the expected GDELT domain.
         """
         parsed = urlparse(url)
-        if parsed.scheme != "http":
-            msg = f"Invalid URL scheme '{parsed.scheme}', expected 'http': {url}"
+        if parsed.scheme != "https":
+            msg = f"Invalid URL scheme '{parsed.scheme}', expected 'https': {url}"
             raise ValueError(msg)
         # Check for exact domain or subdomain of gdeltproject.org
         # Must end with "gdeltproject.org" and either be exactly that or have "." before it
@@ -354,7 +355,7 @@ class RadioNGramsEndpoint:
 
                 # Parse inventory for matching files
                 for line in response.text.strip().split("\n"):
-                    file_url = line.strip()
+                    file_url = normalize_data_url(line.strip())
                     if not file_url:
                         continue
 

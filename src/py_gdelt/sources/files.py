@@ -25,6 +25,7 @@ from py_gdelt.cache import Cache
 from py_gdelt.config import GDELTSettings
 from py_gdelt.exceptions import APIError, APIUnavailableError, DataError
 from py_gdelt.utils.dates import parse_gdelt_datetime
+from py_gdelt.utils.urls import normalize_data_url
 
 
 __all__ = ["FileSource", "FileType", "GraphFileType"]
@@ -32,13 +33,11 @@ __all__ = ["FileSource", "FileType", "GraphFileType"]
 logger = logging.getLogger(__name__)
 
 # GDELT file list URLs
-# NOTE: data.gdeltproject.org only supports HTTP (SSL cert is for *.storage.googleapis.com)
-# See: https://blog.gdeltproject.org/https-now-available-for-selected-gdelt-apis-and-services/
-MASTER_FILE_LIST_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
+MASTER_FILE_LIST_URL: Final[str] = "https://data.gdeltproject.org/gdeltv2/masterfilelist.txt"
 TRANSLATION_FILE_LIST_URL: Final[str] = (
-    "http://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt"
+    "https://data.gdeltproject.org/gdeltv2/masterfilelist-translation.txt"
 )
-LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
+LAST_UPDATE_URL: Final[str] = "https://data.gdeltproject.org/gdeltv2/lastupdate.txt"
 
 # Decompression limit to prevent gzip bombs
 MAX_DECOMPRESSED_SIZE: Final[int] = 500 * 1024 * 1024  # 500MB limit
@@ -168,8 +167,14 @@ class FileSource:
                         ttl=self.settings.master_file_list_ttl,
                     )
 
-                # Parse URLs from content (one URL per line)
-                file_urls = [line.strip() for line in content.splitlines() if line.strip()]
+                # Master lists contain size, hash, and URL; also accept bare URLs.
+                file_urls = []
+                for line in content.splitlines():
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        file_urls.append(normalize_data_url(parts[2]))
+                    elif len(parts) == 1 and parts[0].startswith(("http://", "https://")):
+                        file_urls.append(normalize_data_url(parts[0]))
                 all_urls.extend(file_urls)
 
                 logger.debug("Found %d URLs in %s", len(file_urls), url)
@@ -245,11 +250,11 @@ class FileSource:
             if file_type == "ngrams" or file_type in GRAPH_FILE_TYPES:
                 # Graph datasets have their own subdirectory
                 if file_type == "ngrams":
-                    url = f"http://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
+                    url = f"https://data.gdeltproject.org/gdeltv3/webngrams/{timestamp}{pattern}"
                 else:
-                    url = f"http://data.gdeltproject.org/gdeltv3/{file_type}/{timestamp}{pattern}"
+                    url = f"https://data.gdeltproject.org/gdeltv3/{file_type}/{timestamp}{pattern}"
             else:
-                url = f"http://data.gdeltproject.org/gdeltv2/{timestamp}{pattern}"
+                url = f"https://data.gdeltproject.org/gdeltv2/{timestamp}{pattern}"
 
             urls.append(url)
 
@@ -282,15 +287,13 @@ class FileSource:
         Raises:
             APIError: If download fails
         """
+        url = normalize_data_url(url)
         # Check cache first
         cached_data = self.cache.get(url)
         if cached_data is not None:
             logger.debug("Cache hit for URL: %s", url)
             return cached_data
 
-        # NOTE: We use HTTP (not HTTPS) for data.gdeltproject.org because their
-        # SSL certificate is for *.storage.googleapis.com, causing hostname mismatch.
-        # See: https://blog.gdeltproject.org/https-now-available-for-selected-gdelt-apis-and-services/
         try:
             logger.debug("Downloading: %s", url)
             response = await self.client.get(url)

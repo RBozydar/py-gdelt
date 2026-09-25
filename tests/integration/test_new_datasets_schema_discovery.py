@@ -32,16 +32,18 @@ from typing import Final
 import httpx
 import pytest
 
+from py_gdelt.utils.urls import normalize_data_url
+
 
 logger = logging.getLogger(__name__)
 
 # GDELT data source URLs
-VGKG_LAST_UPDATE_URL: Final[str] = "http://data.gdeltproject.org/gdeltv3/vgkg/lastupdate.txt"
+VGKG_LAST_UPDATE_URL: Final[str] = "https://data.gdeltproject.org/gdeltv3/vgkg/lastupdate.txt"
 TV_GKG_LAST_UPDATE_URL: Final[str] = (
-    "http://data.gdeltproject.org/gdeltv2_iatelevision/lastupdate.txt"
+    "https://data.gdeltproject.org/gdeltv2_iatelevision/lastupdate.txt"
 )
-TV_NGRAMS_INVENTORY_URL: Final[str] = "http://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/"
-RADIO_NGRAMS_INVENTORY_URL: Final[str] = "http://data.gdeltproject.org/gdeltv3/iaradio/ngrams/"
+TV_NGRAMS_INVENTORY_URL: Final[str] = "https://data.gdeltproject.org/gdeltv3/iatv/ngramsv2/"
+RADIO_NGRAMS_INVENTORY_URL: Final[str] = "https://data.gdeltproject.org/gdeltv3/iaradio/ngrams/"
 
 
 def _extract_gzip(compressed_data: bytes) -> bytes:
@@ -136,7 +138,7 @@ async def test_vgkg_schema_discovery() -> None:
         for line in lines:
             parts = line.split()
             if len(parts) >= 3 and "vgkg" in parts[2].lower():
-                vgkg_url = parts[2]
+                vgkg_url = normalize_data_url(parts[2])
                 break
 
         if vgkg_url is None:
@@ -189,7 +191,7 @@ async def test_tv_gkg_schema_discovery() -> None:
         for line in lines:
             parts = line.split()
             if len(parts) >= 3 and ".gkg." in parts[2].lower():
-                tv_gkg_url = parts[2]
+                tv_gkg_url = normalize_data_url(parts[2])
                 break
 
         if tv_gkg_url is None:
@@ -227,7 +229,7 @@ async def test_tv_ngrams_schema_discovery() -> None:
     async with httpx.AsyncClient(timeout=60.0) as client:
         # TV NGrams uses station-specific file lists
         # Try CNN as it's a common station
-        filelist_url = "http://data.gdeltproject.org/gdeltv3/iatv/ngrams/FILELIST-CNN.TXT"
+        filelist_url = "https://data.gdeltproject.org/gdeltv3/iatv/ngrams/FILELIST-CNN.TXT"
 
         try:
             response = await client.get(filelist_url)
@@ -245,7 +247,7 @@ async def test_tv_ngrams_schema_discovery() -> None:
         tv_ngrams_url = None
         for line in reversed(lines[-20:]):  # Check last 20 entries (most recent)
             if "1gram" in line and line.strip().endswith(".gz"):
-                tv_ngrams_url = line.strip()
+                tv_ngrams_url = normalize_data_url(line.strip())
                 break
 
         if not tv_ngrams_url:
@@ -303,7 +305,7 @@ async def test_radio_ngrams_schema_discovery() -> None:
         for raw_line in lines:
             line = raw_line.strip()
             if "1gram" in line and line.endswith(".gz"):
-                radio_ngrams_url = line
+                radio_ngrams_url = normalize_data_url(line)
                 break
 
         if not radio_ngrams_url:
