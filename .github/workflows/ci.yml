@@ -164,7 +164,7 @@ jobs:
         run: uv run pytest -m "not integration" --cov=src/py_gdelt --cov-report=xml --cov-report=term tests/
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           file: ./coverage.xml
           flags: py${{ matrix.python-version }}
